@@ -2,28 +2,234 @@
 //!
 // FILE_CAP_OVERRIDE: accessor methods for graph-driven HMR watcher (#deck-hmr-graph-watch); extracting them would require pub-leaking Bundler internals.
 //! Replaces the bun worker: no child process, no JSON-line protocol. `Bundler`
-//! locates sui-compiler once, then `build`/`build_all` drive Rolldown
+//! locates sail-compiler once, then `build`/`build_all` drive Rolldown
 //! (`rolldown_bundle`) directly, and `start_watching` re-bundles affected
 //! targets on filesystem change (via `notify`), emitting `BundlerEvent`s on a
-//! broadcast channel for HMR. Output lands in `assets_dir_for` (sui-out/dist).
+//! broadcast channel for HMR. Output lands in `assets_dir_for` (under `.sail/`).
 
+pub mod dup_version_check;
 pub mod paths;
 pub mod tag_check;
 pub mod templates;
 
 pub mod app;
+
+/// Load Deck serve settings from the project's typed [`sail_lint::config::SailConfig`].
+///
+/// One parse of the file — the same document Policy / tokens generate read.
+pub fn load_app_serve(project: &std::path::Path) -> Result<deck_config::AppServeConfig, String> {
+    deck_config::refuse_legacy_deck_jsonc(project)?;
+    let Some((path, cfg)) = sail_lint::config::load_in(project) else {
+        return Ok(deck_config::AppServeConfig::default());
+    };
+    if !cfg.parse_ok() {
+        return Err(format!("parse {}: not valid JSON", path.display()));
+    }
+    if let Some(err) = cfg.type_error() {
+        return Err(format!("parse {}: {err}", path.display()));
+    }
+    Ok(app_serve_from_sail(&cfg))
+}
+
+fn app_serve_from_sail(cfg: &sail_lint::config::SailConfig) -> deck_config::AppServeConfig {
+    use deck_config::{AppServeConfig, EntryBootstrap, RenderMode};
+    let Some(d) = &cfg.deck else {
+        return AppServeConfig::default();
+    };
+    AppServeConfig {
+        inject_globals: d.inject_globals.clone().unwrap_or_default(),
+        render: match d.render {
+            Some(sail_lint::config::DeckRender::Ssr) => RenderMode::Ssr,
+            _ => RenderMode::Csr,
+        },
+        entry: d.entry.as_ref().map(|e| EntryBootstrap {
+            clients_module: e.clients_module.clone(),
+            expose_names: e.expose_names.clone(),
+        }),
+        ..AppServeConfig::default()
+    }
+}
+
+#[cfg(test)]
+mod load_app_serve_tests {
+    use super::load_app_serve;
+    use deck_config::{AppServeConfig, RenderMode};
+
+    #[test]
+    fn no_files_is_default() {
+        let dir = tempfile::tempdir().unwrap();
+        let cfg = load_app_serve(dir.path()).unwrap();
+        assert_eq!(cfg, AppServeConfig::default());
+    }
+
+    #[test]
+    fn deck_jsonc_is_migration_error() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("deck.jsonc"),
+            r#"{ "render": "ssr", "injectGlobals": { "A": "1" } }"#,
+        )
+        .unwrap();
+        let err = load_app_serve(dir.path()).unwrap_err();
+        assert!(
+            err.contains("deck.jsonc is no longer supported"),
+            "unexpected err: {err}"
+        );
+    }
+
+    #[test]
+    fn deck_jsonc_errors_even_when_sail_config_exists() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("deck.jsonc"), r#"{ "render": "ssr" }"#).unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{ "deck": { "render": "csr" }, "theme": { "default": "sail" } }"#,
+        )
+        .unwrap();
+        let err = load_app_serve(dir.path()).unwrap_err();
+        assert!(
+            err.contains("deck.jsonc is no longer supported"),
+            "unexpected err: {err}"
+        );
+    }
+
+    #[test]
+    fn nested_deck_serve_keys() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{ "deck": { "render": "ssr" }, "theme": { "default": "sail" } }"#,
+        )
+        .unwrap();
+        let cfg = load_app_serve(dir.path()).unwrap();
+        assert_eq!(cfg.render, RenderMode::Ssr);
+    }
+
+    /// No dual-read: top-level serve keys are ignored by the loader
+    /// (Sail refuses them as unknown keys; deck never migrates them).
+    #[test]
+    fn top_level_serve_keys_ignored() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{ "render": "ssr", "theme": { "default": "sail" } }"#,
+        )
+        .unwrap();
+        let cfg = load_app_serve(dir.path()).unwrap();
+        assert_eq!(
+            cfg,
+            AppServeConfig::default(),
+            "top-level render must not dual-read into serve config"
+        );
+    }
+
+    #[test]
+    fn theme_only_sail_is_default_serve() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{ "theme": { "default": "sail", "enabled": ["sail"] } }"#,
+        )
+        .unwrap();
+        let cfg = load_app_serve(dir.path()).unwrap();
+        assert_eq!(cfg, AppServeConfig::default());
+    }
+
+    #[test]
+    fn sail_entry_and_inject() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{
+  "deck": {
+    "render": "ssr",
+    "injectGlobals": { "DECK_APP_ID": "$id" },
+    "entry": { "clientsModule": "./src/clients.ts", "exposeNames": ["store"] }
+  }
+}"#,
+        )
+        .unwrap();
+        let cfg = load_app_serve(dir.path()).unwrap();
+        assert_eq!(cfg.render, RenderMode::Ssr);
+        assert_eq!(
+            cfg.inject_globals.get("DECK_APP_ID").map(String::as_str),
+            Some("$id")
+        );
+        let entry = cfg.entry.expect("entry");
+        assert_eq!(entry.clients_module, "./src/clients.ts");
+        assert_eq!(entry.expose_names, vec!["store"]);
+    }
+
+    #[test]
+    fn jsonc_preferred_over_json() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.json"),
+            r#"{ "deck": { "render": "ssr" } }"#,
+        )
+        .unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{ "deck": { "render": "csr" } }"#,
+        )
+        .unwrap();
+        let cfg = load_app_serve(dir.path()).unwrap();
+        assert_eq!(cfg.render, RenderMode::Csr, "jsonc wins when both exist");
+    }
+
+    #[test]
+    fn studio_fixture_is_csr_with_side_effect_entry() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{
+  "theme": { "default": "studio" },
+  "deck": {
+    "render": "csr",
+    "entry": {
+      "clientsModule": "./src/clients.ts",
+      "exposeNames": []
+    }
+  }
+}"#,
+        )
+        .unwrap();
+        let cfg = load_app_serve(dir.path()).unwrap();
+        assert_eq!(cfg.render, RenderMode::Csr);
+        let entry = cfg.entry.expect("entry");
+        assert_eq!(entry.clients_module, "./src/clients.ts");
+        assert!(entry.expose_names.is_empty());
+    }
+
+    #[test]
+    fn deck_must_be_object() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("sail.config.jsonc"), r#"{ "deck": "ssr" }"#).unwrap();
+        let err = load_app_serve(dir.path()).unwrap_err();
+        assert!(
+            err.contains("\"deck\" must be an object"),
+            "unexpected err: {err}"
+        );
+    }
+}
 // (formerly `mod asset_graph;`) — purged with the runtime `.deck/asset-graph.json` read.
+pub mod atomic;
 pub mod catalog;
 pub mod cem;
-pub mod emit;
-pub mod node_resolve;
-pub mod routes;
 pub mod compile;
+pub mod emit;
+pub mod fonts;
+pub mod icons;
+pub mod node_resolve;
 pub mod proto;
+pub mod publish;
 pub mod rolldown_bundle;
-pub(crate) mod sui_plugin;
+pub mod routes;
+pub mod routes_bundle;
+pub mod sail_plugin;
+pub mod ship_asset_css;
+pub mod stamp;
 pub mod targets;
-pub mod views_bundle;
 mod watch;
 
 use std::collections::HashMap;
@@ -33,25 +239,34 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use tokio::sync::{broadcast, Notify};
+use tokio::sync::{Notify, broadcast};
 use tracing::error;
-
 
 pub use proto::BundleManifest;
 // (formerly `use asset_graph::write_asset_graph;`) — purged.
-use targets::{BundleLayout, BundleTarget};
 pub use deck_config::DeckConfig;
+use targets::{BundleLayout, BundleTarget};
 
 /// Unsolicited events emitted while watching.
 #[derive(Debug, Clone)]
 pub enum BundlerEvent {
-    ModuleChanged { target: String, out_path: String, bytes: usize },
-    CompileError { target: String, message: String, line: Option<u32>, col: Option<u32>, file: Option<String> },
+    ModuleChanged {
+        target: String,
+        out_path: String,
+        bytes: usize,
+    },
+    CompileError {
+        target: String,
+        message: String,
+        line: Option<u32>,
+        col: Option<u32>,
+        file: Option<String>,
+    },
 }
 
 #[derive(Debug, thiserror::Error)]
 pub enum BundlerError {
-    #[error("sui-compiler not found (runtime dir or target/)")]
+    #[error("sail-compiler not found (runtime dir or target/)")]
     NoCompiler,
     #[error("unknown target: {0}")]
     UnknownTarget(String),
@@ -73,10 +288,10 @@ pub struct Bundler {
     /// cold-misses for the same target wait on the same `Notify` instead of
     /// each spinning a fresh `BundlerBuilder` + oxc module graph (the primary
     /// 470MB/min driver). Without this, N concurrent fanout lanes requesting
-    /// the same view → N full module graphs live simultaneously.
+    /// the same route → N full module graphs live simultaneously.
     in_flight: Arc<tokio::sync::Mutex<HashMap<String, Arc<Notify>>>>,
     /// Cached `all_targets()` snapshot (#256). `all_targets` re-reads every
-    /// `.sui` under the source roots; the watcher hit it on every FS event and
+    /// `.sail` under the source roots; the watcher hit it on every FS event and
     /// the build path on every request. Reuse one long-lived snapshot,
     /// invalidated only when a directory is created/removed (the watcher calls
     /// `invalidate_targets`).
@@ -89,9 +304,9 @@ pub struct Bundler {
 
 impl Bundler {
     /// Start the in-process bundler. `repo_root` is the monorepo/source root;
-    /// `workspace` the user-project (if distinct); `cfg` is the parsed
-    /// `deck.jsonc` (caller calls `DeckConfig::defaults()` first).
-    /// The compiler is the linked `sui-compiler` crate, compiled in-process
+    /// `workspace` the user-project (if distinct); `cfg` is the host
+    /// route-discovery layout (caller calls `DeckConfig::defaults()` first).
+    /// The compiler is the linked `sail-compiler` crate, compiled in-process
     /// (#255) — no binary to locate, no installed-vs-local drift.
     pub fn start(repo_root: PathBuf, workspace: Option<PathBuf>, cfg: DeckConfig) -> Self {
         let (event_tx, _) = broadcast::channel(128);
@@ -110,12 +325,16 @@ impl Bundler {
     }
 
     fn layout(&self) -> BundleLayout {
-        BundleLayout::with_config(self.repo_root.clone(), self.workspace.clone(), self.cfg.clone())
+        BundleLayout::with_config(
+            self.repo_root.clone(),
+            self.workspace.clone(),
+            self.cfg.clone(),
+        )
     }
 
     /// One long-lived `all_targets()` snapshot, computed on first use and
     /// reused until `invalidate_targets` clears it (#256). Cheap clone of the
-    /// shared `Arc<Vec<_>>` — the expensive per-`.sui` FS walk runs once per
+    /// shared `Arc<Vec<_>>` — the expensive per-`.sail` FS walk runs once per
     /// invalidation, not once per request/FS-event.
     fn targets_snapshot(&self) -> Arc<Vec<BundleTarget>> {
         {
@@ -130,7 +349,7 @@ impl Bundler {
     }
 
     /// Drop the cached target snapshot so the next `targets_snapshot` re-walks.
-    /// Called by the watcher when a directory is created/removed (a new view
+    /// Called by the watcher when a directory is created/removed (a new route
     /// may have appeared/disappeared).
     fn invalidate_targets(&self) {
         *self.targets_cache.lock().unwrap_or_else(|e| e.into_inner()) = None;
@@ -141,7 +360,7 @@ impl Bundler {
     /// second `BundlerBuilder`. The first caller registers a `Notify`, runs the
     /// build, then removes the entry and wakes every waiter. Waiters re-resolve
     /// the on-disk artifact themselves (this returns `Ok(None)` for them) — the
-    /// build wrote `view.js`, which is what they actually need.
+    /// build wrote `route.js`, which is what they actually need.
     ///
     /// Returns `Some(manifest)` for the task that performed the build, `None`
     /// for a coalesced waiter (the artifact is on disk either way).
@@ -182,17 +401,12 @@ impl Bundler {
 
         // Leader: run the one build, then clear the entry and wake all waiters.
         let layout = self.layout();
-        let result = rolldown_bundle::bundle_target(
-            &layout,
-            target,
-            &self.staging,
-            false,
-        )
-        .await
-        .map_err(|e| BundlerError::Bundle {
-            target: target_name.to_string(),
-            message: e.to_string(),
-        });
+        let result = rolldown_bundle::bundle_target(&layout, target, &self.staging, false)
+            .await
+            .map_err(|e| BundlerError::Bundle {
+                target: target_name.to_string(),
+                message: e.to_string(),
+            });
         if let Ok(ref manifest) = result {
             self.update_module_graph(&target_name, manifest.modules.iter().cloned().collect());
         }
@@ -206,14 +420,14 @@ impl Bundler {
 
     /// Build one named target.
     ///
-    /// Cold-misses from `serve_sui_view_setup` funnel through here; concurrent
+    /// Cold-misses from `serve_sail_route_setup` funnel through here; concurrent
     /// requests for the same target coalesce onto one build via
     /// `build_single_flight` (#256). A coalesced waiter doesn't get the
     /// leader's manifest, so we synthesize one pointing at the on-disk artifact
     /// — the handler only needs the bundle on disk, which the leader wrote.
     pub async fn build(&self, target: &str) -> Result<BundleManifest, BundlerError> {
         // Resolve the target from the cached snapshot. On a miss, refresh once
-        // (a just-created view won't be in a stale snapshot) and retry before
+        // (a just-created route won't be in a stale snapshot) and retry before
         // giving up.
         let t = match self.find_target(target) {
             Some(t) => t,
@@ -235,7 +449,10 @@ impl Bundler {
 
     /// Look up a target by name in the cached snapshot.
     fn find_target(&self, name: &str) -> Option<BundleTarget> {
-        self.targets_snapshot().iter().find(|t| t.name == name).cloned()
+        self.targets_snapshot()
+            .iter()
+            .find(|t| t.name == name)
+            .cloned()
     }
 
     /// Synthesize a manifest for a target whose artifact a concurrent leader
@@ -244,75 +461,57 @@ impl Bundler {
         use targets::TargetEntry;
         let out_dir = self.layout().assets_dir_for(&t.name);
         let out_path = out_dir.join(&t.out_file);
-        let bytes = std::fs::metadata(&out_path).map(|m| m.len() as usize).unwrap_or(0);
+        let bytes = std::fs::metadata(&out_path)
+            .map(|m| m.len() as usize)
+            .unwrap_or(0);
         BundleManifest {
             target: t.name.clone(),
             out_path: out_path.to_string_lossy().to_string(),
             bytes,
             inputs: match &t.entry {
                 TargetEntry::Real(p) => vec![p.to_string_lossy().to_string()],
-                TargetEntry::Virtual { sources } => {
-                    sources.iter().map(|p| p.to_string_lossy().to_string()).collect()
-                }
+                TargetEntry::Virtual { sources } => sources
+                    .iter()
+                    .map(|p| p.to_string_lossy().to_string())
+                    .collect(),
             },
             modules: vec![],
             dropped_side_effect_modules: vec![],
         }
     }
 
-    /// Build every target, then aggregate the catalog into `.deck/catalogs/`.
+    /// Build every target.
     ///
     /// Honest exit (#262): every target is attempted (one failure must not
-    /// abort the others — the catalog still needs refreshing), but per-target
-    /// failures are collected and surfaced as `Err` so a caller (the asset
-    /// bake, CI) cannot mistake a partial bake for a clean one.
+    /// abort the others), but per-target failures are collected and surfaced
+    /// as `Err` so a caller (the asset bake, CI) cannot mistake a partial bake
+    /// for a clean one.
     ///
     /// Dev loop skip-lazy gate: when the env var `DECK_DEV_SKIP_LAZY=1` is
     /// set, every consumer target whose self-declaration marks it `lazy` is
     /// skipped during the build. The dev loop page never imports the arcade
     /// or PDF packs (Pixi.js + pdfjs-dist together are ~4 MB of JS that the
-    /// browser heap retains even though no view references them; this is the
+    /// browser heap retains even though no route references them; this is the
     /// 400 MB dev-loop reading measured 2026-06-06). Production builds
-    /// (`cargo run -p deck-cli -- build-assets` for the dist, or any consumer that
+    /// (`cargo run -p deck-cli --bin deck-bake -- build-assets` for the dist, or any consumer that
     /// explicitly wants the full asset graph) leave the env var unset and
     /// every target emits as before — the gate is a manual dev lever, so the
     /// default bake is identical whether a target is eager or lazy.
     pub async fn build_all(&self) -> Result<(), BundlerError> {
         let layout = self.layout();
         let mut failed: Vec<String> = Vec::new();
-        let mut built: Vec<BundleTarget> = Vec::new();
-        // Step 0: regenerate the view route/meta tables
-        // (`<bucket>/routes.gen.ts` + `<bucket>/meta.gen.ts`) for every
-        // discovered view bucket. This is the framework-owned home for the
-        // view tables — folded out of the dev-only Justfile `gen-routes`
-        // recipe so a fresh clone + `build-assets` produces them with no
-        // manual `deck routes --views` step. `view_bucket_dirs()` is the SAME
-        // bucket list the view-target scan walks (`discover_view_bundles`) —
-        // one source of truth for "where views live", no second hardcoded path.
-        // The watch path ignores `.gen.ts`, so these writes can't self-trigger
-        // a rebuild loop. Failures are collected (honest exit), not aborted.
-        for views_dir in layout.view_bucket_dirs() {
-            let label = views_dir
-                .file_name()
-                .map(|n| n.to_string_lossy().into_owned())
-                .unwrap_or_else(|| "views".to_string());
-            if let Err(e) = crate::routes::generate_view_artifacts(&views_dir, &label) {
-                error!(bucket = %views_dir.display(), error = %e, "bundler: view route/meta gen failed");
-                failed.push(format!("view-tables {} ({e})", views_dir.display()));
-            }
-        }
-        // Per-view resolver (#255/#267): bundle the view targets TOGETHER
-        // (multi-entry) so components shared across views dedup into shared
+        // Per-route resolver (#255/#267): bundle the route targets TOGETHER
+        // (multi-entry) so components shared across routes dedup into shared
         // chunks — the dedup that replaces the umbrella. Everything else stays
-        // per-target. `build_all` is the bake path (xtask build-assets), so the
+        // per-target. `build_all` is the bake path (`deck build-assets`), so the
         // larger multi-entry graph is a one-shot peak, not a daemon-resident cost.
         let mut views: Vec<BundleTarget> = Vec::new();
         let skip_lazy = std::env::var("DECK_DEV_SKIP_LAZY")
             .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
             .unwrap_or(false);
-        // Reuse the cached snapshot instead of re-walking every `.sui` (#256).
+        // Reuse the cached snapshot instead of re-walking every `.sail` (#256).
         for t in self.targets_snapshot().iter() {
-            if t.name.starts_with("views/") {
+            if t.name.starts_with("routes/") {
                 views.push(t.clone());
                 continue;
             }
@@ -328,7 +527,7 @@ impl Bundler {
                 continue;
             }
             // `production: true` — build_all IS the bake path (deck-cli /
-            // xtask build-assets), so emit minified bundles (#297: the
+            // `deck build-assets`), so emit minified bundles (#297: the
             // framework singletons shipped 188KB raw because the bake left
             // rolldown's `minify` off). Dev rebuilds (`build` single-flight,
             // watch) stay unminified for debuggability. No source maps are
@@ -341,22 +540,20 @@ impl Bundler {
                 }
                 Ok(manifest) => {
                     self.update_module_graph(&t.name, manifest.modules.iter().cloned().collect());
-                    built.push(t.clone());
                 }
             }
         }
-        // View targets together (shared-chunk dedup). Atomic: one bad view fails
-        // the whole view bundle — the bake must not ship a broken view.
+        // Route targets together (shared-chunk dedup). Atomic: one bad route fails
+        // the whole route bundle — the bake must not ship a broken route.
         if !views.is_empty() {
-            match crate::views_bundle::bundle_views(&layout, &views, &self.staging, true).await {
-                Ok(()) => built.extend(views),
+            match crate::routes_bundle::bundle_routes(&layout, &views, &self.staging, true).await {
+                Ok(()) => {}
                 Err(e) => {
-                    error!(error = %e, "bundler: multi-entry view bundle failed");
+                    error!(error = %e, "bundler: multi-entry route bundle failed");
                     failed.push(format!("views ({e})"));
                 }
             }
         }
-        self.refresh_catalog(&layout);
         // (formerly `write_asset_graph(&layout, &built);`) — purged:
         // the framework no longer writes a monorepo-root
         // `.deck/asset-graph.json` (deck-purge-root). The asset-graph SSOT
@@ -370,16 +567,6 @@ impl Bundler {
                 message: failed.join(", "),
             })
         }
-    }
-    fn refresh_catalog(&self, layout: &BundleLayout) {
-        // (formerly wrote `<repo_root>/.deck/catalogs/workspace.json`)
-        // — purged: the framework no longer writes a monorepo-root
-        // `.deck/catalogs/` (deck-purge-root). The workspace catalog was
-        // served via `packs::serve_catalog_workspace`, which was also
-        // removed. The `catalog::build_catalog` walker stays available
-        // for hosts that want to compute the catalog in-memory for
-        // their own devtools; it just does not get written to disk.
-        let _ = layout;
     }
 
     /// Subscribe to unsolicited build events (HMR).
@@ -420,15 +607,15 @@ impl Bundler {
     }
     pub(crate) fn invalidate_targets_for_watch(&self) {
         self.invalidate_targets();
-        // A structural change (a `.sui` CREATE) may have ADDED or removed a
+        // A structural change (a `.sail` CREATE) may have ADDED or removed a
         // component; the tag→source CEM index is memoized process-globally, so
         // clear it too — otherwise a component authored mid-session resolves to a
         // virtual no-op until restart (the `component_index` staleness hazard).
-        crate::sui_plugin::invalidate_component_index();
+        crate::sail_plugin::invalidate_component_index();
     }
     /// Rebuild one target from the watcher, COALESCED through the same
     /// single-flight gate the on-demand `build` path uses. A watcher rebuild of
-    /// `views/git/view` must not run a second `BundlerBuilder` concurrently with
+    /// `routes/git/route` must not run a second `BundlerBuilder` concurrently with
     /// an on-demand build of the same target — that's the cross-build collision
     /// class. Route through `build_single_flight`; a coalesced waiter gets the
     /// on-disk manifest the leader wrote (same fallback as `build`).
@@ -466,16 +653,20 @@ impl Bundler {
         let g = self.module_graph.lock().unwrap_or_else(|e| e.into_inner());
         let names = watch::targets_for_module(&g, path);
         let snap = self.targets_snapshot();
-        names.into_iter()
+        names
+            .into_iter()
             .filter_map(|name| snap.iter().find(|t| t.name == name).cloned())
             .collect()
     }
 
-    pub(crate) fn view_bucket_dirs_for_watch(&self) -> Vec<PathBuf> {
-        self.layout().view_bucket_dirs()
+    pub(crate) fn route_bucket_dirs_for_watch(&self) -> Vec<PathBuf> {
+        self.layout().route_bucket_dirs()
     }
 
-    pub(crate) fn target_for_entry_path_for_watch(&self, path: &Path) -> Option<targets::BundleTarget> {
+    pub(crate) fn target_for_entry_path_for_watch(
+        &self,
+        path: &Path,
+    ) -> Option<targets::BundleTarget> {
         use targets::TargetEntry;
         self.targets_snapshot()
             .iter()

@@ -1,0 +1,519 @@
+{
+  "$description": "Studio workbench — warm charcoal dark, coral accent, compact density dogfood.",
+  "$extensions": {
+    "sail": {
+      "layer": "theme",
+      "themeId": "studio",
+      "defaultMode": "dark",
+      "density": "default"
+    }
+  },
+  "modes": {
+    "light": {
+      "color": {
+        "brandAccent": {
+          "default": {
+            "$value": "oklch(0.68 0.16 32)",
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.18 0.02 48)",
+            "$type": "color"
+          }
+        },
+        "background": {
+          "$value": "oklch(0.975 0.002 106)",
+          "$type": "color"
+        },
+        "border": {
+          "default": {
+            "$value": "oklch(0.147 0.004 49 / 25%)",
+            "$type": "color"
+          },
+          "strong": {
+            "$value": "color-mix(in oklch, var(--foreground) 55%, transparent)",
+            "$type": "color"
+          },
+          "subtle": {
+            "$value": "color-mix(in oklch, var(--border) 60%, transparent)",
+            "$type": "color"
+          }
+        },
+        "foreground": {
+          "$value": "oklch(0.147 0.004 49)",
+          "$type": "color"
+        },
+        "muted": {
+          "default": {
+            "$value": "oklch(0.95 0.003 106)",
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.40 0.02 58)",
+            "$type": "color"
+          }
+        },
+        "primary": {
+          "default": {
+            "$value": "oklch(0.72 0.17 38)",
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.18 0.02 48)",
+            "$type": "color"
+          }
+        },
+        "ring": {
+          "default": {
+            "$value": "oklch(0.72 0.17 38 / 35%)",
+            "$type": "color"
+          }
+        },
+        "surface": {
+          "0": {
+            "$value": "oklch(0.97 0.004 80)",
+            "$type": "color"
+          },
+          "1": {
+            "$value": "oklch(1 0 0)",
+            "$type": "color"
+          },
+          "2": {
+            "$value": "oklch(1 0 0)",
+            "$type": "color"
+          },
+          "3": {
+            "$value": "oklch(1 0 0)",
+            "$type": "color"
+          },
+          "overlay": {
+            "$value": "none",
+            "$type": "string"
+          },
+          "overlay-blend": {
+            "$value": "normal",
+            "$type": "string"
+          },
+          "overlay-opacity": {
+            "$value": "1",
+            "$type": "number"
+          }
+        },
+        "syntax": {
+          "keyword": {
+            "$value": "oklch(0.48 0.18 32)",
+            "$type": "color"
+          },
+          "string": {
+            "$value": "oklch(0.42 0.14 152)",
+            "$type": "color"
+          },
+          "number": {
+            "$value": "oklch(0.42 0.14 250)",
+            "$type": "color"
+          },
+          "function": {
+            "$value": "oklch(0.45 0.16 305)",
+            "$type": "color"
+          },
+          "type": {
+            "$value": "oklch(0.42 0.14 200)",
+            "$type": "color"
+          },
+          "tag": {
+            "$value": "oklch(0.45 0.16 20)",
+            "$type": "color"
+          },
+          "attr": {
+            "$value": "oklch(0.48 0.14 60)",
+            "$type": "color"
+          },
+          "comment": {
+            "$value": "oklch(0.55 0.02 70)",
+            "$type": "color"
+          },
+          "variable": {
+            "$value": "{foreground}",
+            "$type": "color"
+          }
+        }
+      },
+      "typography": {
+        "body": {
+          "font": {
+            "$value": "{font-body}",
+            "$type": "fontFamily"
+          }
+        },
+        "font": {
+          "body": {
+            "$value": "{font-body}",
+            "$type": "fontFamily"
+          }
+        },
+        "heading": {
+          "font": {
+            "$value": "Fraunces, ui-serif, Georgia, serif",
+            "$type": "fontFamily"
+          },
+          "tracking": {
+            "$value": "{tracking-tight}",
+            "$type": "dimension"
+          },
+          "weight": {
+            "$value": "{font-weight-semibold}",
+            "$type": "number"
+          }
+        },
+        "label": {
+          "font": {
+            "$value": "{font-body}",
+            "$type": "fontFamily"
+          },
+          "tracking": {
+            "$value": "0.08em",
+            "$type": "dimension"
+          },
+          "weight": {
+            "$value": "{font-weight-semibold}",
+            "$type": "number"
+          }
+        }
+      },
+      "radius": {
+        "md": {
+          "$value": "6px",
+          "$type": "dimension"
+        },
+        "sm": {
+          "$value": "4px",
+          "$type": "dimension"
+        }
+      },
+      "shadow": {
+        "accent": {
+          "$value": "0 0 0 3px oklch(0.67 0.16 58 / 18%), 0 8px 24px -6px oklch(0.67 0.16 58 / 30%)",
+          "$type": "shadow"
+        },
+        "card-rest": {
+          "$value": "0 1px 2px 0 oklch(0 0 0 / 4%), 0 0 0 1px oklch(0 0 0 / 3%)",
+          "$type": "shadow"
+        },
+        "hover": {
+          "$value": "0 8px 22px -4px oklch(0.55 0.10 58 / 14%), 0 2px 6px oklch(0 0 0 / 6%)",
+          "$type": "shadow"
+        },
+        "lg": {
+          "$value": "0 14px 32px -6px oklch(0.55 0.10 58 / 16%), 0 4px 12px oklch(0 0 0 / 8%)",
+          "$type": "shadow"
+        },
+        "md": {
+          "$value": "0 6px 18px -4px oklch(0.55 0.10 58 / 12%), 0 2px 6px oklch(0 0 0 / 6%)",
+          "$type": "shadow"
+        },
+        "sm": {
+          "$value": "0 2px 4px -1px oklch(0.55 0.10 58 / 9%), 0 1px 2px oklch(0 0 0 / 4%)",
+          "$type": "shadow"
+        },
+        "xs": {
+          "$value": "0 1px 2px 0 oklch(0.55 0.10 58 / 6%), 0 0 0 1px oklch(0 0 0 / 3%)",
+          "$type": "shadow"
+        }
+      },
+      "component": {
+        "card": {
+          "backdrop-filter": {
+            "$value": "none",
+            "$type": "string"
+          },
+          "texture": {
+            "$value": "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E\")",
+            "$type": "string"
+          },
+          "texture-blend": {
+            "$value": "overlay",
+            "$type": "string"
+          },
+          "texture-opacity": {
+            "$value": "1",
+            "$type": "number"
+          },
+          "fg": {
+            "$value": "oklch(0.147 0.004 49)",
+            "$type": "color"
+          },
+          "bg": {
+            "$value": "oklch(1 0 0)",
+            "$type": "color"
+          }
+        }
+      },
+      "$extensions": {
+        "sail": {
+          "dark": false
+        }
+      },
+      "interaction": {
+        "selected": {
+          "strength": {
+            "$value": "14%",
+            "$type": "number"
+          }
+        }
+      }
+    },
+    "dark": {
+      "$extensions": {
+        "sail": {
+          "dark": true
+        }
+      },
+      "color": {
+        "brandAccent": {
+          "default": {
+            "$value": "oklch(0.68 0.16 32)",
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.18 0.02 48)",
+            "$type": "color"
+          }
+        },
+        "background": {
+          "$value": "oklch(0.17 0.014 48)",
+          "$type": "color"
+        },
+        "border": {
+          "default": {
+            "$value": "oklch(0.92 0.01 70 / 12%)",
+            "$type": "color"
+          },
+          "strong": {
+            "$value": "oklch(0.92 0.01 70 / 22%)",
+            "$type": "color"
+          },
+          "subtle": {
+            "$value": "oklch(0.92 0.01 70 / 8%)",
+            "$type": "color"
+          }
+        },
+        "foreground": {
+          "$value": "oklch(0.96 0.008 70)",
+          "$type": "color"
+        },
+        "muted": {
+          "default": {
+            "$value": "oklch(0.22 0.012 48)",
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.72 0.02 55)",
+            "$type": "color"
+          }
+        },
+        "primary": {
+          "default": {
+            "$value": "oklch(0.72 0.17 38)",
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.18 0.02 48)",
+            "$type": "color"
+          }
+        },
+        "ring": {
+          "default": {
+            "$value": "oklch(0.72 0.17 38 / 35%)",
+            "$type": "color"
+          }
+        },
+        "surface": {
+          "0": {
+            "$value": "oklch(0.15 0.012 48)",
+            "$type": "color"
+          },
+          "1": {
+            "$value": "oklch(0.20 0.013 48)",
+            "$type": "color"
+          },
+          "2": {
+            "$value": "oklch(0.24 0.014 48)",
+            "$type": "color"
+          },
+          "3": {
+            "$value": "oklch(0.28 0.015 48)",
+            "$type": "color"
+          },
+          "overlay": {
+            "$value": "none",
+            "$type": "string"
+          },
+          "overlay-blend": {
+            "$value": "normal",
+            "$type": "string"
+          },
+          "overlay-opacity": {
+            "$value": "1",
+            "$type": "number"
+          }
+        },
+        "syntax": {
+          "keyword": {
+            "$value": "oklch(0.78 0.14 32)",
+            "$type": "color"
+          },
+          "string": {
+            "$value": "oklch(0.78 0.12 152)",
+            "$type": "color"
+          },
+          "number": {
+            "$value": "oklch(0.80 0.12 250)",
+            "$type": "color"
+          },
+          "function": {
+            "$value": "oklch(0.80 0.14 305)",
+            "$type": "color"
+          },
+          "type": {
+            "$value": "oklch(0.78 0.12 200)",
+            "$type": "color"
+          },
+          "tag": {
+            "$value": "oklch(0.78 0.14 20)",
+            "$type": "color"
+          },
+          "attr": {
+            "$value": "oklch(0.78 0.12 60)",
+            "$type": "color"
+          },
+          "comment": {
+            "$value": "oklch(0.58 0.03 70)",
+            "$type": "color"
+          },
+          "variable": {
+            "$value": "{foreground}",
+            "$type": "color"
+          }
+        }
+      },
+      "typography": {
+        "body": {
+          "font": {
+            "$value": "{font-body}",
+            "$type": "fontFamily"
+          }
+        },
+        "font": {
+          "body": {
+            "$value": "{font-body}",
+            "$type": "fontFamily"
+          }
+        },
+        "heading": {
+          "font": {
+            "$value": "Fraunces, ui-serif, Georgia, serif",
+            "$type": "fontFamily"
+          },
+          "tracking": {
+            "$value": "{tracking-tight}",
+            "$type": "dimension"
+          },
+          "weight": {
+            "$value": "{font-weight-semibold}",
+            "$type": "number"
+          }
+        },
+        "label": {
+          "font": {
+            "$value": "{font-body}",
+            "$type": "fontFamily"
+          },
+          "tracking": {
+            "$value": "{tracking-normal}",
+            "$type": "dimension"
+          },
+          "weight": {
+            "$value": "{font-weight-semibold}",
+            "$type": "number"
+          }
+        }
+      },
+      "radius": {
+        "md": {
+          "$value": "6px",
+          "$type": "dimension"
+        },
+        "sm": {
+          "$value": "4px",
+          "$type": "dimension"
+        }
+      },
+      "interaction": {
+        "selected": {
+          "strength": {
+            "$value": "18%",
+            "$type": "number"
+          }
+        }
+      },
+      "shadow": {
+        "accent": {
+          "$value": "0 0 0 3px oklch(0.77 0.16 70 / 22%), 0 8px 24px -6px oklch(0.77 0.16 70 / 38%)",
+          "$type": "shadow"
+        },
+        "card-rest": {
+          "$value": "0 1px 2px 0 oklch(0.05 0.02 48 / 35%), 0 0 0 1px oklch(1 0 0 / 4%)",
+          "$type": "shadow"
+        },
+        "hover": {
+          "$value": "0 8px 22px -4px oklch(0.10 0.04 48 / 50%), 0 2px 6px oklch(0 0 0 / 35%)",
+          "$type": "shadow"
+        },
+        "lg": {
+          "$value": "0 14px 32px -6px oklch(0.10 0.04 48 / 60%), 0 4px 12px oklch(0 0 0 / 40%)",
+          "$type": "shadow"
+        },
+        "md": {
+          "$value": "0 6px 18px -4px oklch(0.10 0.04 48 / 55%), 0 2px 6px oklch(0 0 0 / 35%)",
+          "$type": "shadow"
+        },
+        "sm": {
+          "$value": "0 2px 6px -1px oklch(0.10 0.04 48 / 50%), 0 0 0 1px oklch(1 0 0 / 4%)",
+          "$type": "shadow"
+        },
+        "xs": {
+          "$value": "0 1px 2px 0 oklch(0 0 0 / 5%)",
+          "$type": "shadow"
+        }
+      },
+      "component": {
+        "card": {
+          "backdrop-filter": {
+            "$value": "none",
+            "$type": "string"
+          },
+          "texture": {
+            "$value": "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E\")",
+            "$type": "string"
+          },
+          "texture-blend": {
+            "$value": "overlay",
+            "$type": "string"
+          },
+          "texture-opacity": {
+            "$value": "1",
+            "$type": "number"
+          },
+          "fg": {
+            "$value": "oklch(0.98 0.001 106)",
+            "$type": "color"
+          },
+          "bg": {
+            "$value": "oklch(0.205 0.0172 48)",
+            "$type": "color"
+          }
+        }
+      }
+    }
+  }
+}

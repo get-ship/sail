@@ -1,8 +1,8 @@
-// ssr-entry.ts — the SERVER ENTRY: render a synthesized SUI view to an HTML
+// ssr-entry.ts — the SERVER ENTRY: render a synthesized SAIL view to an HTML
 // string INSIDE ship-js (a deno_core/V8 isolate), with route + data resolved
 // over the host-dispatch wire — never the browser.
 //
-// The server DOM lives in `@ship/sui-runtime/server` (`installServerDom`) — a
+// The server DOM lives in `@ship/sail-runtime/server` (`installServerDom`) — a
 // shared, tested module, not an inline shim. Installing it as
 // `globalThis.document` lets the SAME synthesized render that runs in the
 // browser (`createElement`, `appendChild`, `bindText`, `bindFor`, …) run here
@@ -12,7 +12,7 @@
 // `import "ship"` is the one door: `call(op, args)` is the host-dispatch wire
 // (`op_ship_call` → the host's `Dispatch`), `emit(v)` surfaces the result.
 
-import { installServerDom } from '@ship/sui-runtime'
+import { installServerDom, whenCacheSettled } from '@ship/sail-runtime'
 import { mount } from './page.render.ts'
 import { call, emit } from 'ship'
 
@@ -28,21 +28,27 @@ g.__shipServerRoute = route
 const container = dom.container()
 const dispose = mount(container)
 
-// Flush async `live()` sources before serializing (must-build #5):
-// a `<data live source="api.x()">` resolves over the host-dispatch wire — an
-// async op. Mounting renders the `loading` state synchronously; the wire's
-// in-flight counter (`globalThis.__shipPending()`, maintained by the SDK's
-// `call`) lets us drain DETERMINISTICALLY: keep yielding while host calls are
-// outstanding, then a few quiet turns so each resolved op's `.then` → live
-// signal `.set` → bound effect → server-DOM write completes. Bounded so a
-// never-resolving source can't hang first paint.
-const pending = (g.__shipPending as undefined | (() => number)) ?? (() => 0)
-let quiet = 0
-for (let i = 0; i < 1000 && quiet < 3; i++) {
-  await Promise.resolve()
-  if (pending() > 0) quiet = 0
-  else quiet++
-}
+// Flush async data sources before serializing (must-build #5): a controller
+// `query(() => client.x())` resolves over the host-dispatch wire — an async
+// op. Mounting renders the `loading` state synchronously.
+// `whenCacheSettled()` (native-cache.ts) is the DETERMINISTIC completion
+// signal: the cache brackets every PULL fetch from start to the moment its
+// outcome is written into the entry's signal (cache entry `.set` → forwarding
+// effect → outer signal `.set` → bound template effect → server-DOM write is
+// synchronous inside that write, per the signal's own `flush()`), so once the
+// promise resolves, first paint is guaranteed to reflect it — no macrotask-
+// count-and-hope, no race with which queue a host op's completion lands on.
+// Bounded so a source that never resolves (host never answers, or a stuck
+// retry backoff) can't hang first paint forever: race against a deadline and
+// serialize on `loading` if it fires first. 2s is generous for SSR-scoped
+// host-dispatch (an in-process handler, not a real network hop).
+const SETTLE_DEADLINE_MS = 2000
+const g2 = globalThis as { setTimeout?: (fn: () => void, ms: number) => unknown }
+const deadline = new Promise<void>((resolve) => {
+  if (typeof g2.setTimeout === 'function') g2.setTimeout(resolve, SETTLE_DEADLINE_MS)
+  else resolve() // no timers in this isolate: nothing to bound against, don't hang
+})
+await Promise.race([whenCacheSettled(), deadline])
 const html = dom.html(container)
 dispose()
 

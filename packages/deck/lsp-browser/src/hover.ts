@@ -1,16 +1,13 @@
-// Browser-side hover harness for .sui templates.
+// Browser-side hover harness for .sail templates.
 //
-// v2a: static dictionary lookups for directives / modifiers / block
-// keywords. Zero-bundle hover. Covers ~80% of pedagogically useful
-// hover queries an editor user will make (what does `on:click|self`
-// do, what does `{#while-loading}` do).
-//
-// v2b (lazy): identifier resolution via oxc-parser-wasm — kicked off
-// on first editor focus or tutorial nav so first-hover latency is
-// near-zero. Not yet wired here; the worker's hover endpoint falls
-// back to v2a until preloadIdentifiers() succeeds.
+// Static dictionary lookups for directives / modifiers / block keywords,
+// sourced from the compiler's own vocabulary tables via WASM. This replaces
+// every hand-maintained copy in this file with the same data the parser
+// renders in its unknown-directive errors and the docs tables derive from.
 
-export interface SuiHoverInfo {
+import initWasm, { completion_vocabulary } from '@ship/sail-compiler-wasm'
+
+export interface SailHoverInfo {
   /** Markdown — rendered in the editor's hover tooltip. */
   contents: string
   /** Optional 1-based range to highlight in the editor when the
@@ -18,111 +15,70 @@ export interface SuiHoverInfo {
   range?: { line: number; column: number; endColumn?: number }
 }
 
-interface Entry {
-  /** Display label in the hover. */
-  signature: string
-  /** Plain prose, markdown allowed. */
-  doc: string
-  /** Where to learn more — rendered as a "see also" link. */
-  see?: string
+interface WasmVocabulary {
+  modifiers: Array<{
+    canonical: string
+    alias?: string
+    arg?: string
+    summary: string
+  }>
+  blocks: Array<{ open: string; clauses: string[]; summary: string }>
+  directives: Array<{ syntax: string; summary: string }>
+  foreign_idioms: Array<{ syntax: string; instead: string }>
 }
 
-const DIRECTIVES: Record<string, Entry> = {
-  'on:': {
-    signature: '`on:<event>={handler}`',
-    doc: 'Bind a DOM event listener. `<event>` is any DOM event name (`click`, `input`, `submit`, …) or a custom event (`sui-change`, `sui-tab-change`). Compose with `|<modifier>` pipes to wrap the handler.',
-    see: 'docs/ship-sui/references/docs/template.md#events',
-  },
-  'bind:': {
-    signature: '`bind:<target>={signal}`',
-    doc: 'Two-way binding. `bind:value` mirrors a `<input>`/`<select>`/`<textarea>` value into the signal and back; `bind:checked` for checkboxes; `bind:this` captures the DOM element ref into the signal.',
-    see: 'docs/ship-sui/references/tutorial/06-bind-value/',
-  },
-  'prop:': {
-    signature: '`prop:<name>={expr}`',
-    doc: 'One-way assignment to a DOM property (not attribute). Use when the property and attribute diverge (`<input prop:value={…}>` vs the attribute).',
-  },
-  'class:': {
-    signature: '`class:<name>={truthy}`',
-    doc: 'Conditional class toggle. Adds the class when the expression is truthy, removes it otherwise. Composes with `class=` (static classes survive).',
-    see: 'docs/ship-sui/references/tutorial/14-class-style/',
-  },
-  'style:': {
-    signature: '`style:<--var>={value}`',
-    doc: 'Set a CSS custom property (or any CSS property) from an expression. Most useful for `style:--my-var={…}` so component CSS reading `var(--my-var)` picks up the value.',
-    see: 'docs/ship-sui/references/tutorial/14-class-style/',
-  },
+const WASM_URL = '/sail_compiler_bg.wasm'
+
+let vocab: WasmVocabulary | null = null
+let initDone: Promise<void> | null = null
+
+function ensureInit(): Promise<void> {
+  if (!initDone) {
+    initDone = (async () => {
+      await initWasm(WASM_URL)
+      vocab = completion_vocabulary() as WasmVocabulary
+    })()
+  }
+  return initDone
 }
 
-const MODIFIERS: Record<string, Entry> = {
-  preventDefault: {
-    signature: '`|preventDefault`',
-    doc: 'Calls `e.preventDefault()` before the handler runs. Common on `<form on:submit>` to take over submission from the browser.',
-  },
-  prevent: { signature: '`|prevent`', doc: 'Shorthand for `|preventDefault`.' },
-  stopPropagation: {
-    signature: '`|stopPropagation`',
-    doc: 'Calls `e.stopPropagation()` before the handler runs.',
-  },
-  stop: { signature: '`|stop`', doc: 'Shorthand for `|stopPropagation`.' },
-  stopImmediatePropagation: {
-    signature: '`|stopImmediatePropagation`',
-    doc: 'Calls `e.stopImmediatePropagation()` — also skips remaining listeners on this element.',
-  },
-  self: {
-    signature: '`|self`',
-    doc: 'Only fires when `e.target === e.currentTarget`. Useful for "click outside content" patterns.',
-  },
-  trusted: {
-    signature: '`|trusted`',
-    doc: 'Only fires when `e.isTrusted` — real user input, not programmatic dispatch.',
-  },
-  key: {
-    signature: '`|key:<KeyName>`',
-    doc: 'Filter `keydown`/`keyup`/`keypress` to a specific `e.key` value. Examples: `key:Enter`, `key:Escape`, `key:ArrowUp`.',
-  },
-  debounce: {
-    signature: '`|debounce:<ms>`',
-    doc: 'Trailing-edge debounce. Suppresses calls within the window; fires once after silence.',
-  },
-  throttle: {
-    signature: '`|throttle:<ms>`',
-    doc: 'Leading-edge throttle. Fires immediately, then ignores subsequent calls within the window.',
-  },
-}
-
-const BLOCKS: Record<string, Entry> = {
-  'if': {
-    signature: '`{#if expr}…{:else if expr}…{:else}…{/if}`',
-    doc: 'Conditional rendering. Branches mount/unmount as the expression flips. Effects + refs in the inactive branch are torn down.',
-    see: 'docs/ship-sui/references/tutorial/05-bind-if/',
-  },
-  'for': {
-    signature: '`{#for item of items() key={item.id}}…{/for}`',
-    doc: 'Keyed list reconciliation. The `key` expression tracks identity across reorders. Per-field reactivity means each row only re-renders when *its* fields change.',
-    see: 'docs/ship-sui/references/tutorial/03-bindfor/',
-  },
-  'while-loading': {
-    signature: '`{#while-loading of <liveSignal>}…{/while-loading}`',
-    doc: 'Mounts the body while the live signal is in `kind: "loading"` state. Boundary primitive — unmounts when the envelope transitions away from loading.',
-    see: 'docs/ship-sui/references/tutorial/23-while-loading/',
-  },
-  'while-error': {
-    signature: '`{#while-error err of <liveSignal>}…{/while-error}`',
-    doc: 'Mounts while the live signal is in `kind: "error"` state. Inside the body, `err` is the unwrapped `{ message }` value.',
-  },
-  else: { signature: '`{:else}`', doc: 'Else branch of an enclosing `{#if}` block.' },
-  'else if': { signature: '`{:else if expr}`', doc: 'Else-if branch of an enclosing `{#if}` block.' },
-}
+// Lazy — do NOT top-level await (breaks framework singleton bake + importmap).
 
 const TAG_ATTR_RE = /([\w:-]+)(?=\s*=|\s|$)/g
+
+function blockName(open: string): string {
+  // Element form: `<if {…}>` / brace form: `{#if}`
+  const s = open.replace(/^\{#/, '').replace(/^</, '')
+  return s.split(/[\s{>/]/)[0] ?? s
+}
+
+function clauseName(clause: string): string {
+  // Arms: `{else => …}` / `{loading => …}` — take the head keyword.
+  const s = clause.replace(/^\{:?/, '').trim()
+  return s.split(/[\s=>]/)[0] ?? s
+}
+
+function directivePrefix(syntax: string): string {
+  // Attribute directives: `on:<event>...`, `bind:value / ...`, plain fields,
+  // `sx="..."`, `slot="name"`, `<slot name="...">`, etc.
+  const attr = syntax.match(/^<?[\w:-]+/)
+  if (attr) return attr[0]
+  // Fallback for shapes like `(--name)` inside sx values.
+  return syntax.split(/\s/)[0]!
+}
 
 /**
  * Resolve a hover query at `offset` against the source text. Returns
  * static doc if the cursor is over a recognized directive, modifier,
  * or block keyword; null otherwise.
  */
-export function hoverAt(source: string, offset: number): SuiHoverInfo | null {
+export function hoverAt(source: string, offset: number): SailHoverInfo | null {
+  // Sync path for editor tooltips — vocab may still be loading; return null
+  // until ready rather than throwing (would break hoverTooltip).
+  if (!vocab) {
+    void ensureInit()
+    return null
+  }
   if (offset < 0 || offset > source.length) return null
 
   // Walk back over identifier chars only (and `:` so `on:click` and
@@ -139,36 +95,71 @@ export function hoverAt(source: string, offset: number): SuiHoverInfo | null {
   // 1. Directive prefix (on:, bind:, prop:, class:, style:). The
   //    token here will already include the trailing `:` (`on:`,
   //    `on:click`, etc.) so prefix-match is enough.
-  for (const prefix of Object.keys(DIRECTIVES)) {
+  for (const d of vocab.directives) {
+    const prefix = directivePrefix(d.syntax)
     if (token === prefix || token.startsWith(prefix)) {
-      return renderEntry(DIRECTIVES[prefix]!)
+      return renderEntry(d.syntax, d.summary)
+    }
+  }
+
+  // 1b. Foreign idioms (class:, style:, …) — teach the sail way.
+  for (const d of vocab.foreign_idioms) {
+    const prefix = d.syntax.replace(':', ':').split(' ')[0]!
+    if (token === prefix || token.startsWith(prefix)) {
+      return renderEntry(d.syntax, `**Foreign idiom.** ${d.instead}`)
     }
   }
 
   // 2. Modifier — preceded by `|`. e.g. `on:submit|preventDefault`,
   //    cursor in `preventDefault`, source[start-1] === '|'.
   if (start > 0 && source[start - 1] === '|') {
-    if (MODIFIERS[token]) return renderEntry(MODIFIERS[token]!)
-    // `key:Enter` → look up base `key`; same for debounce/throttle.
     const base = token.includes(':') ? token.slice(0, token.indexOf(':')) : token
-    if (MODIFIERS[base]) return renderEntry(MODIFIERS[base]!)
+    for (const m of vocab.modifiers) {
+      if (m.canonical === base || m.alias === base) {
+        const sig = m.arg ? `|${m.canonical}:<${m.arg}>` : `|${m.canonical}`
+        return renderEntry(sig, m.summary)
+      }
+    }
   }
 
-  // 3. Block keyword — preceded by `{#` or `{:`.
-  //    `{#while-loading}` → cursor in `while-loading`,
-  //    source[start-2..start] === '{#'.
+  // 3. Block keyword — element open `<match`, brace `{#if}`, arm `{else`.
+  if (start >= 1 && source[start - 1] === '<') {
+    for (const b of vocab.blocks) {
+      if (blockName(b.open) === token) {
+        const clauses = b.clauses.join(' ')
+        const sig = `${b.open}${clauses ? ` … ${clauses}` : ''}`
+        return renderEntry(sig, b.summary)
+      }
+    }
+  }
   if (start >= 2) {
     const sigil = source.slice(start - 2, start)
     if (sigil === '{#' || sigil === '{:') {
-      if (BLOCKS[token]) return renderEntry(BLOCKS[token]!)
+      for (const b of vocab.blocks) {
+        if (sigil === '{#' && blockName(b.open) === token) {
+          const clauses = b.clauses.join(' ')
+          const sig = `${b.open}${clauses ? ` … ${clauses}` : ''}`
+          return renderEntry(sig, b.summary)
+        }
+        if (sigil === '{:' && b.clauses.some((c) => clauseName(c) === token)) {
+          const sig = `${sigil}${token}`
+          return renderEntry(sig, b.summary)
+        }
+      }
+    }
+  }
+  // Arm head inside `{loading => …}` / `{else => …}` (no preceding `#`/`: `).
+  if (start >= 1 && source[start - 1] === '{') {
+    for (const b of vocab.blocks) {
+      if (b.clauses.some((c) => clauseName(c) === token || c.includes(token))) {
+        return renderEntry(b.open, b.summary)
+      }
     }
   }
 
   return null
 }
 
-function renderEntry(entry: Entry): SuiHoverInfo {
-  let contents = `${entry.signature}\n\n${entry.doc}`
-  if (entry.see) contents += `\n\n**See also**: \`${entry.see}\``
-  return { contents }
+function renderEntry(signature: string, doc: string): SailHoverInfo {
+  return { contents: `${signature}\n\n${doc}` }
 }

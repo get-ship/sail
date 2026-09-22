@@ -1,7 +1,7 @@
 //! Run the bundle in ship-js and collect the first-paint HTML.
 //!
 //! A `JsRuntime` is `!Send`, so the run happens on a dedicated current-thread
-//! VM thread; the caller blocks on it. The production view-host would instead
+//! VM thread; the caller blocks on it. The production route-host would instead
 //! pool `ship_js::deno::ScriptExecutor` threads (one isolate live per thread),
 //! awaiting their `Send` reply futures — a fresh isolate per request, pooled
 //! across VM threads. This single-shot path is the unit the pool repeats.
@@ -9,7 +9,7 @@
 //! **Bounded:** every run carries a [`RunLimits`] (wall-clock + heap cap). A
 //! runaway controller — infinite loop, stuck host op, unbounded allocation —
 //! is **terminated** and `render` returns an `Err`, so the SSR gate
-//! (`deck_core::synthetic_ssr`) serves an empty `#sui-root` for the client to
+//! (`deck_core::synthetic_ssr`) serves an empty `#sail-root` for the client to
 //! mount (CSR; the error is logged loudly) rather than 500ing the request or
 //! wedging the daemon. The bound is configurable
 //! per-call (`render_with_limits`) or host-wide via `SHIP_JS_DEADLINE_MS` /
@@ -25,10 +25,11 @@
 
 use std::sync::Arc;
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use serde_json::Value;
-use ship_js::deno::{run_module_with_limits, RunLimits};
 use ship_js::Dispatch;
+use ship_js::deno::{RunLimits, run_module_with_limits};
+use ship_js::dispatch::{CancellationToken, SesPolicy};
 
 use crate::host::SsrDispatch;
 use crate::{RenderOut, SHIP_SDK};
@@ -42,7 +43,7 @@ pub fn render(bundle: &str, dispatch: Arc<SsrDispatch>) -> Result<RenderOut> {
 }
 
 /// Render `bundle` once with an explicit `limits` bound. Use this when a host
-/// wants to tune the wall-clock / heap cap per request (e.g. a richer view
+/// wants to tune the wall-clock / heap cap per request (e.g. a richer route
 /// getting more time) rather than relying on the env defaults.
 pub fn render_with_limits(
     bundle: &str,
@@ -56,14 +57,31 @@ pub fn render_with_limits(
         dispatch.clone(),
         move |b, d| async move {
             let host: Arc<dyn Dispatch> = d;
-            // ship-exec v2 added op/module allow-lists to run_module_with_limits;
-            // deck-ssr imposes no allow-list (None, None) — same behavior as before.
-            run_module_with_limits(host, None, None, SHIP_SDK.to_string(), b, limits)
-                .await
-                .map_err(|e| anyhow!("run_module: {e:?}"))
+            // ship-exec grew per-run gates (allow-lists, expression policy,
+            // compartments, module cache, cancellation, SES). deck-ssr wants
+            // the "no gate" semantics ship-js's own `run_module` wrapper uses:
+            // no lists/policy/compartment/cache, a fresh (un-cancelled) token,
+            // SES off — behavior-identical to before the signature grew.
+            run_module_with_limits(
+                host,
+                None, // op_allow_list
+                None, // module_allow_list
+                None, // expression_policy
+                None, // compartment_id
+                None, // module_cache_key
+                CancellationToken::new(),
+                SesPolicy::Off,
+                SHIP_SDK.to_string(),
+                b,
+                limits,
+            )
+            .await
+            .map_err(|e| anyhow!("run_module: {e:?}"))
         },
     )?;
-    let first = emits.first().ok_or_else(|| anyhow!("ssr entry emitted nothing"))?;
+    let first = emits
+        .first()
+        .ok_or_else(|| anyhow!("ssr entry emitted nothing"))?;
     Ok(RenderOut {
         html: first["html"].as_str().unwrap_or_default().to_string(),
         route_params: first["routeParams"].clone(),
@@ -91,5 +109,3 @@ where
         .join()
         .map_err(|_| anyhow!("SSR VM thread panicked"))?
 }
-
-

@@ -1,0 +1,100 @@
+{
+  "apps/studio/test/studio-shell.e2e.spec.ts": {
+    "emit": 2
+  },
+  "crates/sail/compiler/src/bin/sail-compiler.rs": {
+    "site_fixture": 2
+  },
+  "crates/sail/compiler/src/check/mount_ambient_shadow.rs": {
+    "site_fixture": 1
+  },
+  "crates/sail/compiler/src/check/tscheck.rs": {
+    "site_fixture": 5
+  },
+  "crates/sail/compiler/src/profile.rs": {
+    "site_fixture": 5
+  },
+  "crates/sail/compiler/tests/anonymous_diag_ratchet.rs": {
+    "pin": 1
+  },
+  "crates/sail/compiler/tests/channel_discipline.rs": {
+    "parked_test": 1
+  },
+  "crates/sail/compiler/tests/channel_integrity.rs": {
+    "parked_test": 2
+  },
+  "crates/sail/compiler/tests/check_all.rs": {
+    "parked_test": 1
+  },
+  "crates/sail/compiler/tests/common/mod.rs": {
+    "pin": 1
+  },
+  "crates/sail/compiler/tests/controller_scope_port_tsc.rs": {
+    "parked_test": 2
+  },
+  "crates/sail/compiler/tests/diag_spec_probes.rs": {
+    "parked_test": 1,
+    "pin": 1
+  },
+  "crates/sail/compiler/tests/diag_spec_registry.rs": {
+    "pin": 3
+  },
+  "crates/sail/compiler/tests/diagnostic_id_drift.rs": {
+    "parked_test": 1
+  },
+  "crates/sail/compiler/tests/element_mode.rs": {
+    "parked_test": 1
+  },
+  "crates/sail/compiler/tests/fixture_law.rs": {
+    "parked_test": 1
+  },
+  "crates/sail/compiler/tests/fmt_roundtrip.rs": {
+    "pin": 17
+  },
+  "crates/sail/compiler/tests/for_as_binder.rs": {
+    "parked_test": 1
+  },
+  "crates/sail/compiler/tests/golden.rs": {
+    "parked_test": 1,
+    "pin": 22
+  },
+  "crates/sail/compiler/tests/layout_seeds.rs": {
+    "pin": 1
+  },
+  "crates/sail/compiler/tests/snapshot.rs": {
+    "pin": 3
+  },
+  "crates/sail/compiler/tests/style_privilege.rs": {
+    "site_fixture": 27
+  },
+  "crates/sail/compiler/tests/type_gate_tsc_parity.rs": {
+    "site_fixture": 2
+  },
+  "crates/sail/spinnaker/src/surface.rs": {
+    "site_fixture": 8
+  },
+  "crates/sail/spinnaker/tests/layout_canary.rs": {
+    "pin": 1
+  },
+  "packages/components/sail/primitives/src/sail-calendar/engine/date-math.test.ts": {
+    "stay_green": 1
+  },
+  "packages/sail/runtime/test/collapsible-toast-behaviors.test.ts": {
+    "emit": 1
+  },
+  "packages/sail/runtime/test/described-control.test.ts": {
+    "emit": 2
+  },
+  "packages/sail/runtime/test/resizable-action.test.ts": {
+    "emit": 1
+  },
+  "packages/sail/runtime/test/syntax-highlight-action.test.ts": {
+    "emit": 2
+  },
+  "packages/sail/sail-test/test/app-surface.test.ts": {
+    "emit": 1
+  },
+  "packages/sail/tokens/test/tokens.test.ts": {
+    "tombstone": 3
+  }
+}

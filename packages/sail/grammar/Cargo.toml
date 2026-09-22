@@ -1,0 +1,38 @@
+[package]
+name = "tree-sitter-sail"
+description = "Tree-sitter grammar for the SAIL .sail template format"
+version = "0.1.0"
+authors = ["Sail"]
+license = "MIT"
+readme = "README.md"
+keywords = ["incremental", "parsing", "tree-sitter", "sail"]
+categories = ["parser-implementations", "parsing", "text-editors"]
+edition = "2021"
+autoexamples = false
+
+build = "bindings/rust/build.rs"
+include = [
+  "bindings/rust/*",
+  "grammar.js",
+  "queries/*",
+  "src/*",
+  "tree-sitter.json",
+  "/LICENSE",
+]
+
+[lib]
+path = "bindings/rust/lib.rs"
+
+[dependencies]
+tree-sitter-language = "0.1"
+tree-sitter = "0.26.8"
+
+[build-dependencies]
+cc = "1.2"
+
+[dev-dependencies]
+# Anti-drift check only (bindings/rust/tests/block_vocabulary.rs): read the
+# compiler's own block_manifest::BLOCKS table and fail the build if
+# grammar.js's block/clause vocabulary has drifted from it. Not used by the
+# generated parser itself.
+sail-compiler = { path = "../../../crates/sail/compiler" }

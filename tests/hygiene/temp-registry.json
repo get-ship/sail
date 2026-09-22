@@ -1,0 +1,226 @@
+{
+  "schema": 1,
+  "productVersion": "0.0.0",
+  "expiryModes": {
+    "never": "KEEP rows (teaching, living policy, false-friend English).",
+    "date": "ISO YYYY-MM-DD. Expired when today >= date.",
+    "condition": "Named flag in `conditions`. Expired when the flag is true.",
+    "version": "Semver threshold. Expired when productVersion >= version."
+  },
+  "conditions": {
+    "after-spinnaker-cut": true
+  },
+  "markers": [
+    {
+      "id": "legacy",
+      "re": "\\blegacy\\b"
+    },
+    {
+      "id": "deprecated",
+      "re": "\\bdeprecated\\b"
+    },
+    {
+      "id": "compat",
+      "re": "\\bcompat\\b"
+    },
+    {
+      "id": "transitional",
+      "re": "\\btransitional\\b"
+    },
+    {
+      "id": "migration",
+      "re": "\\bmigration\\b"
+    },
+    {
+      "id": "TODO remove",
+      "re": "TODO remove"
+    },
+    {
+      "id": "keep for now",
+      "re": "keep for now"
+    },
+    {
+      "id": "old path",
+      "re": "old path"
+    },
+    {
+      "id": "shim",
+      "re": "\\bshim\\b"
+    },
+    {
+      "id": "backwards",
+      "re": "\\bbackwards\\b"
+    },
+    {
+      "id": "alias for",
+      "re": "alias for"
+    }
+  ],
+  "entries": [
+    {
+      "id": "product-changelog",
+      "kind": "keep",
+      "verdict": "KEEP",
+      "reason": "Public digest of shipped changes; history still lives in git.",
+      "paths": [
+        "CHANGELOG.md"
+      ],
+      "expires": {
+        "never": true
+      }
+    },
+    {
+      "id": "gitignore-paired-controller-window",
+      "kind": "keep",
+      "verdict": "KEEP",
+      "reason": "Documents the generated .controller.ts ignore rule, not a product compat path.",
+      "paths": [
+        ".gitignore"
+      ],
+      "markers": [
+        "migration"
+      ],
+      "expires": {
+        "never": true
+      }
+    },
+    {
+      "id": "foreign-idiom-keypress-teaching",
+      "kind": "guidance",
+      "verdict": "KEEP",
+      "reason": "Foreign-idiom / event-name teaching (prefer keydown). Permanent, not own-API compat.",
+      "paths": [
+        "crates/sail/compiler/src/directive_manifest.rs"
+      ],
+      "markers": [
+        "deprecated"
+      ],
+      "expires": {
+        "never": true
+      }
+    },
+    {
+      "id": "css-fill-mode-backwards",
+      "kind": "keep",
+      "verdict": "KEEP",
+      "reason": "CSS animation-fill-mode keyword `backwards`, not sediment.",
+      "paths": [
+        "crates/sail/compiler/src/animation/mod.rs"
+      ],
+      "markers": [
+        "backwards"
+      ],
+      "expires": {
+        "never": true
+      }
+    },
+    {
+      "id": "spatial-backwards-scan",
+      "kind": "keep",
+      "verdict": "KEEP",
+      "reason": "Scan-direction adverb in a comment, not a compat path.",
+      "paths": [
+        "crates/sail/lint/src/rules/surface_not_card.rs"
+      ],
+      "markers": [
+        "backwards"
+      ],
+      "expires": {
+        "never": true
+      }
+    },
+    {
+      "id": "living-cmd-meta-alias",
+      "kind": "keep",
+      "verdict": "KEEP",
+      "reason": "Live keyboard modifier alias (cmd ≡ meta), product behavior.",
+      "paths": [
+        "packages/sail/runtime/test/on.test.ts"
+      ],
+      "markers": [
+        "alias for"
+      ],
+      "expires": {
+        "never": true
+      }
+    },
+    {
+      "id": "living-package-path-alias",
+      "kind": "keep",
+      "verdict": "KEEP",
+      "reason": "Authored package specifier mapped to a monorepo path; not a retired API.",
+      "paths": [
+        "crates/sail/lsp/src/tsgo.rs"
+      ],
+      "markers": [
+        "shim",
+        "alias for"
+      ],
+      "expires": {
+        "never": true
+      }
+    },
+    {
+      "id": "import-rewrite-alias-prose",
+      "kind": "keep",
+      "verdict": "KEEP",
+      "reason": "Comment about rewriting alias import forms to the SSOT specifier.",
+      "paths": [
+        "packages/components/sail/viewer/src/same-doc-mount.ts"
+      ],
+      "markers": [
+        "alias for"
+      ],
+      "expires": {
+        "never": true
+      }
+    },
+    {
+      "id": "route-client-alias-vocab",
+      "kind": "keep",
+      "verdict": "KEEP",
+      "reason": "Live route `<client name>` vocabulary, not a retired dual name.",
+      "paths": [
+        "crates/deck/deck-conformance/src/data_port.rs"
+      ],
+      "markers": [
+        "legacy",
+        "alias for"
+      ],
+      "expires": {
+        "never": true
+      }
+    },
+    {
+      "id": "test-isolation-shims",
+      "kind": "keep",
+      "verdict": "KEEP",
+      "reason": "Test/harness isolation modules (runtime-shim, rAF, bun-as-node). Not product compat.",
+      "paths": [
+        "crates/sail/compiler-napi/src/lib.rs",
+        "crates/sail/compiler/tests/ambient_app_tsc.rs",
+        "crates/sail/compiler/tests/for_match_row_reactivity_jsdom.rs",
+        "crates/sail/compiler/tests/parity.rs",
+        "crates/sail/compiler/tests/synthetic_client_jsdom.rs",
+        "crates/sail/compiler/tests/synthetic_client_tsc.rs",
+        "crates/sail/compiler/tests/synthetic_jsdom.rs",
+        "crates/sail/compiler/tests/synthetic_tsc.rs",
+        "crates/deck/deck-axum/src/lib.rs",
+        "crates/deck/deck-axum/src/render_helpers.rs",
+        "crates/deck/deck-bundler/tests/g3_wasm_compile.ts",
+        "crates/deck/deck-ssr/ssr/ssr-entry.ts",
+        "packages/deck/router/src/scroll-restoration.ts",
+        "packages/deck/router/src/server.ts",
+        "packages/sail/dom/src/setup-loader.ts",
+        "packages/sail/runtime/src/error-overlay.ts",
+        "packages/sail/test-setup/src/vitest.ts"
+      ],
+      "markers": [
+        "shim"
+      ],
+      "expires": {
+        "never": true
+      }
+    }
+  ]
+}

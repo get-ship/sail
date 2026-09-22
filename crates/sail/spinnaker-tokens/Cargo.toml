@@ -1,0 +1,27 @@
+[package]
+name = "spinnaker-tokens"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "DTCG token engine: model → registry → CSS. Compiler depends on this crate."
+build = "build.rs"
+
+[lib]
+name = "spinnaker_tokens"
+path = "src/lib.rs"
+
+[build-dependencies]
+# none — bake is local
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true, features = ["preserve_order"] }
+anyhow = { workspace = true }
+sail-lint = { path = "../lint" }
+spinnaker = { path = "../spinnaker" }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[lints]
+workspace = true

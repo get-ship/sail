@@ -1,0 +1,37 @@
+{
+  "service": "SailTheme",
+  "method": "Read",
+  "mcp_tool": "sail_theme_read",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "path"
+    ]
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ThemeReadRet",
+    "type": "object",
+    "required": [
+      "content",
+      "ok",
+      "path"
+    ],
+    "properties": {
+      "content": {
+        "type": "string"
+      },
+      "ok": {
+        "type": "boolean"
+      },
+      "path": {
+        "type": "string"
+      }
+    }
+  }
+}

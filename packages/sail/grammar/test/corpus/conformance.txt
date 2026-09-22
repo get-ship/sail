@@ -1,0 +1,226 @@
+==================
+conformance smoke: full live surface in one document
+==================
+
+<video poster="/agents.png" src="/agents.mp4" autoplay/>
+
+<div class="ship-view agents-view">
+  <link rel="stylesheet" href="/_sail/views/agents/view.css">
+  <header class="agents-head">
+    <h1 class="agents-title">Agents</h1>
+    <p class="agents-sub">{total()} agent{total() === 1 ? '' : 's'}</p>
+    <ship-button tone="primary" variant="solid"
+                 on:click={() => navigate('/agents/create')}
+>
+      style({ animate: { enter: play(fade) } })
+      <ship-icon slot="leading" name="plus"></ship-icon>
+      New agent
+    </ship-button>
+  </header>
+
+  <match on={agents}>
+    {loading => <p class="loading-copy" data-test="loading">Loading agents&hellip;</p>}
+    {error as err => <p class="loading-copy" data-test="error">Error loading agents: {err.message}</p>}
+    {ok as value =>
+      <if cond={items().length === 0}>
+        <ship-empty-state icon="sparkles" variant="default" size="lg" data-test="empty">
+          <span slot="title">No agents yet</span>
+        </ship-empty-state>
+      <else>
+        <div class="agents-grid" data-view-enter data-test="grid" hidden={items().length === 0}>
+          <for as="a" of={items()} key={a.id}>
+            <ship-list-tile variant="card" navigable={'/agents/' + a.id} use:hoverCard>
+              <span class="agents-card-letter">{a.letter}</span>
+              <if cond={a.providers && a.providers.length > 0}>
+                <div class="agents-card-providers">
+                  <for as="p" of={a.providers.slice(0, 4)}>
+                    <ship-provider-blob provider={p} title={p}></ship-provider-blob>
+                  </for>
+                </div>
+              </if>
+            </ship-list-tile>
+          </for>
+        </div>
+      </else></if>
+    }
+  </match>
+</div>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (static_attr
+      name: (attr_name)
+      value: (string_literal))
+    (static_attr
+      name: (attr_name)
+      value: (string_literal))
+    (boolean_attr
+      (attr_name)))
+  (element
+    tag: (tag_name)
+    (static_attr
+      name: (attr_name)
+      value: (string_literal))
+    (element
+      tag: (tag_name)
+      (static_attr
+        name: (attr_name)
+        value: (string_literal))
+      (static_attr
+        name: (attr_name)
+        value: (string_literal)))
+    (element
+      tag: (tag_name)
+      (static_attr
+        name: (attr_name)
+        value: (string_literal))
+      (element
+        tag: (tag_name)
+        (static_attr
+          name: (attr_name)
+          value: (string_literal))
+        (text)
+        close_tag: (tag_name))
+      (element
+        tag: (tag_name)
+        (static_attr
+          name: (attr_name)
+          value: (string_literal))
+        (interpolation
+          (identifier))
+        (text)
+        (interpolation
+          (identifier))
+        close_tag: (tag_name))
+      (element
+        tag: (tag_name)
+        (static_attr
+          name: (attr_name)
+          value: (string_literal))
+        (static_attr
+          name: (attr_name)
+          value: (string_literal))
+        (event_attr
+          event: (attr_local)
+          handler: (brace_expression
+            (identifier)))
+        (text)
+        (interpolation
+          (identifier))
+        (text)
+        (element
+          tag: (tag_name)
+          (static_attr
+            name: (attr_name)
+            value: (string_literal))
+          (static_attr
+            name: (attr_name)
+            value: (string_literal))
+          close_tag: (tag_name))
+        (text)
+        close_tag: (tag_name))
+      close_tag: (tag_name))
+    (match_block
+      (control_open)
+      (dynamic_attr
+        name: (attr_name)
+        value: (brace_expression
+          (identifier)))
+      (interpolation
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier))
+      (interpolation
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier))
+      (interpolation
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier))
+      (control_close))
+    close_tag: (tag_name)))

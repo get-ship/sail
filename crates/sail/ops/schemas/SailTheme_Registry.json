@@ -1,0 +1,73 @@
+{
+  "service": "SailTheme",
+  "method": "Registry",
+  "mcp_tool": "sail_theme_registry",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "model": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "section": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "workspace": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ThemeRegistryRet",
+    "type": "object",
+    "required": [
+      "catalog",
+      "contrastPairs",
+      "metadata",
+      "ok",
+      "schema"
+    ],
+    "properties": {
+      "catalog": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "contrastPairs": {
+        "$ref": "#/definitions/Json"
+      },
+      "metadata": {
+        "$ref": "#/definitions/Json"
+      },
+      "ok": {
+        "type": "boolean"
+      },
+      "registry": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Json"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "schema": {
+        "type": "string"
+      }
+    },
+    "definitions": {
+      "Json": {}
+    }
+  }
+}

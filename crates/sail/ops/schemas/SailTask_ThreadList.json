@@ -1,0 +1,69 @@
+{
+  "service": "SailTask",
+  "method": "ThreadList",
+  "mcp_tool": "sail_task_thread_list",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "actor": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "drift": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "label": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "open": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "project": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "status": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "TaskThreadListRet",
+    "type": "object",
+    "required": [
+      "ok",
+      "tasks"
+    ],
+    "properties": {
+      "ok": {
+        "type": "boolean"
+      },
+      "tasks": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Json"
+        }
+      }
+    },
+    "definitions": {
+      "Json": {}
+    }
+  }
+}

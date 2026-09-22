@@ -1,0 +1,12 @@
+{
+  // Full catalog — the matrix probe sweeps THEME_META, not a site allowlist.
+  "theme": {
+    "default": "sail",
+    "defaultMode": "light",
+    "enabled": "all"
+  },
+  "deck": {
+    "render": "csr"
+  },
+  "raw_containers": true
+}

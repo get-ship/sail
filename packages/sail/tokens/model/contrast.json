@@ -1,0 +1,69 @@
+{
+  "$description": "High-contrast variant any theme can fulfill. Mode-keyed values follow color-scheme (sail is the demo host).",
+  "$extensions": {
+    "sail": {
+      "selector": ":root[data-contrast='high']",
+      "layer": "contrast"
+    }
+  },
+  "color": {
+    "background": {
+      "$value": {
+        "light": { "space": "oklch", "l": 1, "c": 0, "h": 0 },
+        "dark": { "space": "oklch", "l": 0.06, "c": 0, "h": 0 }
+      },
+      "$type": "color"
+    },
+    "foreground": {
+      "$value": {
+        "light": { "space": "oklch", "l": 0.08, "c": 0, "h": 0 },
+        "dark": { "space": "oklch", "l": 0.99, "c": 0, "h": 0 }
+      },
+      "$type": "color"
+    },
+    "muted": {
+      "default": {
+        "$value": {
+          "light": { "space": "oklch", "l": 0.92, "c": 0, "h": 0 },
+          "dark": { "space": "oklch", "l": 0.16, "c": 0, "h": 0 }
+        },
+        "$type": "color"
+      },
+      "foreground": {
+        "$value": {
+          "light": { "space": "oklch", "l": 0.18, "c": 0, "h": 0 },
+          "dark": { "space": "oklch", "l": 0.92, "c": 0, "h": 0 }
+        },
+        "$type": "color"
+      }
+    },
+    "border": {
+      "default": {
+        "$value": {
+          "light": { "space": "oklch", "l": 0.08, "c": 0, "h": 0 },
+          "dark": { "space": "oklch", "l": 0.99, "c": 0, "h": 0 }
+        },
+        "$type": "color"
+      },
+      "strong": {
+        "$value": {
+          "light": { "space": "oklch", "l": 0.08, "c": 0, "h": 0 },
+          "dark": { "space": "oklch", "l": 0.99, "c": 0, "h": 0 }
+        },
+        "$type": "color"
+      },
+      "subtle": {
+        "$value": {
+          "light": { "space": "oklch", "l": 0.08, "c": 0, "h": 0, "a": 0.72 },
+          "dark": { "space": "oklch", "l": 0.99, "c": 0, "h": 0, "a": 0.72 }
+        },
+        "$type": "color"
+      }
+    }
+  },
+  "interaction": {
+    "hover": { "strength": { "$value": "16%", "$type": "number" } },
+    "active": { "strength": { "$value": "24%", "$type": "number" } },
+    "selected": { "strength": { "$value": "32%", "$type": "number" } }
+  }
+}

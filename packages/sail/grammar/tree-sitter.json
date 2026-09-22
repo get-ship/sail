@@ -1,0 +1,38 @@
+{
+  "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/config.schema.json",
+  "grammars": [
+    {
+      "name": "sail",
+      "camelcase": "Sail",
+      "scope": "source.sail",
+      "path": ".",
+      "file-types": [
+        "sail"
+      ],
+      "highlights": "queries/highlights.scm",
+      "injections": "queries/injections.scm",
+      "injection-regex": "^sail$",
+      "abi": 15
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "license": "MIT",
+    "description": "Tree-sitter grammar for the Sail .set single-file component format",
+    "authors": [
+      {
+        "name": "Sail"
+      }
+    ]
+  },
+  "bindings": {
+    "c": false,
+    "go": false,
+    "java": false,
+    "node": true,
+    "python": false,
+    "rust": true,
+    "swift": false,
+    "zig": false
+  }
+}

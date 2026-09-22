@@ -15,7 +15,7 @@ export interface DeckResponse {
   contentType: string;
   cachePolicy: CachePolicy;
   body: Uint8Array | string;
-  /** Extra headers (e.g. X-Sui-View, Location). Security headers are added by `htmlView`. */
+  /** Extra headers (e.g. Location). Security headers are added by `html_route`. */
   extraHeaders: Array<[string, string]>;
 }
 
@@ -34,7 +34,7 @@ export const HTML_SECURITY_HEADERS: ReadonlyArray<readonly [string, string]> = [
   ["X-Content-Type-Options", "nosniff"],
   [
     "Content-Security-Policy",
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'self'",
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https:; connect-src 'self'; frame-ancestors 'self'",
   ],
 ];
 
@@ -72,7 +72,7 @@ function toBytes(body: Uint8Array | string): Uint8Array {
 export function jsAsset(body: Uint8Array | string): DeckResponse {
   return { status: 200, contentType: CT_JS, cachePolicy: "asset", body, extraHeaders: [] };
 }
-export function jsView(body: Uint8Array | string): DeckResponse {
+export function js_route(body: Uint8Array | string): DeckResponse {
   return { status: 200, contentType: CT_JS, cachePolicy: "view", body, extraHeaders: [] };
 }
 export function cssAsset(body: Uint8Array | string): DeckResponse {
@@ -91,8 +91,8 @@ export function jsonAsset(value: unknown): DeckResponse {
 export function jsonNoCache(value: unknown): DeckResponse {
   return { status: 200, contentType: CT_JSON, cachePolicy: "none", body: JSON.stringify(value), extraHeaders: [] };
 }
-/** HTML view — the single mint point that appends HTML_SECURITY_HEADERS. */
-export function htmlView(body: Uint8Array | string): DeckResponse {
+/** HTML route — the single mint point that appends HTML_SECURITY_HEADERS. */
+export function html_route(body: Uint8Array | string): DeckResponse {
   return {
     status: 200,
     contentType: CT_HTML,

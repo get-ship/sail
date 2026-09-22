@@ -11,7 +11,7 @@
   <!-- Design tokens served by the daemon — the same stylesheet the view
        host links, so this page picks up the active theme's palette, radii,
        typography, and spacing. Every rule below reads `var(--token)`; no
-       raw color/hex/px literals (sui-css-literals discipline). -->
+       raw color/hex/px literals (sail-css-literals discipline). -->
   <link rel="stylesheet" href="/api/assets/view-tokens.css" />
 
   <style>
@@ -118,12 +118,12 @@
   <main class="nf-wrap">
     <section class="nf-card" role="alert">
       <p class="nf-code">404 — view not found</p>
-      <h1 class="nf-title">No view named <span class="nf-name"><!-- SUI_NF_NAME --></span></h1>
+      <h1 class="nf-title">No view named <span class="nf-name"><!-- SAIL_NF_NAME --></span></h1>
       <p class="nf-message">
         The daemon could not resolve a view for this route. Check the name, or
         pick one of the views it can serve below.
       </p>
-      <!-- SUI_NF_ROUTES -->
+      <!-- SAIL_NF_ROUTES -->
       <a class="nf-back" href="/">&larr; back to Ship</a>
     </section>
   </main>

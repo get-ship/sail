@@ -1,9 +1,9 @@
 //! The serve-path SSR renderer — the [`deck_core::synthetic_ssr::SyntheticSsr`]
 //! implementation deck-ssr registers into deck-core's gated seam.
 //!
-//! deck-core declares the result ("first-paint HTML for this view + request");
+//! deck-core declares the result ("first-paint HTML for this route + request");
 //! this owns the procedure: locate the app manifest + sibling controller
-//! relative to the source `.sui`, synthesize + Rolldown-bundle (mtime-cached on
+//! relative to the source `.sail`, synthesize + Rolldown-bundle (mtime-cached on
 //! the source), then run the bundle in a POOLED isolate ([`ScriptPool`], not
 //! single-shot [`crate::run`]) with route + data resolved over the
 //! host-dispatch wire.
@@ -19,27 +19,30 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::SystemTime;
 
-use anyhow::{anyhow, Result};
-use deck_core::synthetic_ssr::{SsrRequest, SyntheticSsr};
+use anyhow::{Result, anyhow};
 use deck_core::DataPort;
+use deck_core::synthetic_ssr::{SsrRequest, SyntheticSsr};
+use sail_compiler::CompileMode;
+use sail_compiler::emit::synthetic::AppManifest;
 use ship_js::Dispatch;
-use sui_compiler::emit::synthetic::AppManifest;
-use sui_compiler::CompileMode;
 
-use crate::build::{repo_root, synthesize_and_bundle_with, ClientAlias};
+use crate::SHIP_SDK;
+use crate::build::{ClientAlias, repo_root, synthesize_and_bundle_with};
 use crate::host::SsrDispatch;
 use crate::pool::ScriptPool;
-use crate::SHIP_SDK;
 
-/// Construct + register the ship-js SSR renderer into deck-core's gated seam.
-/// Call once at host startup. `data` is the host's live data surface — the
-/// `<data>`/`<client>` op resolver; pass `None` for a route-only host.
-pub fn register(data: Option<Arc<dyn DataPort>>) -> Result<()> {
-    deck_core::synthetic_ssr::register(ShipJsSsr::new(data)?);
-    Ok(())
+/// Construct the ship-js SSR renderer as a MOUNT-SCOPED handle — an
+/// `Arc<dyn SyntheticSsr>` the host layers as an axum `Extension` and the serve
+/// path threads per-request. NOT a process-global `register` install (that
+/// global was removed for `inv-deck-mount-scoped-resolution`), so one process
+/// can carry different (or no) engines per mount. `data` is the host's live
+/// data surface — the controller's query()/client op resolver; pass `None` for a
+/// route-only host.
+pub fn engine(data: Option<Arc<dyn DataPort>>) -> Result<Arc<dyn SyntheticSsr>> {
+    Ok(Arc::new(ShipJsSsr::new(data)?))
 }
 
-/// One cached bundle, keyed by the source `.sui`'s mtime.
+/// One cached bundle, keyed by the source `.sail`'s mtime.
 struct BundleEntry {
     mtime: SystemTime,
     bundle: Arc<String>,
@@ -66,7 +69,7 @@ impl ShipJsSsr {
     }
 
     /// The bundled ES module for `source`, mtime-cached. A source whose mtime
-    /// advanced is a MISS and is re-synthesized, so an edited view is never
+    /// advanced is a MISS and is re-synthesized, so an edited route is never
     /// stale-pinned (mirrors deck-core's SPLIT_CACHE/SSR_CACHE gate).
     fn bundle_for(&self, source: &Path) -> Result<Arc<String>> {
         let mtime = std::fs::metadata(source).and_then(|m| m.modified()).ok();
@@ -81,12 +84,18 @@ impl ShipJsSsr {
         let bundle = Arc::new(self.synth_bundle(source)?);
         if let Some(mt) = mtime {
             let mut cache = self.cache.lock().unwrap_or_else(|e| e.into_inner());
-            cache.insert(source.to_path_buf(), BundleEntry { mtime: mt, bundle: bundle.clone() });
+            cache.insert(
+                source.to_path_buf(),
+                BundleEntry {
+                    mtime: mt,
+                    bundle: bundle.clone(),
+                },
+            );
         }
         Ok(bundle)
     }
 
-    /// Synthesize + Rolldown-bundle one view. Discovers the app manifest +
+    /// Synthesize + Rolldown-bundle one route. Discovers the app manifest +
     /// sibling controller relative to `source`; aliases the manifest's
     /// `@app/*` clients to their `.server.ts` entries.
     fn synth_bundle(&self, source: &Path) -> Result<String> {
@@ -96,16 +105,19 @@ impl ShipJsSsr {
             .parent()
             .ok_or_else(|| anyhow!("manifest has no parent dir"))?
             .to_path_buf();
-        let view_rel = rel(&self.repo, source)?;
+        let route_rel = rel(&self.repo, source)?;
         let manifest_rel = rel(&self.repo, &manifest_path)?;
         let authored = sibling_controller(source);
         let aliases = client_aliases(&app_dir)?;
-        let build_dir = self.repo.join("target/deck-ssr-serve").join(sanitize(&view_rel));
+        let build_dir = self
+            .repo
+            .join("target/deck-ssr-serve")
+            .join(sanitize(&route_rel));
         let repo = self.repo.clone();
         on_worker(true, move || async move {
             synthesize_and_bundle_with(
                 &repo,
-                &view_rel,
+                &route_rel,
                 &manifest_rel,
                 CompileMode::Component,
                 authored.as_deref(),
@@ -120,7 +132,8 @@ impl ShipJsSsr {
 impl SyntheticSsr for ShipJsSsr {
     fn first_paint(&self, req: &SsrRequest) -> Result<String> {
         let bundle = self.bundle_for(req.source_path)?;
-        let mut dispatch = SsrDispatch::for_request(req.pathname, req.params.clone(), req.query.clone());
+        let mut dispatch =
+            SsrDispatch::for_request(req.pathname, req.params.clone(), req.query.clone());
         if let Some(d) = &self.data {
             dispatch = dispatch.with_data(d.clone());
         }
@@ -130,7 +143,9 @@ impl SyntheticSsr for ShipJsSsr {
         let emits = on_worker(false, move || async move {
             pool.run(dispatch, SHIP_SDK.to_string(), main).await
         })?;
-        let first = emits.first().ok_or_else(|| anyhow!("ssr entry emitted nothing"))?;
+        let first = emits
+            .first()
+            .ok_or_else(|| anyhow!("ssr entry emitted nothing"))?;
         Ok(first["html"].as_str().unwrap_or_default().to_string())
     }
 }
@@ -148,9 +163,13 @@ where
         .name("deck-ssr-serve".into())
         .spawn(move || {
             let rt = if multi {
-                tokio::runtime::Builder::new_multi_thread().enable_all().build()
+                tokio::runtime::Builder::new_multi_thread()
+                    .enable_all()
+                    .build()
             } else {
-                tokio::runtime::Builder::new_current_thread().enable_all().build()
+                tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
             }
             .expect("deck-ssr worker runtime");
             rt.block_on(fut_fn())
@@ -173,7 +192,7 @@ fn find_manifest(source: &Path) -> Option<PathBuf> {
     None
 }
 
-/// The sibling authored controller (`controller.ts`) next to a `page.sui`, if
+/// The sibling authored controller (`controller.ts`) next to a `page.sail`, if
 /// present. The synthetic controller composes it via `setup(ctx)`.
 fn sibling_controller(source: &Path) -> Option<PathBuf> {
     let c = source.parent()?.join("controller.ts");
@@ -185,17 +204,23 @@ fn sibling_controller(source: &Path) -> Option<PathBuf> {
 /// `build::bundle` itself; only the app's own clients are resolved here.
 fn client_aliases(app_dir: &Path) -> Result<Vec<ClientAlias>> {
     let manifest_src = std::fs::read_to_string(app_dir.join("app.manifest.jsonc"))?;
-    let manifest = AppManifest::parse(&manifest_src).map_err(|e| anyhow!("parse manifest: {e:?}"))?;
+    let manifest =
+        AppManifest::parse(&manifest_src).map_err(|e| anyhow!("parse manifest: {e:?}"))?;
     let mut seen: HashMap<String, ClientAlias> = HashMap::new();
     for client in manifest.clients.values() {
-        let Some(rest) = client.from.strip_prefix("@app/") else { continue };
+        let Some(rest) = client.from.strip_prefix("@app/") else {
+            continue;
+        };
         if seen.contains_key(&client.from) {
             continue;
         }
         let server_entry = app_dir.join(format!("{rest}.server.ts"));
         seen.insert(
             client.from.clone(),
-            ClientAlias { specifier: client.from.clone(), server_entry },
+            ClientAlias {
+                specifier: client.from.clone(),
+                server_entry,
+            },
         );
     }
     Ok(seen.into_values().collect())
@@ -208,7 +233,7 @@ fn rel(repo: &Path, p: &Path) -> Result<String> {
         .map_err(|_| anyhow!("{} is not under repo root {}", p.display(), repo.display()))
 }
 
-/// A filesystem-safe build-dir name from a relative view path.
+/// A filesystem-safe build-dir name from a relative route path.
 fn sanitize(rel: &str) -> String {
     rel.chars()
         .map(|c| if c.is_ascii_alphanumeric() { c } else { '_' })

@@ -1,6 +1,6 @@
 //! Workspace discovery for the catalog aggregator (#163 catalog port).
 //!
-//! Port of `@ship/sui-catalog`'s `workspace.ts`: read the root `package.json`
+//! Port of `@ship/sail-catalog`'s `workspace.ts`: read the root `package.json`
 //! `workspaces.packages` globs, expand each (single trailing `*` only), and
 //! return every package dir with a parsable `package.json` that has a `name`.
 
@@ -31,17 +31,17 @@ pub struct WorkspacePackage {
 /// One consumer-bundle self-declaration, read from a package's `package.json`
 /// `deck.bundles[]`. Replaces the central `deck.jsonc` `TargetDecl`: the package
 /// that owns the entry declares the bundle, and the bundler discovers it the
-/// same way it discovers `views/*`. `entry` is relative to the declaring
+/// same way it discovers `routes/*`. `entry` is relative to the declaring
 /// package's root (not the repo root).
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BundleDecl {
-    /// Logical name + output basename (`<name>.js`), e.g. `sui-marketing`.
+    /// Logical name + output basename (`<name>.js`), e.g. `sail-marketing`.
     pub name: String,
     /// Entry module, relative to the declaring package's root.
     pub entry: PathBuf,
     /// Module specifiers kept external (not bundled). The build phase
-    /// additionally forces `@ship/sui-runtime` external for every target.
+    /// additionally forces `@ship/sail-runtime` external for every target.
     #[serde(default)]
     pub externals: Vec<String>,
     /// Eager (false) vs lazy (true) intent. Both bundle identically; `lazy`
@@ -65,11 +65,18 @@ fn workspace_globs(repo_root: &Path) -> Vec<String> {
     };
     let ws = &manifest["workspaces"];
     if let Some(arr) = ws.as_array() {
-        return arr.iter().filter_map(|v| v.as_str().map(String::from)).collect();
+        return arr
+            .iter()
+            .filter_map(|v| v.as_str().map(String::from))
+            .collect();
     }
     ws["packages"]
         .as_array()
-        .map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+        .map(|a| {
+            a.iter()
+                .filter_map(|v| v.as_str().map(String::from))
+                .collect()
+        })
         .unwrap_or_default()
 }
 
@@ -125,7 +132,7 @@ pub fn discover_workspace_packages(repo_root: &Path) -> Result<Vec<WorkspacePack
 ///   `package.json` `name` is in the declared set are returned. A declared pack
 ///   that doesn't resolve to a discovered package is silently absent; its tags
 ///   never enter the resolver index. This is the access-control mechanic:
-///   undeclared packs' tags become `@sui-tag` no-ops (and the bundler emits an
+///   undeclared packs' tags become `@sail-tag` no-ops (and the bundler emits an
 ///   author diagnostic naming them — see `catalog::shadowed_tags`).
 ///
 /// The scope is matched by workspace `name` — a stand-in for a registry lookup
@@ -196,24 +203,46 @@ pub fn discover_workspace_packages_scoped(
     Ok(out)
 }
 
-/// Resolve a dependency spec to its package dir: `file:<path>` (relative to
-/// `repo_root`) or `<repo_root>/node_modules/<name>`.
-fn resolve_dependency_dir(repo_root: &Path, name: &str, spec: &str) -> Option<PathBuf> {
-    let dir = match spec.strip_prefix("file:") {
-        Some(p) => repo_root.join(p),
-        None => repo_root.join("node_modules").join(name),
+/// Resolve a dependency spec to its package dir relative to `start`:
+/// - `file:<path>` — path relative to `start` (the declaring package.json dir)
+/// - otherwise — Node-style `node_modules` ancestor walk from `start`
+///   (`<anc>/node_modules/<name>/package.json`), matching bun/npm hoist.
+///
+/// Does **not** fall back to workspace members — that path is handled by the
+/// workspace glob walk above. Avoids recursion through
+/// [`crate::node_resolve::resolve_package_root`].
+fn resolve_dependency_dir(start: &Path, name: &str, spec: &str) -> Option<PathBuf> {
+    let dir = if let Some(rel) = spec.strip_prefix("file:") {
+        start.join(rel)
+    } else {
+        // node_modules ancestor walk (registry install / `bun add` path).
+        let mut cur = Some(start);
+        let mut found = None;
+        while let Some(dir) = cur {
+            let candidate = dir.join("node_modules").join(name);
+            if candidate.join("package.json").is_file() {
+                found = Some(candidate);
+                break;
+            }
+            cur = dir.parent();
+        }
+        found?
     };
     let dir = dir.canonicalize().ok()?;
-    dir.join("package.json").exists().then_some(dir)
+    dir.join("package.json").is_file().then_some(dir)
 }
 
-/// Discover component packages declared as dependencies. Only deps carrying a
-/// `package.json#customElements` marker count — that marker is what makes a
-/// package a component library. The app declares the dependency; the bundler
-/// resolves it (file: link now; a registry/CDN install populates the same
-/// node_modules later).
-fn discover_dependency_packages(repo_root: &Path) -> Vec<WorkspacePackage> {
-    let Some(manifest) = read_json(&repo_root.join("package.json")) else {
+/// Discover component packages declared as dependencies of `start`'s
+/// `package.json`. Only deps carrying a `package.json#customElements` marker
+/// count — that marker is what makes a package a component library. The app
+/// declares the dependency; the bundler resolves it (`file:` link or
+/// `node_modules` install from a registry).
+///
+/// Public for `generate_components_gen`: when an app project sits under a
+/// monorepo root, its pack deps hang off the **app** package.json /
+/// `node_modules`, not the workspace root's.
+pub fn discover_dependency_packages(start: &Path) -> Vec<WorkspacePackage> {
+    let Some(manifest) = read_json(&start.join("package.json")) else {
         return Vec::new();
     };
     let mut out = Vec::new();
@@ -223,9 +252,15 @@ fn discover_dependency_packages(repo_root: &Path) -> Vec<WorkspacePackage> {
         };
         for (name, spec) in deps {
             let Some(spec) = spec.as_str() else { continue };
-            let Some(dir) = resolve_dependency_dir(repo_root, name, spec) else { continue };
-            let Some(pkg) = read_json(&dir.join("package.json")) else { continue };
-            let Some(ce) = pkg["customElements"].as_str() else { continue };
+            let Some(dir) = resolve_dependency_dir(start, name, spec) else {
+                continue;
+            };
+            let Some(pkg) = read_json(&dir.join("package.json")) else {
+                continue;
+            };
+            let Some(ce) = pkg["customElements"].as_str() else {
+                continue;
+            };
             let bundles = pkg
                 .get("deck")
                 .and_then(|d| d.get("bundles"))
@@ -247,7 +282,7 @@ fn discover_dependency_packages(repo_root: &Path) -> Vec<WorkspacePackage> {
 /// declaring package's absolute root (to resolve the package-relative `entry`).
 /// This is the discovery half of the dissolved `deck.jsonc targets`: instead of
 /// a central registry, each package declares its bundles and the bundler walks
-/// the workspace to find them — the same model used for `views/*`. Order follows
+/// the workspace to find them — the same model used for `routes/*`. Order follows
 /// `discover_workspace_packages` (byte-stable, sorted by package name).
 pub fn discover_bundle_declarations(repo_root: &Path) -> Vec<(PathBuf, BundleDecl)> {
     discover_workspace_packages(repo_root)
@@ -260,20 +295,20 @@ pub fn discover_bundle_declarations(repo_root: &Path) -> Vec<(PathBuf, BundleDec
         .collect()
 }
 
-/// Sui's own workspace root — three parents up from this crate's
-/// `CARGO_MANIFEST_DIR` (`<sui>/crates/deck/deck-bundler` → `<sui>`), validated
-/// once at first access. Sui carved the framework `@ship/*` packages out of the
-/// consuming project (`@ship/tokens`, `@ship/sui-*`, the `packages/components/
-/// sui/*` packs); a consuming project depends on them via `file:` deps, so they
+/// Sail's own workspace root — three parents up from this crate's
+/// `CARGO_MANIFEST_DIR` (`<sail>/crates/deck/deck-bundler` → `<sail>`), validated
+/// once at first access. Sail carved the framework `@ship/*` packages out of the
+/// consuming project (`@ship/tokens`, `@ship/sail-*`, the `packages/components/
+/// sail/*` packs); a consuming project depends on them via `file:` deps, so they
 /// no longer live under the project's `repo_root` and a `repo_root`-only
-/// workspace walk misses them. Resolving sui's root from the build crate's own
+/// workspace walk misses them. Resolving sail's root from the build crate's own
 /// location lets the bundler union those packages into the `@ship/<name>` →
 /// source map regardless of which project it is building.
 ///
-/// `None` when the derived path doesn't look like sui's workspace (e.g. the
+/// `None` when the derived path doesn't look like sail's workspace (e.g. the
 /// crate was relocated, or a prod build runs from an install layout) — callers
 /// fall back to project-only resolution and never panic.
-fn sui_workspace_root() -> Option<&'static Path> {
+fn sail_workspace_root() -> Option<&'static Path> {
     static ROOT: OnceLock<Option<PathBuf>> = OnceLock::new();
     ROOT.get_or_init(|| {
         let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -282,12 +317,10 @@ fn sui_workspace_root() -> Option<&'static Path> {
                 return None;
             }
         }
-        // Confirm it's sui's workspace: a `package.json` + `packages/` dir,
-        // AND it actually declares the carved `@ship/tokens` package. The
-        // tokens check is the cheap, specific guard that this is sui (not some
-        // other ancestor workspace) without a full discovery walk.
-        if d.join("package.json").exists()
-            && d.join("packages/sui/tokens/package.json").exists()
+        // Confirm it's sail's workspace without requiring the tokens package
+        // on disk (catalog is baked; external apps have no packages/sail).
+        // Runtime package is the stable framework marker under packages/sail.
+        if d.join("package.json").exists() && d.join("packages/sail/runtime/package.json").exists()
         {
             Some(d)
         } else {
@@ -300,7 +333,7 @@ fn sui_workspace_root() -> Option<&'static Path> {
 /// npm package name → absolute package root, for resolving `@ship/<name>`
 /// component imports to workspace source. This is the bun/npm workspace package
 /// map — `@ship/<name>` already resolves to its package dir via `workspaces` —
-/// surfaced for the bundler's resolver (`SuiPlugin::component_roots`). It
+/// surfaced for the bundler's resolver (`SailPlugin::component_roots`). It
 /// REPLACES the hand-maintained `componentSourceRoots` search order: in dev the
 /// map is the source of truth; in prod, standard package resolution
 /// (node_modules) applies and this map is simply empty.
@@ -308,16 +341,16 @@ fn sui_workspace_root() -> Option<&'static Path> {
 /// The map UNIONS two workspaces:
 ///   1. the consuming project's `repo_root` (its own `@ship/*` — `@ship/sdk`,
 ///      `@ship/agents`, the `packages/components/ship/*` packs, etc.);
-///   2. sui's own workspace ([`sui_workspace_root`]) — the carved framework
-///      packages (`@ship/tokens`, `@ship/sui-*`, `packages/components/sui/*`).
+///   2. sail's own workspace ([`sail_workspace_root`]) — the carved framework
+///      packages (`@ship/tokens`, `@ship/sail-*`, `packages/components/sail/*`).
 ///
-/// PRECEDENCE on a name collision: **sui wins**. Sui owns the framework `@ship/*`
-/// names; after the carve they live only under sui's root, so a stale or absent
-/// entry under the project's root must never shadow the real sui source. Sui's
+/// PRECEDENCE on a name collision: **sail wins**. Sail owns the framework `@ship/*`
+/// names; after the carve they live only under sail's root, so a stale or absent
+/// entry under the project's root must never shadow the real sail source. Sail's
 /// entries are therefore overlaid AFTER the project's, overwriting on collision.
 /// (Today the two sets are disjoint — project owns `@ship/sdk`/`@ship/agents`/…,
-/// sui owns `@ship/tokens`/`@ship/sui-*` — so this rule only ever fires
-/// defensively.) If sui's root can't be derived the union degrades to
+/// sail owns `@ship/tokens`/`@ship/sail-*` — so this rule only ever fires
+/// defensively.) If sail's root can't be derived the union degrades to
 /// project-only resolution.
 ///
 /// Cached per `repo_root` (shared `Arc`, mirroring `component_index`) so the
@@ -339,14 +372,14 @@ pub fn component_package_roots(repo_root: &Path) -> Arc<HashMap<String, PathBuf>
         .map(|p| (p.name, p.root))
         .collect();
     // Overlay the ENCLOSING JS workspace (the bun/npm workspace root above the
-    // project). A pure-JS consumer (ship-apps) is built with `repo_root` set to
-    // the APP subdir (`ship-apps/apps/helm`) — not the workspace root — so the
+    // project). A pure-JS consumer monorepo is often built with `repo_root` set
+    // to the APP subdir (`apps/demo`) — not the workspace root — so the
     // project-only walk above sees only the app's own declared deps and MISSES
     // its SIBLING workspace packs (`@ship/agents`, …). Without those in the map,
-    // `SuiPlugin` can't re-anchor a bare `import "@ship/agents"` to source, it
+    // `SailPlugin` can't re-anchor a bare `import "@ship/agents"` to source, it
     // falls through to a bare external the importmap never covers, and the app
     // renders blank. Resolve the enclosing workspace root and union its packages
-    // (skip when it IS the project root — the sui monorepo, where they coincide).
+    // (skip when it IS the project root — the sail monorepo, where they coincide).
     if let Some(ws_root) = crate::paths::topmost_workspace_root(repo_root) {
         if ws_root != repo_root {
             for p in discover_workspace_packages(&ws_root).unwrap_or_default() {
@@ -354,12 +387,12 @@ pub fn component_package_roots(repo_root: &Path) -> Arc<HashMap<String, PathBuf>
             }
         }
     }
-    // Overlay sui's own workspace (sui wins on collision). Skip when sui IS the
+    // Overlay sail's own workspace (sail wins on collision). Skip when sail IS the
     // project root — its packages are already in `roots`, and re-walking would
     // only be redundant work for an identical result.
-    if let Some(sui_root) = sui_workspace_root() {
-        if sui_root != repo_root {
-            for p in discover_workspace_packages(sui_root).unwrap_or_default() {
+    if let Some(sail_root) = sail_workspace_root() {
+        if sail_root != repo_root {
+            for p in discover_workspace_packages(sail_root).unwrap_or_default() {
                 roots.insert(p.name, p.root);
             }
         }
@@ -372,8 +405,8 @@ pub fn component_package_roots(repo_root: &Path) -> Arc<HashMap<String, PathBuf>
     map
 }
 
-/// npm name → daemon pack-id. `@ship/charts` → `charts`; `widgets` → `widgets`.
-pub fn pack_id_for_name(npm_name: &str) -> String {
+/// npm name → components-package id. `@ship/charts` → `charts`; `widgets` → `widgets`.
+pub fn components_package_id_for_name(npm_name: &str) -> String {
     if let Some(rest) = npm_name.strip_prefix('@') {
         if let Some(slash) = rest.find('/') {
             return rest[slash + 1..].to_string();
@@ -383,14 +416,22 @@ pub fn pack_id_for_name(npm_name: &str) -> String {
 }
 
 /// Recursively walk `dir`, collecting `(tag, abs_path)` pairs for component
-/// `.sui` files. A `.sui` is a component iff its stem contains a hyphen and is
+/// `.sail` files. A `.sail` is a component iff its stem contains a hyphen and is
 /// neither "page" nor "index" — the HTML custom-element tag-name rule (HTML spec
-/// §4.13.3 requires a hyphen). Views use `page.sui` or `index.sui` and are
+/// §4.13.3 requires a hyphen). Routes use `page.sail` or `index.sail` and are
 /// excluded by this guard. `dist`, `node_modules`, `.git`, and `target` are
 /// skipped for speed.
-fn scan_sui_components(dir: &Path, out: &mut Vec<(String, PathBuf)>) {
-    const SKIP: [&str; 5] = ["node_modules", "dist", "target", ".git", ".deck"];
-    let Ok(entries) = std::fs::read_dir(dir) else { return };
+fn scan_sail_components(dir: &Path, out: &mut Vec<(String, PathBuf)>) {
+    const SKIP: [&str; 5] = [
+        "node_modules",
+        "dist",
+        "target",
+        ".git",
+        deck_config::DECK_OUT_DIRNAME,
+    ];
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
     for e in entries.flatten() {
         let name = e.file_name().to_string_lossy().into_owned();
         if SKIP.contains(&name.as_str()) {
@@ -398,9 +439,9 @@ fn scan_sui_components(dir: &Path, out: &mut Vec<(String, PathBuf)>) {
         }
         let p = e.path();
         if p.is_dir() {
-            scan_sui_components(&p, out);
+            scan_sail_components(&p, out);
         } else if let Some(stem) = p.file_stem().and_then(|s| s.to_str()) {
-            if p.extension().and_then(|x| x.to_str()) != Some("sui") {
+            if p.extension().and_then(|x| x.to_str()) != Some("sail") {
                 continue;
             }
             // Guard: stem must contain a hyphen and not be "page" or "index".
@@ -411,38 +452,95 @@ fn scan_sui_components(dir: &Path, out: &mut Vec<(String, PathBuf)>) {
     }
 }
 
-/// Return all `(tag, abs_path)` component pairs discovered by source scan of
-/// `pkg_root/src/`. Only `.sui` files whose stem contains a hyphen and is not
-/// "page" or "index" are returned; views and other files are excluded by the
-/// guard.
-pub fn source_tags_for_package(pkg_root: &Path) -> Vec<(String, PathBuf)> {
-    let src = pkg_root.join("src");
-    if !src.is_dir() {
-        return vec![];
-    }
+/// Source trees used by tag discovery and HMR watch.
+///
+/// Same walk for both jobs:
+/// - `pkg_root/src/` (classic single-domain package)
+/// - `pkg_root/routes/` (route-local hyphenated faces next to `page.sail`)
+/// - `pkg_root/*/src/` when the package declares `sailComponents: true`
+///   (umbrella multi-domain layout used by `@ship/sail-components`:
+///   primitives, charts, …)
+fn package_src_roots(pkg_root: &Path) -> Vec<PathBuf> {
     let mut out = Vec::new();
-    scan_sui_components(&src, &mut out);
+    let src = pkg_root.join("src");
+    if src.is_dir() {
+        out.push(src);
+    }
+    let routes = pkg_root.join("routes");
+    if routes.is_dir() {
+        out.push(routes);
+    }
+    if package_is_sail_components(pkg_root) {
+        if let Ok(entries) = std::fs::read_dir(pkg_root) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if !path.is_dir() {
+                    continue;
+                }
+                let domain_src = path.join("src");
+                if domain_src.is_dir() {
+                    out.push(domain_src);
+                }
+            }
+        }
+    }
     out
 }
 
-/// Build a `<tag>` → source `.sui` index from a registry-composed root's
+/// Return all `(tag, abs_path)` component pairs discovered by source scan of
+/// `pkg_root`.
+///
+/// Scan roots: see [`package_src_roots`] / [`component_src_roots`].
+///
+/// Only `.sail` files whose stem contains a hyphen and is not "page" or
+/// "index" are returned; routes and other files are excluded by the guard.
+pub fn source_tags_for_package(pkg_root: &Path) -> Vec<(String, PathBuf)> {
+    let mut out = Vec::new();
+    for src in package_src_roots(pkg_root) {
+        scan_sail_components(&src, &mut out);
+    }
+    out
+}
+
+/// Source directories to watch for HMR in a component package.
+///
+/// Same walk as tag discovery ([`source_tags_for_package`]): `src/` plus,
+/// when `sailComponents: true`, each `*/src` (primitives, charts, …).
+///
+/// Returns only directories that exist. Empty when the package has no
+/// source tree — `sail dev` then falls back to watching `pkg_root` itself.
+pub fn component_src_roots(pkg_root: &Path) -> Vec<PathBuf> {
+    package_src_roots(pkg_root)
+}
+
+/// Umbrella components packages declare `sailComponents: true`.
+fn package_is_sail_components(pkg_root: &Path) -> bool {
+    let Some(manifest) = read_json(&pkg_root.join("package.json")) else {
+        return false;
+    };
+    manifest.get("sailComponents").and_then(|v| v.as_bool()) == Some(true)
+}
+
+/// Build a `<tag>` → source `.sail` index from a registry-composed root's
 /// `components/` tree — the per-space component layer.
 ///
 /// This is the monorepo-decoupled discovery: instead of reading the root
 /// `package.json` workspaces, scan the `components/` dir of a space's composed
 /// root (`ship_platform::registry::compose::composed_root_for`), which holds
 /// each declared dep's components namespaced as
-/// `components/<pkg.path>/<tag>/<tag>.sui`. The same custom-element hyphen rule
-/// applies (component iff hyphenated stem ∉ {page,index}), so views never leak.
+/// `components/<pkg.path>/<tag>/<tag>.sail`. The same custom-element hyphen rule
+/// applies (component iff hyphenated stem ∉ {page,index}), so routes never leak.
 /// First tag wins on collision (byte-stable: WalkDir is lexical).
-pub fn composed_component_index(composed_root: &Path) -> std::collections::HashMap<String, PathBuf> {
+pub fn composed_component_index(
+    composed_root: &Path,
+) -> std::collections::HashMap<String, PathBuf> {
     let mut out = std::collections::HashMap::new();
     let components = composed_root.join("components");
     if !components.is_dir() {
         return out;
     }
     let mut pairs = Vec::new();
-    scan_sui_components(&components, &mut pairs);
+    scan_sail_components(&components, &mut pairs);
     for (tag, path) in pairs {
         out.entry(tag).or_insert(path);
     }

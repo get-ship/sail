@@ -1,7 +1,0 @@
-<data name="rows" source="ship.rows()" live />
-
-<table>
-  {#for row of rows().value key={row.id}}
-    <tr attr:id={row.id}><td>cell</td></tr>
-  {/for}
-</table>

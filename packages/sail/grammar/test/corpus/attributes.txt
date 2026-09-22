@@ -1,0 +1,140 @@
+==================
+bind attribute
+==================
+
+<input bind:value={x}/>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (bind_attr
+      name: (attr_local)
+      value: (brace_expression
+        (identifier)))))
+
+==================
+event attribute with modifiers
+==================
+
+<button on:click|preventDefault|stop={save}></button>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (event_attr
+      event: (attr_local)
+      modifier: (attr_local)
+      modifier: (attr_local)
+      handler: (brace_expression
+        (identifier)))
+    close_tag: (tag_name)))
+
+==================
+prop: attribute is refused syntax — must NOT parse as a directive
+==================
+
+<sail-donut prop:data={rows()}></sail-donut>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (dynamic_attr
+      name: (attr_name)
+      (ERROR)
+      value: (brace_expression
+        (identifier)))
+    close_tag: (tag_name)))
+
+==================
+use action with param
+==================
+
+<span use:swatch={value() || '#000000'}></span>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (use_attr
+      action: (attr_local)
+      param: (brace_expression
+        (identifier)))
+    close_tag: (tag_name)))
+
+==================
+use action without param
+==================
+
+<div use:errorBoundary></div>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (use_attr
+      action: (attr_local))
+    close_tag: (tag_name)))
+
+==================
+attr: attribute is refused syntax — must NOT parse as a directive
+==================
+
+<section attr:hidden={tab() !== 'source'}></section>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (dynamic_attr
+      name: (attr_name)
+      (ERROR)
+      value: (brace_expression
+        (identifier)))
+    close_tag: (tag_name)))
+
+==================
+dynamic attribute (plain expression value)
+==================
+
+<a href={url} disabled={off}></a>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (dynamic_attr
+      name: (attr_name)
+      value: (brace_expression
+        (identifier)))
+    (dynamic_attr
+      name: (attr_name)
+      value: (brace_expression
+        (identifier)))
+    close_tag: (tag_name)))
+
+==================
+attribute value containing string concatenation
+==================
+
+<a href={'/agents/' + a.id}></a>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (dynamic_attr
+      name: (attr_name)
+      value: (brace_expression
+        (identifier)))
+    close_tag: (tag_name)))

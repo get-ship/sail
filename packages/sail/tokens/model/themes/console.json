@@ -1,0 +1,112 @@
+{
+  "$description": "Terminal phosphor. Dark-only green-on-black.",
+  "$extensions": {
+    "sail": {
+      "layer": "theme",
+      "themeId": "console",
+      "defaultMode": "dark",
+      "supportedModes": ["dark"],
+      "identity": "Terminal green.",
+      "variants": {
+        "density": true,
+        "contrast": true,
+        "reducedMotion": true
+      },
+      "chrome": [
+        {
+          "selector": ":focus-visible",
+          "media": "(prefers-reduced-motion: no-preference)",
+          "props": { "animation": "console-blink 1.05s steps(2, end) infinite" }
+        },
+        {
+          "keyframes": "console-blink",
+          "frames": {
+            "0%, 49%": { "box-shadow": "{shadow-accent}" },
+            "50%, 100%": { "box-shadow": "0 0 0 2px oklch(0.78 0.20 145 / 20%)" }
+          }
+        }
+      ]
+    }
+  },
+  "anchors": {
+    "dark": {
+      "primary": { "space": "oklch", "l": 0.78, "c": 0.2, "h": 145 },
+      "accent": { "space": "oklch", "l": 0.78, "c": 0.16, "h": 195 },
+      "secondary": { "space": "oklch", "l": 0.2, "c": 0.012, "h": 220 },
+      "success": { "space": "oklch", "l": 0.78, "c": 0.2, "h": 145 },
+      "warning": { "space": "oklch", "l": 0.85, "c": 0.18, "h": 90 },
+      "info": { "space": "oklch", "l": 0.78, "c": 0.16, "h": 195 },
+      "danger": { "space": "oklch", "l": 0.7, "c": 0.22, "h": 25 },
+      "neutral": { "space": "oklch", "l": 0.2, "c": 0.012, "h": 220 }
+    }
+  },
+  "modes": {
+    "dark": {
+      "color": {
+        "background": { "$value": { "space": "oklch", "l": 0.13, "c": 0.008, "h": 220 }, "$type": "color" },
+        "foreground": { "$value": { "space": "oklch", "l": 0.92, "c": 0.06, "h": 145 }, "$type": "color" },
+        "muted": {
+          "default": { "$value": { "space": "oklch", "l": 0.2, "c": 0.012, "h": 220 }, "$type": "color" },
+          "foreground": { "$value": { "space": "oklch", "l": 0.62, "c": 0.05, "h": 145 }, "$type": "color" }
+        },
+        "surface": { "$value": { "space": "oklch", "l": 0.16, "c": 0.01, "h": 220 }, "$type": "color" },
+        "inset": { "$value": { "space": "oklch", "l": 0.3, "c": 0.04, "h": 145, "a": 0.4 }, "$type": "color" },
+        "overlay": { "$value": { "space": "oklch", "l": 0.18, "c": 0.012, "h": 220 }, "$type": "color" },
+        "border": {
+          "default": { "$value": { "space": "oklch", "l": 0.3, "c": 0.04, "h": 145, "a": 0.4 }, "$type": "color" },
+          "subtle": { "$value": { "space": "oklch", "l": 0.3, "c": 0.04, "h": 145, "a": 0.2 }, "$type": "color" },
+          "strong": { "$value": { "space": "oklch", "l": 0.78, "c": 0.2, "h": 145, "a": 0.6 }, "$type": "color" }
+        }
+      },
+      "overlay": {
+        "fill": {
+          "$value": "repeating-linear-gradient(to bottom, transparent 0px, transparent 1px, oklch(0 0 0 / 8%) 1px, oklch(0 0 0 / 8%) 2px)",
+          "$type": "string"
+        },
+        "blend": { "$value": "multiply", "$type": "string" },
+        "opacity": { "$value": "0.55", "$type": "number" }
+      },
+      "typography": {
+        "font": {
+          "body": { "$value": "\"JetBrains Mono Variable\", \"JetBrains Mono\", ui-monospace, \"SFMono-Regular\", Menlo, Consolas, monospace", "$type": "fontFamily" },
+          "heading": { "$value": "\"JetBrains Mono Variable\", \"JetBrains Mono\", ui-monospace, \"SFMono-Regular\", Menlo, Consolas, monospace", "$type": "fontFamily" },
+          "display": { "$value": "\"JetBrains Mono Variable\", \"JetBrains Mono\", ui-monospace, \"SFMono-Regular\", Menlo, Consolas, monospace", "$type": "fontFamily" },
+          "mono": { "$value": "\"JetBrains Mono Variable\", \"JetBrains Mono\", ui-monospace, \"SFMono-Regular\", Menlo, Consolas, monospace", "$type": "fontFamily" }
+        }
+      },
+      "radius": {
+        "sm": { "$value": "2px", "$type": "dimension" },
+        "md": { "$value": "2px", "$type": "dimension" },
+        "lg": { "$value": "3px", "$type": "dimension" },
+        "xl": { "$value": "4px", "$type": "dimension" }
+      },
+      "shadow": {
+        "xs": { "$value": "0 0 0 1px oklch(0.78 0.20 145 / 10%)", "$type": "shadow" },
+        "sm": { "$value": "0 1px 2px oklch(0 0 0 / 50%), 0 0 0 1px oklch(0.78 0.20 145 / 12%)", "$type": "shadow" },
+        "md": { "$value": "0 0 0 1px oklch(0.78 0.20 145 / 30%), 0 4px 0 -1px oklch(0 0 0 / 60%)", "$type": "shadow" },
+        "lg": { "$value": "0 0 0 1px oklch(0.78 0.20 145 / 40%), 0 8px 0 -2px oklch(0 0 0 / 70%)", "$type": "shadow" },
+        "xl": { "$value": "0 24px 64px oklch(0 0 0 / 70%)", "$type": "shadow" },
+        "card-rest": { "$value": "0 0 0 1px oklch(0.78 0.20 145 / 30%)", "$type": "shadow" },
+        "hover": { "$value": "0 0 0 1px oklch(0.78 0.20 145 / 60%), 0 0 0 3px oklch(0.78 0.20 145 / 10%)", "$type": "shadow" },
+        "sticky": { "$value": "0 1px 0 oklch(0.78 0.20 145 / 24%)", "$type": "shadow" },
+        "accent": { "$value": "0 0 0 2px oklch(0.78 0.20 145 / 55%), 0 0 18px oklch(0.78 0.20 145 / 18%)", "$type": "shadow" },
+        "edge-top": { "$value": "0 -1px 0 oklch(0.78 0.20 145 / 30%)", "$type": "shadow" }
+      },
+      "filter": { "backdrop": { "$value": "none", "$type": "string" } },
+      "image": { "texture": { "$value": "none", "$type": "string" } },
+      "interaction": {
+        "hover": { "strength": { "$value": "12%", "$type": "number" } },
+        "active": { "strength": { "$value": "18%", "$type": "number" } },
+        "selected": { "strength": { "$value": "22%", "$type": "number" } }
+      },
+      "scrollbar": {
+        "radius": { "$value": "2px", "$type": "dimension" },
+        "width": { "$value": "12px", "$type": "dimension" },
+        "width-thin": { "$value": "8px", "$type": "dimension" },
+        "thumb": { "$value": "oklch(0.78 0.20 145 / 30%)", "$type": "color" },
+        "thumb-hover": { "$value": "oklch(0.78 0.20 145 / 60%)", "$type": "color" }
+      },
+      "$extensions": { "sail": { "dark": true } }
+    }
+  }
+}

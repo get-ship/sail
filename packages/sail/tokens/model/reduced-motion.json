@@ -1,0 +1,35 @@
+{
+  "$description": "Reduced-motion duration overrides.",
+  "motion": {
+    "duration": {
+      "instant": {
+        "$value": "0.01ms",
+        "$type": "duration"
+      },
+      "fast": {
+        "$value": "0.01ms",
+        "$type": "duration"
+      },
+      "medium": {
+        "$value": "0.01ms",
+        "$type": "duration"
+      },
+      "slow": {
+        "$value": "0.01ms",
+        "$type": "duration"
+      },
+      "deliberate": {
+        "$value": "0.01ms",
+        "$type": "duration"
+      }
+    },
+    "$type": "duration"
+  },
+  "$extensions": {
+    "sail": {
+      "selector": ":root",
+      "media": "(prefers-reduced-motion: reduce)",
+      "layer": "reduced-motion"
+    }
+  }
+}

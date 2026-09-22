@@ -1,0 +1,10 @@
+{
+  "name": "bakeoff-rescript",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "jsdom": "^26.1.0",
+    "rescript": "^11.1.4",
+    "vitest": "^3.2.4"
+  }
+}

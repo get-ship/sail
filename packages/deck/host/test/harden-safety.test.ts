@@ -1,6 +1,6 @@
-// Slice 8 — harden-safety audit (#133). The confined-view endowment surface is
+// Slice 8 — harden-safety audit (#133). The confined-route endowment surface is
 // `harden()`-ed, which transitively freezes everything reachable. This asserts
-// the REAL `@ship/sui-runtime` reactive core survives that freeze and stays
+// the REAL `@ship/sail-runtime` reactive core survives that freeze and stays
 // functional — the precondition for endowing the real runtime to a confined
 // view.
 //
@@ -10,7 +10,7 @@
 
 import { beforeAll, describe, expect, it } from 'vitest'
 
-import { buildViewEndowments, lockdownRealm } from '../src/index.ts'
+import { buildRouteEndowments, lockdownRealm } from '../src/index.ts'
 // The real reactive core that every confined controller calls.
 import {
   signal,
@@ -19,7 +19,7 @@ import {
   batch,
   untrack,
   isSignal,
-} from '../../../sui/runtime/src/signal.ts'
+} from '../../../sail/runtime/src/signal.ts'
 
 const fakeDoc = {
   createElement: (t: string) => ({ tagName: t.toUpperCase() }),
@@ -29,13 +29,13 @@ const fakeDoc = {
   createDocumentFragment: () => ({ kind: 'fragment' }),
 } as unknown as Document
 
-describe('harden-safety of the real @ship/sui-runtime reactive core', () => {
+describe('harden-safety of the real @ship/sail-runtime reactive core', () => {
   beforeAll(() => lockdownRealm())
 
   it('hardens the real reactive surface without throwing', () => {
-    // buildViewEndowments runs harden() over the spread runtime namespace. If
+    // buildRouteEndowments runs harden() over the spread runtime namespace. If
     // any real export were harden-hostile, this constructor would throw.
-    const surface = buildViewEndowments({
+    const surface = buildRouteEndowments({
       runtime: { signal, derived, effect, batch, untrack, isSignal },
       ship: {},
       doc: fakeDoc,
@@ -45,7 +45,7 @@ describe('harden-safety of the real @ship/sui-runtime reactive core', () => {
   })
 
   it('signals stay readable + writable + derivable through the hardened surface', () => {
-    const surface = buildViewEndowments({
+    const surface = buildRouteEndowments({
       runtime: { signal, derived, effect, batch, untrack, isSignal },
       ship: {},
       doc: fakeDoc,
@@ -62,7 +62,7 @@ describe('harden-safety of the real @ship/sui-runtime reactive core', () => {
   })
 
   it('effects re-run on dep change through the hardened surface', () => {
-    const surface = buildViewEndowments({
+    const surface = buildRouteEndowments({
       runtime: { signal, derived, effect, batch, untrack, isSignal },
       ship: {},
       doc: fakeDoc,

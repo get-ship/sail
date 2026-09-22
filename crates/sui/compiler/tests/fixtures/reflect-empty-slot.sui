@@ -1,5 +1,0 @@
-<prop name="label" type="string" default="" />
-
-<button part="button">
-  <slot reflect-empty="data-icon-only"></slot>
-</button>

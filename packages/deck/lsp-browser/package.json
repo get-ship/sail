@@ -1,7 +1,7 @@
 {
-  "name": "@ship/sui-lsp-browser",
-  "version": "0.2.0",
-  "description": "Browser-side analyser for .sui files. Pure parse + diagnostics + scope-aware completions for editors that can't shell out to the Node LSP (docs playground, shell source editor).",
+  "name": "@ship/sail-lsp-browser",
+  "version": "0.3.0",
+  "description": "Browser-side analyser for .sail files. Pure parse + diagnostics + scope-aware completions for editors that can't shell out to the Node LSP (docs playground, shell source editor).",
   "private": false,
   "license": "MIT",
   "type": "module",
@@ -14,11 +14,11 @@
     "./hover": "./src/hover.ts"
   },
   "scripts": {
-    "test": "bun test test/",
-    "test:watch": "bun test --watch test/"
+    "test": "vitest run",
+    "test:watch": "vitest --watch"
   },
   "dependencies": {
-    "@ship/sui-compiler-wasm": "workspace:*"
+    "@ship/sail-compiler-wasm": "workspace:*"
   },
   "devDependencies": {
     "vitest": "^4.1.5"

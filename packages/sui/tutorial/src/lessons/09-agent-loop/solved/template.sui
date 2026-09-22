@@ -1,9 +1,0 @@
-<prop name="shadow" type="bool" default="false" />
-
-<div class="dash">
-  <h3>request rate</h3>
-  <p>errors / sec: <strong>{rateText()}</strong></p>
-  <button on:click={() => init()}>init</button>
-  <p>previous: {prevRate()}</p>
-  <input bind:value={query} placeholder="search" />
-</div>

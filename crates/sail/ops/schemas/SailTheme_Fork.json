@@ -1,0 +1,63 @@
+{
+  "service": "SailTheme",
+  "method": "Fork",
+  "mcp_tool": "sail_theme_fork",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "content": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "dest_path": {
+        "type": "string"
+      },
+      "new_id": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "source_path": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "dest_path",
+      "source_path"
+    ]
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ThemeForkRet",
+    "type": "object",
+    "properties": {
+      "dest_path": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "message": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "ok": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "path": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  }
+}

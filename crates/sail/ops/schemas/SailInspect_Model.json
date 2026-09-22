@@ -1,0 +1,101 @@
+{
+  "service": "SailInspect",
+  "method": "Model",
+  "mcp_tool": "sail_inspect_model",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "viewport": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/InspectViewport"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "required": [
+      "path"
+    ],
+    "definitions": {
+      "InspectViewport": {
+        "type": "object",
+        "required": [
+          "height",
+          "width"
+        ],
+        "properties": {
+          "height": {
+            "type": "number",
+            "format": "double"
+          },
+          "width": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      }
+    }
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "InspectModelRet",
+    "type": "object",
+    "required": [
+      "data",
+      "diagnostics",
+      "file",
+      "layout",
+      "modelVersion",
+      "state",
+      "theme",
+      "tree"
+    ],
+    "properties": {
+      "data": {
+        "$ref": "#/definitions/Json"
+      },
+      "diagnostics": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Json"
+        }
+      },
+      "file": {
+        "type": "string"
+      },
+      "layout": {
+        "$ref": "#/definitions/Json"
+      },
+      "modelVersion": {
+        "type": "integer",
+        "format": "uint32",
+        "minimum": 0.0
+      },
+      "source": {
+        "description": "Author `.sail` source (same bytes Model inspected). Studio Source view.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "state": {
+        "$ref": "#/definitions/Json"
+      },
+      "theme": {
+        "$ref": "#/definitions/Json"
+      },
+      "tree": {
+        "$ref": "#/definitions/Json"
+      }
+    },
+    "definitions": {
+      "Json": {}
+    }
+  }
+}

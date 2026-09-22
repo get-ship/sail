@@ -1,0 +1,8 @@
+// Route metadata for views/sail-demo/.
+{
+  "name": "sail-demo",
+  "path": "/sail-demo",
+  "title": "Sail Demo",
+  "layout": "default",
+  "auth": "public"
+}

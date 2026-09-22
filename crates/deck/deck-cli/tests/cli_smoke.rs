@@ -1,66 +1,54 @@
-//! Behavior smoke tests for the `deck` CLI.
+//! Behavior smoke tests for the `sail` + `deck-bake` CLIs (`deck-cli` package).
 //!
-//! Spec: `.artifacts/job-spec.md` (job/deck-cli-tests) — top-3 fix #3 of
-//! the 2026-06-19 deck-readiness punch-list (P2-10). `crates/deck/deck-cli/`
-//! shipped zero tests; `emit`, `scaffold {view,component,pack}`, and
-//! `build-assets` were unproven. These tests exercise each subcommand
-//! against a temp dir via `Command::new(env!("CARGO_BIN_EXE_deck"))` and
-//! assert on the PRODUCED ARTIFACTS (not internal logs).
+//! Behavior coverage for `deck-bake emit` / `deck-bake build-assets`, plus
+//! product `sail` verbs. Bake subcommands run via
+//! `Command::new(env!("CARGO_BIN_EXE_deck-bake"))` and assert on the PRODUCED
+//! ARTIFACTS (not internal logs).
 //!
 //! Design notes:
 //!
 //! - The CLI discovers the workspace root from cwd via
-//!   `topmost_cargo_root` (deck-bundler/paths.rs). Tests set the child's
+//!   `deck_bundler::paths::topmost_workspace_root`. Tests set the child's
 //!   cwd to the repo root so the walk is deterministic.
-//! - Scaffolds bail when the target dir already exists, so each test
-//!   picks a unique timestamped name. A `Drop` guard removes the dirs
-//!   the test wrote so reruns stay clean.
+//! - Create/theme scaffolds bail when the target dir already exists, so
+//!   each test picks a unique timestamped name (tempdirs for create).
 //! - `build-assets` may exit non-zero when a consumer bundle fails on
-//!   this worktree (sui-marketing astro/tsconfigs/strict miss, see
-//!   job-spec.md Scope). Framework singletons bake independently of
+//!   this worktree (missing consumer tsconfigs / strict miss). Framework
+//!   singletons bake independently of
 //!   consumer targets — `build_all` writes each framework bundle to
-//!   `.deck/framework/` before the consumer guard runs — so the test
+//!   `.sail/framework/` before the consumer guard runs — so the test
 //!   asserts the framework artifacts regardless of overall exit code.
 //! - `emit` requires its targets to be already baked. The emit test
 //!   runs `build-assets` first (accepting non-zero exit), then asserts
 //!   the requested target lands in the out dir.
-//! - The component validator is tested by running the CLI with a
-//!   non-`sui-` tag and asserting non-zero exit — no artifacts on
-//!   disk means the validator was the failure point.
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::Command;
+use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use tempfile::TempDir;
 
-// ── Repo + binary discovery ─────────────────────────────────────────────────
+// Serialize tests that invoke `deck-bake build-assets`. The command writes
+// framework bundles into the shared repo-root bake directory; without this
+// lock, parallel test threads can truncate a file another thread is reading or
+// emitting. See claim c-2026-07-19T18-12-45-685Z-f499ce4b.
+static BUILD_ASSETS_LOCK: Mutex<()> = Mutex::new(());
 
-/// Resolve the cargo workspace root from `start`. Mirrors
-/// `deck_bundler::paths::topmost_cargo_root` semantics (topmost, not
-/// nearest) so we land on the same root the CLI will discover.
-fn topmost_cargo_root(start: &Path) -> PathBuf {
-    let mut cur = start;
-    let mut topmost: Option<PathBuf> = None;
-    for _ in 0..16 {
-        if cur.join("Cargo.toml").exists() {
-            topmost = Some(cur.to_path_buf());
-        }
-        match cur.parent() {
-            Some(p) => cur = p,
-            None => break,
-        }
-    }
-    topmost.expect("could not find repo root from CARGO_MANIFEST_DIR")
-}
+// ── Repo + binary discovery ─────────────────────────────────────────────────
 
 fn repo_root() -> PathBuf {
     let start = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    topmost_cargo_root(&start)
+    deck_bundler::paths::topmost_cargo_root(&start)
+        .expect("could not find repo root from CARGO_MANIFEST_DIR")
 }
 
-fn deck_bin() -> PathBuf {
-    PathBuf::from(env!("CARGO_BIN_EXE_deck"))
+fn sail_bin() -> PathBuf {
+    PathBuf::from(env!("CARGO_BIN_EXE_sail"))
+}
+
+fn bake_bin() -> PathBuf {
+    PathBuf::from(env!("CARGO_BIN_EXE_deck-bake"))
 }
 
 /// Build a unique lowercase-hyphen stem from the unix epoch nanos.
@@ -74,56 +62,57 @@ fn unique_stem(label: &str) -> String {
     format!("{label}-{nanos:x}")
 }
 
-/// Run `deck <args...>` with cwd = repo root. Returns the `Output`
+/// Run `sail <args...>` with cwd = repo root. Returns the `Output`
 /// (stdout, stderr, status) for the caller to assert on.
-fn run_deck(args: &[&str]) -> std::process::Output {
-    Command::new(deck_bin())
+fn run_sail(args: &[&str]) -> std::process::Output {
+    Command::new(sail_bin())
         .args(args)
         .current_dir(repo_root())
         .output()
-        .expect("spawn deck binary")
+        .expect("spawn sail binary")
 }
 
-// ── Scaffold cleanup guard ──────────────────────────────────────────────────
-
-/// Removes scaffold dirs on drop so reruns / panics don't leave residue.
-struct ScaffoldGuard {
-    paths: Vec<PathBuf>,
+/// Run `deck-bake <args...>` with cwd = repo root.
+fn run_bake(args: &[&str]) -> std::process::Output {
+    Command::new(bake_bin())
+        .args(args)
+        .current_dir(repo_root())
+        .output()
+        .expect("spawn deck-bake binary")
 }
 
-impl ScaffoldGuard {
-    fn new() -> Self {
-        Self { paths: Vec::new() }
-    }
-    fn track(&mut self, p: PathBuf) {
-        self.paths.push(p);
-    }
-}
-
-impl Drop for ScaffoldGuard {
-    fn drop(&mut self) {
-        for p in &self.paths {
-            let _ = std::fs::remove_dir_all(p);
-        }
-    }
+fn help_has_subcommand(help: &str, cmd: &str) -> bool {
+    help.lines()
+        .any(|line| line.split_whitespace().next() == Some(cmd))
 }
 
 // ── build-assets ────────────────────────────────────────────────────────────
 
-/// `deck build-assets` must materialize the framework singletons
+/// `deck-bake build-assets` must materialize the framework singletons
 /// (the bundles deck-core's build.rs stages into `assets/` for
 /// `include_str!`). Framework targets bake independently of consumer
 /// targets in `build_all`, so their on-disk artifacts are present
-/// even when a consumer target (e.g. sui-marketing) fails the bake.
+/// even when a consumer target (e.g. sail-marketing) fails the bake.
+///
+/// Only the singletons this repo actually PROVIDES are asserted. Some
+/// framework singletons are host-provided and node-resolved from the
+/// project being built (`@ship/sdk-client` → `sail-sdk-client.js`,
+/// `@ship/sdk` → `sdk.js`): the bundler skips them when the package is
+/// absent (this repo does not vend `@ship/sdk-client`), and deck-core's
+/// build.rs stages a bootstrap stub for the missing embed rather than
+/// failing the build. Asserting `sail-sdk-client.js` here would demand a
+/// package this repo doesn't ship.
 #[test]
 fn build_assets_writes_framework_bundles() {
-    let out = run_deck(&["build-assets"]);
+    let _guard = BUILD_ASSETS_LOCK.lock().unwrap();
+
+    let out = run_bake(&["build-assets", "--no-stamp"]);
     let stderr = String::from_utf8_lossy(&out.stderr);
-    // Don't assert status — consumer failures (sui-marketing) are a
+    // Don't assert status — consumer failures (sail-marketing) are a
     // known-bad on this worktree. Framework bundles are written
     // before build_all returns; their absence is the real signal.
-    let fw_dir = repo_root().join(".deck").join("framework");
-    for name in ["sui-runtime.js", "sui-dom.js", "sui-sdk-client.js"] {
+    let fw_dir = repo_root().join(".sail").join("framework");
+    for name in ["sail-runtime.js", "sail-dom.js", "deck-route.js"] {
         let path = fw_dir.join(name);
         assert!(
             path.exists(),
@@ -141,211 +130,126 @@ fn build_assets_writes_framework_bundles() {
 
 // ── emit ────────────────────────────────────────────────────────────────────
 
-/// `deck emit --target <name> --out <dir>` must place the named target
+/// `deck-bake emit --target <name> --out <dir>` must place the named target
 /// (and its lazy-chunk closure) into `<dir>`. Uses the framework
-/// singleton `sui-runtime` because it bundles deterministically on
+/// singleton `sail-runtime` because it bundles deterministically on
 /// this worktree (no consumer-bundle dependency).
 ///
 /// Runs `build-assets` first so the target is on disk; accepts a
 /// non-zero build-assets exit (see `build_assets_writes_framework_bundles`).
 #[test]
 fn emit_places_target_in_out_dir() {
+    let _guard = BUILD_ASSETS_LOCK.lock().unwrap();
+
     // Ensure the target is baked. If the framework dir is already
     // populated, this is a fast no-op rewrite.
-    let _ = run_deck(&["build-assets"]);
+    let _ = run_bake(&["build-assets", "--no-stamp"]);
 
     let out = TempDir::new().expect("tempdir");
-    let status = run_deck(&[
+    let status = run_bake(&[
         "emit",
         "--target",
-        "sui-runtime",
+        "sail-runtime",
         "--out",
         out.path().to_str().unwrap(),
     ])
     .status;
     assert!(
         status.success(),
-        "deck emit --target sui-runtime exited {status:?}"
+        "deck-bake emit --target sail-runtime exited {status:?}"
     );
-    let entry = out.path().join("sui-runtime.js");
-    assert!(
-        entry.exists(),
-        "emit did not write {}",
-        entry.display()
-    );
+    let entry = out.path().join("sail-runtime.js");
+    assert!(entry.exists(), "emit did not write {}", entry.display());
     let len = std::fs::metadata(&entry).map(|m| m.len()).unwrap_or(0);
     assert!(len > 0, "emit wrote empty {}", entry.display());
 }
 
-// ── scaffold view ───────────────────────────────────────────────────────────
+// ── scaffold theme (C5) ─────────────────────────────────────────────────────
 
-/// `deck scaffold view <name>` writes the 4 documented files at the
-/// documented paths (`views/<name>/{manifest.jsonc,page.sui,controller.ts,style.css}`)
-/// and the manifest's `path` field starts with `/`.
+/// `deck scaffold theme --project <tmp>` copies one catalog theme into
+/// `themes/` and writes a thin `sail.config.jsonc` (theme + nested deck).
 #[test]
-fn scaffold_view_writes_four_files_and_manifest_path() {
-    let mut guard = ScaffoldGuard::new();
-    let name = unique_stem("testview");
-    let view_dir = repo_root().join("views").join(&name);
-    guard.track(view_dir.clone());
+fn scaffold_theme_copies_default_and_writes_config() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let project = tmp.path().join("app");
+    std::fs::create_dir_all(&project).expect("mkdir project");
 
-    let status = run_deck(&["scaffold", "view", &name]).status;
-    assert!(status.success(), "deck scaffold view {name} exited {status:?}");
-
-    for rel in ["manifest.jsonc", "page.sui", "controller.ts", "style.css"] {
-        let p = view_dir.join(rel);
-        assert!(p.exists(), "missing {} after scaffold view", p.display());
-        let len = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
-        assert!(len > 0, "empty {} after scaffold view", p.display());
-    }
-
-    // Manifest `path` must start with `/` (the daemon resolver expects
-    // absolute URL patterns; scaffold defaults to /<name>).
-    let manifest = std::fs::read_to_string(view_dir.join("manifest.jsonc"))
-        .expect("read manifest");
-    assert!(
-        manifest.contains("\"path\": \"/"),
-        "manifest path does not start with `/`: {manifest}"
-    );
-}
-
-/// `deck scaffold view --component <tag>` writes the view-private
-/// widget under `views/<name>/_components/<tag>/`.
-#[test]
-fn scaffold_view_with_component_writes_widget() {
-    let mut guard = ScaffoldGuard::new();
-    let name = unique_stem("testview");
-    let view_dir = repo_root().join("views").join(&name);
-    let tag = format!("{name}-widget");
-    let widget_dir = view_dir.join("_components").join(&tag);
-    guard.track(view_dir);
-
-    let status = run_deck(&[
+    let status = run_sail(&[
         "scaffold",
-        "view",
-        &name,
-        "--component",
-        &tag,
+        "theme",
+        "--project",
+        project.to_str().expect("utf8 path"),
     ])
     .status;
+    assert!(status.success(), "deck scaffold theme exited {status:?}");
+
+    // Modern external layout: <project>/themes/<id>.json (EXT-1 E4).
+    let theme = project.join("themes/sail.json");
     assert!(
-        status.success(),
-        "deck scaffold view {name} --component {tag} exited {status:?}"
+        theme.is_file(),
+        "missing {} after scaffold theme",
+        theme.display()
+    );
+    let len = std::fs::metadata(&theme).map(|m| m.len()).unwrap_or(0);
+    assert!(len > 0, "empty theme file after scaffold theme");
+    let theme_body = std::fs::read_to_string(&theme).expect("read theme");
+    assert!(
+        theme_body.contains("\"modes\"") || theme_body.contains("themeId"),
+        "scaffold theme should carry modes-in-file or themeId meta: {theme_body}"
     );
 
-    for rel in [format!("{tag}.sui"), format!("{tag}.controller.ts")] {
-        let p = widget_dir.join(&rel);
-        assert!(p.exists(), "missing {} after scaffold view --component", p.display());
-        let len = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
-        assert!(len > 0, "empty {} after scaffold view --component", p.display());
-    }
-}
-
-// ── scaffold component ──────────────────────────────────────────────────────
-
-/// `deck scaffold component <tag>` writes the `.sui` (and optional
-/// controller) under the SUI primitives package:
-/// `packages/components/sui/primitives/src/<tag>/<tag>.sui`.
-#[test]
-fn scaffold_component_writes_sui_under_primitives_package() {
-    let mut guard = ScaffoldGuard::new();
-    let tag = unique_stem("sui-testcomp");
-    let base = repo_root()
-        .join("packages/components/sui/primitives/src")
-        .join(&tag);
-    guard.track(base.clone());
-
-    let status = run_deck(&["scaffold", "component", &tag]).status;
+    let cfg = project.join("sail.config.jsonc");
     assert!(
-        status.success(),
-        "deck scaffold component {tag} exited {status:?}"
+        cfg.is_file(),
+        "missing sail.config.jsonc after scaffold theme"
     );
-
-    let sui = base.join(format!("{tag}.sui"));
-    assert!(sui.exists(), "missing {} after scaffold component", sui.display());
-    let len = std::fs::metadata(&sui).map(|m| m.len()).unwrap_or(0);
-    assert!(len > 0, "empty {} after scaffold component", sui.display());
-
-    // Without --controller, no controller file should be written.
+    let body = std::fs::read_to_string(&cfg).expect("read config");
     assert!(
-        !base.join(format!("{tag}.controller.ts")).exists(),
-        "controller file written without --controller"
+        body.contains("\"default\": \"sail\""),
+        "config missing default theme: {body}"
     );
-}
-
-/// The component validator rejects tags that don't start with `sui-`.
-/// Tested by running the CLI with a non-`sui-` tag and asserting
-/// non-zero exit; the validator runs before any directory is created,
-/// so the absence of artifacts on disk is the failure-mode proof.
-#[test]
-fn scaffold_component_rejects_non_sui_tag() {
-    // `tag` must pass `validate_view_name` (lowercase ASCII + hyphens
-    // + digits) but violate the `sui-` prefix requirement.
-    let bad_tag = unique_stem("not-sui-widget");
-    let base = repo_root()
-        .join("packages/components/sui/primitives/src")
-        .join(&bad_tag);
-    // Cleanup guard in case validation is bypassed (defense in depth).
-    let mut guard = ScaffoldGuard::new();
-    guard.track(base.clone());
-
-    let output = run_deck(&["scaffold", "component", &bad_tag]);
+    // Thin single-id allowlist (C5) — not a full catalog list / null.
     assert!(
-        !output.status.success(),
-        "deck scaffold component accepted non-sui tag (status: {:?})",
-        output.status
-    );
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(
-        stderr.contains("sui-"),
-        "expected validator message mentioning `sui-`, got: {stderr}"
+        body.contains("\"enabled\": [\"sail\"]"),
+        "config must thin-enable only sail: {body}"
     );
     assert!(
-        !base.exists(),
-        "validator rejected the tag but directory was created: {}",
-        base.display()
+        body.contains("\"deck\"") && body.contains("\"render\": \"csr\""),
+        "scaffold must emit nested deck.render csr: {body}"
     );
-}
+    assert!(
+        !body.contains("paper") && !body.contains("glass"),
+        "scaffold must not dump full catalog into enabled: {body}"
+    );
 
-// ── scaffold pack ───────────────────────────────────────────────────────────
-
-/// `deck scaffold pack <name>` writes `package.json`, `tsconfig.json`,
-/// and the `src/` tree under `packages/components/<name>/`. The
-/// package.json's `name` field is `@ship/<name>`.
-#[test]
-fn scaffold_pack_writes_package_json_tsconfig_and_src() {
-    let mut guard = ScaffoldGuard::new();
-    let name = unique_stem("testpack");
-    let base = repo_root().join("packages/components").join(&name);
-    let example_dir = base.join("src").join(format!("{name}-example"));
-    guard.track(base.clone());
-
-    let status = run_deck(&["scaffold", "pack", &name]).status;
-    assert!(status.success(), "deck scaffold pack {name} exited {status:?}");
-
-    for rel in ["package.json", "tsconfig.json", "src/index.ts"] {
-        let p = base.join(rel);
-        assert!(p.exists(), "missing {} after scaffold pack", p.display());
-        let len = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
-        assert!(len > 0, "empty {} after scaffold pack", p.display());
-    }
-    // Placeholder example primitive under src/<name>-example/.
-    for rel in [
-        format!("{name}-example.sui"),
-        format!("{name}-example.controller.ts"),
+    // S0: theme scaffold ensures gitignore + .sail/README (tasks never commit).
+    let gi = std::fs::read_to_string(project.join(".gitignore")).expect("read .gitignore");
+    for line in [
+        "dist/",
+        ".sail/",
+        "routes.gen.ts",
+        "entry.gen.ts",
+        "components.gen.ts",
+        "node_modules/",
+        ".env",
     ] {
-        let p = example_dir.join(&rel);
-        assert!(p.exists(), "missing {} after scaffold pack", p.display());
-        let len = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
-        assert!(len > 0, "empty {} after scaffold pack", p.display());
+        assert!(
+            gi.lines().any(|l| {
+                let t = l.trim().trim_start_matches('/');
+                t == line.trim_start_matches('/')
+            }),
+            "gitignore missing critical {line:?}:\n{gi}"
+        );
     }
-
-    // package.json `name` field must be `@ship/<name>`.
-    let pkg = std::fs::read_to_string(base.join("package.json")).expect("read package.json");
-    let expected = format!("\"name\": \"@ship/{name}\"");
     assert!(
-        pkg.contains(&expected),
-        "package.json missing {expected:?}; contents:\n{pkg}"
+        !gi.contains("tokens/themes") && !gi.contains("sail.config"),
+        "must not ignore theme SSOT: {gi}"
+    );
+    let readme = project.join(".sail/README.md");
+    assert!(
+        readme.is_file(),
+        "missing {} after scaffold theme",
+        readme.display()
     );
 }
 
@@ -353,7 +257,7 @@ fn scaffold_pack_writes_package_json_tsconfig_and_src() {
 
 /// The REAL standalone test (the boundary lint in deck-conformance is only the
 /// backstop): deck BUILDS a zero-ship-PRODUCT app — a plain `routes/` page that
-/// depends on the SUI framework and nothing of the ship product — into a served
+/// depends on the SAIL framework and nothing of the ship product — into a served
 /// SPA. If deck can compile + emit a runnable app that names nothing ship, it
 /// stands on its own. This serves development (it proves the capability) and
 /// doesn't break when a path is renamed, unlike a forbidden-string scan.
@@ -362,21 +266,24 @@ fn builds_a_zero_ship_product_app() {
     let proj = TempDir::new().expect("tempdir");
     let root = proj.path();
     std::fs::create_dir_all(root.join("routes")).expect("routes dir");
-    // Framework deps only (@ship/* is the org npm SCOPE — sui-runtime/dom are
+    // A Project is nearest sail.config — routes/ alone is deck detect
+    // zero-config, not `sail build`.
+    std::fs::write(root.join("sail.config.jsonc"), "{}\n").expect("sail.config");
+    // Framework deps only (@ship/* is the org npm SCOPE — sail-runtime/dom are
     // framework packages, not the ship product). No @ship/sdk-client, no
     // ship.* client, no .ship/ — a genuinely host-free app.
     std::fs::write(
         root.join("package.json"),
-        r#"{"name":"zeroship","type":"module","dependencies":{"@ship/sui-runtime":"workspace:*","@ship/sui-dom":"workspace:*"}}"#,
+        r#"{"name":"zeroship","type":"module","dependencies":{"@ship/sail-runtime":"workspace:*","@ship/sail-dom":"workspace:*"}}"#,
     )
     .expect("package.json");
     std::fs::write(
-        root.join("routes").join("page.sui"),
+        root.join("routes").join("page.sail"),
         "<main>\n  <h1>zero-ship</h1>\n  <p>sum is {1 + 1}</p>\n</main>\n",
     )
-    .expect("page.sui");
+    .expect("page.sail");
 
-    let out = run_deck(&["build", "--project", root.to_str().unwrap()]);
+    let out = run_sail(&["build", "--project", root.to_str().unwrap()]);
     assert!(
         out.status.success(),
         "deck build of a zero-ship-product app failed (status {:?}):\n{}",
@@ -385,14 +292,20 @@ fn builds_a_zero_ship_product_app() {
     );
 
     // The built SPA shell exists and is wired (importmap + a mount root).
-    let index = root.join(".deck").join("index.html");
-    assert!(index.exists(), "deck build did not emit .deck/index.html");
+    let index = root.join("dist").join("index.html");
+    assert!(index.exists(), "deck build did not emit dist/index.html");
     let html = std::fs::read_to_string(&index).expect("read index.html");
-    assert!(html.contains("importmap"), "built index.html missing importmap:\n{html}");
-    assert!(html.contains("root"), "built index.html missing the #root mount point:\n{html}");
+    assert!(
+        html.contains("importmap"),
+        "built index.html missing importmap:\n{html}"
+    );
+    assert!(
+        html.contains("root"),
+        "built index.html missing the #root mount point:\n{html}"
+    );
 
     // The entry chunk was bundled (the routes/ page compiled into the SPA).
-    let assets = root.join(".deck").join("assets");
+    let assets = root.join("dist").join("assets");
     let entry_js = std::fs::read_dir(&assets)
         .ok()
         .and_then(|d| {
@@ -403,7 +316,10 @@ fn builds_a_zero_ship_product_app() {
         })
         .map(|e| e.path());
     let entry_js = entry_js.unwrap_or_else(|| {
-        panic!("deck build did not emit an entry-*.js chunk in {}", assets.display())
+        panic!(
+            "deck build did not emit an entry-*.js chunk in {}",
+            assets.display()
+        )
     });
 
     // The entry must BOOTSTRAP, not merely export data: a standalone app's
@@ -416,5 +332,697 @@ fn builds_a_zero_ship_product_app() {
         entry_src.contains("mountRouter"),
         "entry chunk must call mountRouter (the SPA bootstrap), else nothing mounts:\n{}",
         &entry_src[..entry_src.len().min(600)],
+    );
+}
+
+// ── sail create (EXT-1 E8) ──────────────────────────────────────────────────
+
+/// `sail create my-app` writes the external-app 4-entry tree + gitignore
+/// (with `dist/` + `.sail/`), and `sail check` on the result is green.
+#[test]
+fn create_writes_four_entry_tree_and_check_is_green() {
+    let tmp = TempDir::new().expect("tempdir");
+    let name = unique_stem("create-app");
+    let app = tmp.path().join(&name);
+
+    let out = Command::new(sail_bin())
+        .args(["create", app.to_str().unwrap()])
+        .current_dir(tmp.path())
+        .output()
+        .expect("spawn sail create");
+    assert!(
+        out.status.success(),
+        "sail create failed (status {:?}):\nstdout:{}\nstderr:{}",
+        out.status,
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr),
+    );
+
+    // 4-entry tree: package.json, sail.config.jsonc, routes/, themes/
+    for rel in [
+        "package.json",
+        "sail.config.jsonc",
+        "routes/page.sail",
+        "themes/sail.json",
+    ] {
+        let p = app.join(rel);
+        assert!(
+            p.exists(),
+            "missing {rel} after sail create: {}",
+            p.display()
+        );
+        let len = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
+        assert!(len > 0, "empty {rel} after sail create");
+    }
+
+    // .gitignore enforces dist/ never committed (deploy out)
+    let gi = std::fs::read_to_string(app.join(".gitignore")).expect("read .gitignore");
+    assert!(
+        gi.lines().any(|l| {
+            let t = l.trim().trim_start_matches('/');
+            t == "dist/" || t == "dist"
+        }),
+        "gitignore missing dist/:\n{gi}"
+    );
+
+    // Registry-style deps only (no file: / workspace:*)
+    let pkg = std::fs::read_to_string(app.join("package.json")).expect("package.json");
+    assert!(
+        !pkg.contains("file:") && !pkg.contains("workspace:"),
+        "create package.json must use registry deps, not file:/workspace:\n{pkg}"
+    );
+    assert!(
+        pkg.contains("@ship/sail-runtime"),
+        "package.json missing @ship/sail-runtime:\n{pkg}"
+    );
+    // TOOLING-1 WI2: typecheck/lint scripts + tooling devDeps
+    assert!(
+        pkg.contains("\"typecheck\"") && pkg.contains("\"lint\""),
+        "create package.json missing typecheck/lint scripts:\n{pkg}"
+    );
+    assert!(
+        pkg.contains("oxlint"),
+        "create package.json missing oxlint devDep:\n{pkg}"
+    );
+    assert!(
+        !pkg.contains("\"typescript\""),
+        "create must not pin npm typescript — types use the sail sidecar:\n{pkg}"
+    );
+    assert!(
+        pkg.contains("sail build --bundle-framework"),
+        "create build script must emit a self-contained bundle:\n{pkg}"
+    );
+
+    // G2c / TOOLING-1 WI2: solution root + kind configs under .sail/
+    // + ambient pack + oxlint. Root is references-only; flags live on pure/action.
+    let tsconfig = std::fs::read_to_string(app.join("tsconfig.json")).expect("tsconfig.json");
+    assert!(
+        tsconfig.contains("references")
+            && tsconfig.contains(".sail/tsconfig.sail.json")
+            && tsconfig.contains(".sail/tsconfig.action.json"),
+        "create root tsconfig must be a solution referencing pure+action under .sail/:\n{tsconfig}"
+    );
+    assert!(
+        !app.join("tsconfig.sail.json").exists() && !app.join("tsconfig.action.json").exists(),
+        "create must not emit root-level tsconfig.pure/action.json (G2c)"
+    );
+    let pure = std::fs::read_to_string(app.join(".sail/tsconfig.sail.json"))
+        .expect(".sail/tsconfig.sail.json");
+    for flag in [
+        "\"strict\": true",
+        "\"noUncheckedIndexedAccess\": true",
+        "\"exactOptionalPropertyTypes\": true",
+        "\"noImplicitOverride\": true",
+        "\"verbatimModuleSyntax\": true",
+        "\"erasableSyntaxOnly\": true",
+        "\"isolatedModules\": true",
+        "\"moduleResolution\": \"Bundler\"",
+        "\"target\": \"ESNext\"",
+        "\"skipLibCheck\": true",
+        "types.d.ts",
+    ] {
+        assert!(
+            pure.contains(flag),
+            "create pure kind tsconfig missing WI2 flag/pack {flag}:\n{pure}"
+        );
+    }
+    assert!(
+        app.join(".sail/types.d.ts").is_file(),
+        "create must emit ambient pack .sail/types.d.ts"
+    );
+    assert!(
+        app.join(".sail/tsconfig.action.json").is_file(),
+        "create must emit action kind tsconfig under .sail/"
+    );
+    let oxlint = std::fs::read_to_string(app.join(".oxlintrc.json")).expect(".oxlintrc.json");
+    assert!(
+        oxlint.contains("typescript") && oxlint.contains("correctness"),
+        "create .oxlintrc.json must enable typescript + correctness:\n{oxlint}"
+    );
+    let cfg = std::fs::read_to_string(app.join("sail.config.jsonc")).expect("sail.config.jsonc");
+    assert!(
+        cfg.contains("\"default\": \"sail\"") && cfg.contains("\"preset\": \"strict\""),
+        "create config must default to sail + explicit strict preset:\n{cfg}"
+    );
+
+    // create → check path green
+    let check = Command::new(sail_bin())
+        .args(["check", app.to_str().unwrap()])
+        .current_dir(tmp.path())
+        .output()
+        .expect("spawn sail check");
+    assert!(
+        check.status.success(),
+        "sail check after create failed (status {:?}):\nstdout:{}\nstderr:{}",
+        check.status,
+        String::from_utf8_lossy(&check.stdout),
+        String::from_utf8_lossy(&check.stderr),
+    );
+    let stderr = String::from_utf8_lossy(&check.stderr);
+    assert!(
+        !stderr.contains("dist/ is tracked"),
+        "fresh create must not warn about tracked dist/:\n{stderr}"
+    );
+    assert!(
+        !stderr.contains("carries no capability signal"),
+        "fresh create must not dump a NoSignal policy warning:\n{stderr}"
+    );
+}
+
+/// FIRST-RUN: create → `sail build` with no `bun install` and no monorepo cwd.
+/// `--bundle-framework` still needs `@ship/*` on disk; the no-flag build must
+/// not. Hello-world output has no `.wasm` (EXT-1 E5).
+#[test]
+fn create_then_build_without_install() {
+    let tmp = TempDir::new().expect("tempdir");
+    let app = tmp.path().join(unique_stem("create-build"));
+    let create = Command::new(sail_bin())
+        .args(["create", app.to_str().unwrap()])
+        .current_dir(tmp.path())
+        .output()
+        .expect("spawn sail create");
+    assert!(
+        create.status.success(),
+        "create failed: {}",
+        String::from_utf8_lossy(&create.stderr)
+    );
+    assert!(
+        !app.join("node_modules").exists(),
+        "create must not write node_modules"
+    );
+
+    let build = Command::new(sail_bin())
+        .args(["build", "--project", app.to_str().unwrap()])
+        .current_dir(tmp.path())
+        .output()
+        .expect("spawn sail build");
+    assert!(
+        build.status.success(),
+        "sail build after create (no install) failed (status {:?}):\nstdout:{}\nstderr:{}",
+        build.status,
+        String::from_utf8_lossy(&build.stdout),
+        String::from_utf8_lossy(&build.stderr),
+    );
+    let index = app.join("dist/index.html");
+    assert!(index.is_file(), "build must emit dist/index.html");
+    let html = std::fs::read_to_string(&index).expect("index.html");
+    assert!(
+        html.contains("importmap") && html.contains("root"),
+        "built index missing importmap/#root:\n{html}"
+    );
+    assert!(
+        html.contains("sail-default-theme") && html.contains("sail"),
+        "built index must stamp the sail brand default:\n{html}"
+    );
+    let wasm = walk_ext(&app.join("dist"), "wasm");
+    assert!(
+        wasm.is_empty(),
+        "hello-world build must not ship wasm: {wasm:?}"
+    );
+}
+
+/// FIRST-RUN: `sail dev` on a created app outside the monorepo serves HTML.
+#[test]
+fn create_then_dev_serves() {
+    let tmp = TempDir::new().expect("tempdir");
+    let app = tmp.path().join(unique_stem("create-dev"));
+    let create = Command::new(sail_bin())
+        .args(["create", app.to_str().unwrap()])
+        .current_dir(tmp.path())
+        .output()
+        .expect("spawn sail create");
+    assert!(
+        create.status.success(),
+        "create failed: {}",
+        String::from_utf8_lossy(&create.stderr)
+    );
+
+    let port = free_port();
+    let addr = format!("127.0.0.1:{port}");
+    let mut child = Command::new(sail_bin())
+        .args(["dev", "--project", app.to_str().unwrap(), "--addr", &addr])
+        .current_dir(tmp.path())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .expect("spawn sail dev");
+
+    let body = match wait_http_get(&addr, "/", std::time::Duration::from_secs(30)) {
+        Ok(b) => b,
+        Err(e) => {
+            let _ = child.kill();
+            let (stdout, stderr) = match child.wait_with_output() {
+                Ok(o) => (
+                    String::from_utf8_lossy(&o.stdout).into_owned(),
+                    String::from_utf8_lossy(&o.stderr).into_owned(),
+                ),
+                Err(wait_err) => (String::new(), wait_err.to_string()),
+            };
+            panic!("sail dev did not serve {addr}: {e}\nstdout:{stdout}\nstderr:{stderr}");
+        }
+    };
+    let _ = child.kill();
+    let _ = child.wait();
+
+    assert!(
+        body.contains("<html") && body.contains("sail-default-theme"),
+        "dev index missing html/theme meta:\n{body}"
+    );
+    assert!(
+        body.contains("content=\"sail\""),
+        "dev must paint the sail brand default:\n{body}"
+    );
+}
+
+/// Created app: doctor is project health; types/fmt/inspect/tokens work
+/// with no bun install. `sail op gen` does not dump a fake monorepo.
+#[test]
+fn create_then_product_cli_verbs() {
+    let tmp = TempDir::new().expect("tempdir");
+    let app = tmp.path().join(unique_stem("create-cli"));
+    let create = Command::new(sail_bin())
+        .args(["create", app.to_str().unwrap()])
+        .current_dir(tmp.path())
+        .output()
+        .expect("spawn sail create");
+    assert!(
+        create.status.success(),
+        "create failed: {}",
+        String::from_utf8_lossy(&create.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&create.stdout);
+    assert!(
+        !stdout.contains("bun install"),
+        "create next-steps must not lead with bun install:\n{stdout}"
+    );
+
+    let doctor = Command::new(sail_bin())
+        .args(["doctor"])
+        .current_dir(&app)
+        .output()
+        .expect("spawn sail doctor");
+    let d_out = String::from_utf8_lossy(&doctor.stdout);
+    let d_err = String::from_utf8_lossy(&doctor.stderr);
+    assert!(
+        doctor.status.success(),
+        "doctor on created app failed:\nstdout:{d_out}\nstderr:{d_err}"
+    );
+    assert!(
+        d_out.contains("status: ok")
+            && d_out.contains("theme: sail")
+            && d_out.contains("types: .sail/types.d.ts")
+            && d_out.contains("render: csr"),
+        "doctor must report product shape:\n{d_out}"
+    );
+    for leak in ["bun:", "typescript:", "workspace:", "list-tools", "sidecar"] {
+        assert!(
+            !d_out.contains(leak),
+            "doctor must not report toolchain `{leak}`:\n{d_out}"
+        );
+    }
+
+    for (args, label) in [
+        (vec!["types", "--check"], "types --check"),
+        (vec!["fmt", "--check", "."], "fmt --check"),
+        (vec!["tokens"], "tokens"),
+    ] {
+        let out = Command::new(sail_bin())
+            .args(&args)
+            .current_dir(&app)
+            .output()
+            .expect(label);
+        assert!(
+            out.status.success(),
+            "{label} failed (status {:?}):\nstdout:{}\nstderr:{}",
+            out.status,
+            String::from_utf8_lossy(&out.stdout),
+            String::from_utf8_lossy(&out.stderr),
+        );
+    }
+
+    let inspect = Command::new(sail_bin())
+        .args(["inspect", "tree", "routes/page.sail"])
+        .current_dir(&app)
+        .output()
+        .expect("inspect");
+    assert!(
+        inspect.status.success(),
+        "inspect tree failed:\n{}",
+        String::from_utf8_lossy(&inspect.stderr)
+    );
+    let tree = String::from_utf8_lossy(&inspect.stdout);
+    assert!(
+        tree.contains("\"tag\": \"column\"") || tree.contains("\"tag\":\"column\""),
+        "inspect tree must name the page root:\n{tree}"
+    );
+
+    let op_gen = Command::new(sail_bin())
+        .args(["op", "gen"])
+        .current_dir(&app)
+        .output()
+        .expect("sail op gen");
+    assert!(
+        !op_gen.status.success(),
+        "sail op gen must refuse on a created app"
+    );
+    let gen_err = String::from_utf8_lossy(&op_gen.stderr);
+    assert!(
+        gen_err.contains("deck-bake gen"),
+        "refuse must name deck-bake gen:\n{gen_err}"
+    );
+    assert!(
+        !app.join("packages/sail/studio-client").exists(),
+        "sail op gen must not write packages/ into a created app"
+    );
+}
+
+/// `sail check` lints created-app `src/` (not only monorepo `apps/`).
+#[test]
+fn create_then_check_lints_src() {
+    let tmp = TempDir::new().expect("tempdir");
+    let app = tmp.path().join(unique_stem("create-src"));
+    let create = Command::new(sail_bin())
+        .args(["create", app.to_str().unwrap()])
+        .current_dir(tmp.path())
+        .output()
+        .expect("spawn sail create");
+    assert!(create.status.success(), "create failed");
+    std::fs::create_dir_all(app.join("src/stores")).expect("mkdir src/stores");
+    std::fs::write(
+        app.join("src/stores/leak.ts"),
+        "export function leak(el: { style: { cssText: string } }) {\n  el.style.cssText = \"x\";\n}\n",
+    )
+    .expect("write leak");
+    let check = Command::new(sail_bin())
+        .args(["check", "."])
+        .current_dir(&app)
+        .output()
+        .expect("sail check");
+    let combined = format!(
+        "{}{}",
+        String::from_utf8_lossy(&check.stdout),
+        String::from_utf8_lossy(&check.stderr)
+    );
+    assert!(
+        !check.status.success(),
+        "check must fail on src/stores/leak.ts:\n{combined}"
+    );
+    assert!(
+        combined.contains("leak.ts"),
+        "check must name leak.ts:\n{combined}"
+    );
+}
+
+fn walk_ext(dir: &std::path::Path, ext: &str) -> Vec<std::path::PathBuf> {
+    let mut out = Vec::new();
+    let Ok(rd) = std::fs::read_dir(dir) else {
+        return out;
+    };
+    for ent in rd.flatten() {
+        let p = ent.path();
+        if p.is_dir() {
+            out.extend(walk_ext(&p, ext));
+        } else if p.extension().and_then(|e| e.to_str()) == Some(ext) {
+            out.push(p);
+        }
+    }
+    out
+}
+
+fn free_port() -> u16 {
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind :0");
+    let port = listener.local_addr().expect("local_addr").port();
+    drop(listener);
+    port
+}
+
+fn wait_http_get(addr: &str, path: &str, budget: std::time::Duration) -> Result<String, String> {
+    let start = std::time::Instant::now();
+    let mut last = String::from("no attempt");
+    while start.elapsed() < budget {
+        match http_get(addr, path) {
+            Ok(body) => return Ok(body),
+            Err(e) => last = e,
+        }
+        std::thread::sleep(std::time::Duration::from_millis(200));
+    }
+    Err(last)
+}
+
+fn http_get(addr: &str, path: &str) -> Result<String, String> {
+    use std::io::{Read, Write};
+    let mut stream = std::net::TcpStream::connect(addr).map_err(|e| e.to_string())?;
+    stream
+        .set_read_timeout(Some(std::time::Duration::from_secs(2)))
+        .ok();
+    let req = format!("GET {path} HTTP/1.1\r\nHost: {addr}\r\nConnection: close\r\n\r\n");
+    stream
+        .write_all(req.as_bytes())
+        .map_err(|e| e.to_string())?;
+    let mut buf = String::new();
+    stream.read_to_string(&mut buf).map_err(|e| e.to_string())?;
+    if !buf.starts_with("HTTP/1.1 200") && !buf.starts_with("HTTP/1.0 200") {
+        return Err(format!("not 200: {}", buf.lines().next().unwrap_or("")));
+    }
+    Ok(buf)
+}
+
+/// `sail check` warns (does not fail) when `dist/` is git-tracked.
+#[test]
+fn check_warns_when_dist_is_tracked() {
+    let tmp = TempDir::new().expect("tempdir");
+    let name = unique_stem("dist-tracked");
+    let app = tmp.path().join(&name);
+
+    let create = Command::new(sail_bin())
+        .args(["create", app.to_str().unwrap()])
+        .current_dir(tmp.path())
+        .output()
+        .expect("spawn sail create");
+    assert!(
+        create.status.success(),
+        "sail create failed: {}",
+        String::from_utf8_lossy(&create.stderr)
+    );
+
+    // Init a git repo in the app and force-add a dist artifact despite gitignore.
+    let git = |args: &[&str]| {
+        let st = Command::new("git")
+            .args(args)
+            .current_dir(&app)
+            .output()
+            .expect("git");
+        assert!(
+            st.status.success(),
+            "git {args:?} failed: {}",
+            String::from_utf8_lossy(&st.stderr)
+        );
+    };
+    git(&["init"]);
+    git(&["config", "user.email", "test@example.com"]);
+    git(&["config", "user.name", "test"]);
+    std::fs::create_dir_all(app.join("dist")).expect("mkdir dist");
+    std::fs::write(app.join("dist").join("index.html"), "<html></html>\n").expect("write");
+    // -f forces through .gitignore so we can simulate a bad commit of deploy output.
+    git(&["add", "-f", "dist/index.html"]);
+    git(&["commit", "-m", "track dist by mistake"]);
+
+    let check = Command::new(sail_bin())
+        .args(["check", "."])
+        .current_dir(&app)
+        .output()
+        .expect("spawn sail check");
+    assert!(
+        check.status.success(),
+        "sail check must still succeed (warning only); status {:?}:\nstdout:{}\nstderr:{}",
+        check.status,
+        String::from_utf8_lossy(&check.stdout),
+        String::from_utf8_lossy(&check.stderr),
+    );
+    let stderr = String::from_utf8_lossy(&check.stderr);
+    assert!(
+        stderr.contains("dist/ is tracked") || stderr.contains("dist is tracked"),
+        "expected dist/ tracked warning, got:\n{stderr}"
+    );
+}
+
+// ── sail surface (C-pack) ───────────────────────────────────────────────────
+
+#[test]
+fn sail_version_smoke() {
+    let out = Command::new(sail_bin())
+        .args(["version"])
+        .current_dir(repo_root())
+        .output()
+        .expect("spawn sail");
+    assert!(out.status.success(), "sail version failed: {:?}", out);
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        stdout.contains("sail") && stdout.contains("0.1.0"),
+        "unexpected version output: {stdout}"
+    );
+    assert!(
+        !stdout.contains("cargo") && !stdout.contains("embeds:") && !stdout.contains("sidecar"),
+        "version must not dump internals:\n{stdout}"
+    );
+}
+
+/// Default `sail` does not link V8. Asking for SSR is a project fail, not CSR.
+#[test]
+fn doctor_refuses_ssr_when_v8_unlinked() {
+    let tmp = TempDir::new().expect("tempdir");
+    let app = tmp.path().join(unique_stem("ssr-refused"));
+    let create = Command::new(sail_bin())
+        .args(["create", app.to_str().unwrap()])
+        .current_dir(tmp.path())
+        .output()
+        .expect("spawn sail create");
+    assert!(
+        create.status.success(),
+        "create failed: {}",
+        String::from_utf8_lossy(&create.stderr)
+    );
+    let cfg = app.join("sail.config.jsonc");
+    let body = std::fs::read_to_string(&cfg).expect("read config");
+    let body = body.replace("\"render\": \"csr\"", "\"render\": \"ssr\"");
+    std::fs::write(&cfg, body).expect("write ssr config");
+
+    let doctor = Command::new(sail_bin())
+        .args(["doctor"])
+        .current_dir(&app)
+        .output()
+        .expect("spawn sail doctor");
+    let d_out = String::from_utf8_lossy(&doctor.stdout);
+    let d_err = String::from_utf8_lossy(&doctor.stderr);
+    assert!(
+        !doctor.status.success(),
+        "doctor must fail an SSR project on a V8-less sail:\n{d_out}\n{d_err}"
+    );
+    assert!(
+        d_out.contains("render: ssr") && d_out.contains("status: fail"),
+        "doctor must name the SSR refuse:\n{d_out}"
+    );
+    assert!(
+        !d_out.contains("V8") && !d_err.contains("V8"),
+        "doctor is product health, not a V8 selfie:\n{d_out}\n{d_err}"
+    );
+}
+
+/// Empty dir is not a Sail project. Doctor does not report bun/sidecar/cargo.
+#[test]
+fn doctor_refuses_empty_dir() {
+    let tmp = TempDir::new().expect("tempdir");
+    let doc = Command::new(sail_bin())
+        .args(["doctor"])
+        .current_dir(tmp.path())
+        .output()
+        .expect("spawn sail doctor");
+    let stdout = String::from_utf8_lossy(&doc.stdout);
+    let stderr = String::from_utf8_lossy(&doc.stderr);
+    assert!(
+        !doc.status.success(),
+        "empty dir must fail doctor:\n{stdout}"
+    );
+    assert!(
+        stdout.contains("status: fail") && stdout.contains("project: (none)"),
+        "empty dir must print project none / fail:\n{stdout}"
+    );
+    assert!(
+        stderr.contains("not a Sail project"),
+        "expected project refuse, got:\n{stderr}"
+    );
+    for leak in [
+        "bun:",
+        "typescript:",
+        "workspace:",
+        "tokens model:",
+        "list-tools",
+        "in-process",
+        "sidecar",
+    ] {
+        assert!(
+            !stdout.contains(leak) && !stderr.contains(leak),
+            "doctor must not report toolchain `{leak}`:\nstdout:{stdout}\nstderr:{stderr}"
+        );
+    }
+}
+
+#[test]
+fn sail_help_lists_mvp_subcommands() {
+    let out = Command::new(sail_bin())
+        .args(["--help"])
+        .current_dir(repo_root())
+        .output()
+        .expect("spawn sail --help");
+    assert!(out.status.success());
+    let help = String::from_utf8_lossy(&out.stdout);
+    for cmd in [
+        "create", "dev", "build", "scaffold", "tokens", "compile", "check", "fmt", "lsp", "mcp",
+        "editor", "op", "layout", "doctor", "version", "types",
+    ] {
+        assert!(
+            help_has_subcommand(&help, cmd),
+            "help missing subcommand `{cmd}`:\n{help}"
+        );
+    }
+    for cmd in ["build-assets", "emit", "routes"] {
+        assert!(
+            !help_has_subcommand(&help, cmd),
+            "product sail --help must not list bake verb `{cmd}`:\n{help}"
+        );
+    }
+}
+
+#[test]
+fn deck_bake_help_lists_bake_verbs() {
+    let out = Command::new(bake_bin())
+        .args(["--help"])
+        .current_dir(repo_root())
+        .output()
+        .expect("spawn deck-bake --help");
+    assert!(out.status.success());
+    let help = String::from_utf8_lossy(&out.stdout);
+    for cmd in ["build-assets", "emit", "gen"] {
+        assert!(
+            help_has_subcommand(&help, cmd),
+            "deck-bake --help missing `{cmd}`:\n{help}"
+        );
+    }
+    for cmd in ["create", "dev", "build", "routes"] {
+        assert!(
+            !help_has_subcommand(&help, cmd),
+            "deck-bake --help must not list product verb `{cmd}`:\n{help}"
+        );
+    }
+}
+
+#[test]
+fn sail_rejects_bake_verbs() {
+    for cmd in ["build-assets", "emit", "routes"] {
+        let out = run_sail(&[cmd]);
+        assert!(
+            !out.status.success(),
+            "product sail must reject `{cmd}` (status {:?})",
+            out.status
+        );
+    }
+}
+
+#[test]
+fn tokens_without_project_or_bake_flags_refuses() {
+    let tmp = TempDir::new().expect("tempdir");
+    let out = Command::new(sail_bin())
+        .args(["tokens"])
+        .current_dir(tmp.path())
+        .output()
+        .expect("spawn sail tokens");
+    assert!(
+        !out.status.success(),
+        "sail tokens must refuse without Project or --model/--out"
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains("pass --model/--out (bake)"),
+        "expected bake-flag refuse, got: {stderr}"
     );
 }

@@ -1,0 +1,105 @@
+{
+  "service": "SailAuthoring",
+  "method": "Check",
+  "mcp_tool": "sail_check",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "actor": {
+        "description": "Attribution when fix=apply (e.g. `agent`, `human:name`).",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "fix": {
+        "description": "Auto-fix: `off` | `suggest` | `apply`. Default `off` (unattended). `suggest` attaches machine fix payloads without writing; `apply` rewrites the file when `path` is set (or returns fixed `source` when inline).",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "includeTs": {
+        "description": "When true (default), merge mapped TypeScript diagnostics into structure/check results. Returns `typescriptStatus: missing` and omits TS diagnostics when the sidecar is absent.",
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "path": {
+        "description": "Workspace-relative path (WI4: path escape refused). Prefer with no `source` to read disk; absolute / `..` paths are PermissionDenied.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "source": {
+        "description": "Inline source — unrestricted (source mode; WI4 leaves this unchanged).",
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "CheckRet",
+    "type": "object",
+    "required": [
+      "count",
+      "diagnostics",
+      "ok"
+    ],
+    "properties": {
+      "autoFixed": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/definitions/Json"
+        }
+      },
+      "count": {
+        "type": "integer",
+        "format": "uint",
+        "minimum": 0.0
+      },
+      "diagnostics": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Json"
+        }
+      },
+      "fixes": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/definitions/Json"
+        }
+      },
+      "ok": {
+        "type": "boolean"
+      },
+      "source": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "typescriptStatus": {
+        "description": "`\"live\"` or `\"missing\"`.",
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "definitions": {
+      "Json": {}
+    }
+  }
+}

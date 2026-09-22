@@ -1,0 +1,63 @@
+import { defineConfig } from 'vitest/config'
+import { resolve } from 'node:path'
+import { SHIP_VITEST_DEFAULTS } from '@ship/test-setup/vitest'
+
+export default defineConfig({
+  resolve: {
+    alias: [
+      {
+        find: '@ship/sail-runtime/template-hooks',
+        replacement: resolve(__dirname, '../runtime/src/template-hooks/index.ts'),
+      },
+      {
+        find: '@ship/deck-router',
+        replacement: resolve(__dirname, '../deck/router/src/index.ts'),
+      },
+      {
+        find: '@ship/sail-runtime/route',
+        replacement: resolve(__dirname, '../runtime/src/route/index.ts'),
+      },
+      // The compiler emits `use:` action imports from this subpath (emit/js/
+      // imports.rs) and compile-sail.ts imports it for the eval harness —
+      // without the entry it falls through to the bare-name alias below.
+      {
+        find: '@ship/sail-runtime/actions',
+        replacement: resolve(__dirname, '../runtime/src/actions/index.ts'),
+      },
+      {
+        find: '@ship/sail-runtime/motion',
+        replacement: resolve(__dirname, '../runtime/src/motion-bundle.ts'),
+      },
+      {
+        find: '@ship/sail-runtime/query',
+        replacement: resolve(__dirname, '../runtime/src/query.ts'),
+      },
+      {
+        find: '@ship/sail-runtime/virtual',
+        replacement: resolve(__dirname, '../runtime/src/virtual.ts'),
+      },
+      {
+        find: '@ship/sail-runtime/internal',
+        replacement: resolve(__dirname, '../runtime/src/internal.ts'),
+      },
+      {
+        find: '@ship/sail-runtime',
+        replacement: resolve(__dirname, '../runtime/src/index.ts'),
+      },
+      { find: '@ship/sail-dom', replacement: resolve(__dirname, 'src/index.ts') },
+      // No `@ship/sail-compiler-wasm` alias: the test helper
+      // (test/compile-sail.ts) loads the native sail-compiler as a Node-API
+      // addon via process.dlopen — one cargo-current build feeds both the
+      // daemon and this harness. The wasm surface stays browser-only.
+    ],
+    // sail-compiler emits `view.js` next to `view.sail` and the paired `view.ts`
+    // (see scripts/build-bundles.mjs::compileSail). Tests target the controller
+    // source — prefer `.ts` over the generated `.js` shadow.
+    extensions: ['.mts', '.ts', '.tsx', '.mjs', '.js', '.jsx', '.json'],
+  },
+  test: {
+    include: ['test/**/*.test.ts'],
+    environment: 'jsdom',
+    ...SHIP_VITEST_DEFAULTS,
+  },
+})

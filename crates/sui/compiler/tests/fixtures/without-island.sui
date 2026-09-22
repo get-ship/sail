@@ -1,4 +1,0 @@
-<div class="counter">
-  <p>{count()}</p>
-  <button on:click={() => count.set(count() + 1)}>increment</button>
-</div>

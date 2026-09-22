@@ -1,24 +1,41 @@
-//! Synthesize + bundle: turn a `.sui` + app manifest into ONE self-contained
+//! Synthesize + bundle: turn a `.sail` + app manifest into ONE self-contained
 //! ES module ready to run in the isolate.
 //!
 //! `synthesize_and_bundle` calls the synthetic emitter as a pure function (no
 //! CLI shell-out) and drives Rolldown — the project's own bundler — so the
-//! module matches the real pipeline. `@ship/sui-runtime` and `@ship/deck/router`
+//! module matches the real pipeline. `@ship/sail-runtime` and `@ship/deck/router`
 //! alias to their SERVER entries (no browser side-effects, host-backed route),
 //! app `<client>` modules alias to their server entries, and `ship` stays
 //! external (the host-dispatch wire).
 
 use std::path::{Component, Path, PathBuf};
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use rolldown::BundlerBuilder;
-use rolldown_common::{BundlerOptions, InputItem, Output, OutputFormat, ResolveOptions};
-use sui_compiler::emit::synthetic::{emit_synthetic, AppManifest};
-use sui_compiler::parse::parse;
-use sui_compiler::CompileMode;
+use rolldown_common::{
+    BundlerOptions, CodeSplittingMode, InputItem, Output, OutputFormat, ResolveOptions,
+};
+use sail_compiler::CompileMode;
+use sail_compiler::emit::synthetic::{AppManifest, emit_synthetic};
+use sail_compiler::parse::parse;
+use sail_compiler::parse::preprocess::extract_controller_block;
+
+/// Lower `query()`/`mutation()`/`invalidate()`, then ambient-wrap an extracted
+/// controller body for `page.inline.controller.ts`. Same order as CLI
+/// `synthesize` / bundler virtual-controller load. Without rewrite, a
+/// `query(() => client.m())` reaches the runtime with no compiler-derived key.
+/// Without the wrap, bare ambient idents (`signal`, `controller`, …) are free
+/// variables at runtime. Re-wrap is idempotent for already-bound names.
+pub fn materialize_inline_controller(inline_src: &str) -> Result<String> {
+    let lowered = sail_compiler::check::query_keys::rewrite(inline_src)
+        .map_err(|e| anyhow!("synthesize (query keys): {}", e.render(inline_src)))?;
+    Ok(sail_compiler::parse::preprocess::wrap_controller_body(
+        &lowered,
+    ))
+}
 
 /// Walk up from this crate to the repo root (the dir holding `package.json`
-/// and `packages/`). Anchors the view / manifest / server-entry paths.
+/// and `packages/`). Anchors the route / manifest / server-entry paths.
 pub fn repo_root() -> Result<PathBuf> {
     let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     loop {
@@ -41,18 +58,26 @@ pub struct ClientAlias {
     pub server_entry: PathBuf,
 }
 
-/// Synthesize `view_rel` with `manifest_rel`, lay the artifacts + the SSR
+/// Synthesize `route_rel` with `manifest_rel`, lay the artifacts + the SSR
 /// entry out in `build_dir`, then Rolldown-bundle into one ES module string.
 pub async fn synthesize_and_bundle(
     repo: &Path,
-    view_rel: &str,
+    route_rel: &str,
     manifest_rel: &str,
     mode: CompileMode,
     client_aliases: &[ClientAlias],
     build_dir: &Path,
 ) -> Result<String> {
-    synthesize_and_bundle_with(repo, view_rel, manifest_rel, mode, None, client_aliases, build_dir)
-        .await
+    synthesize_and_bundle_with(
+        repo,
+        route_rel,
+        manifest_rel,
+        mode,
+        None,
+        client_aliases,
+        build_dir,
+    )
+    .await
 }
 
 /// As [`synthesize_and_bundle`], but composing an authored controller. The
@@ -61,36 +86,83 @@ pub async fn synthesize_and_bundle(
 #[allow(clippy::too_many_arguments)]
 pub async fn synthesize_and_bundle_with(
     repo: &Path,
-    view_rel: &str,
+    route_rel: &str,
     manifest_rel: &str,
     mode: CompileMode,
     authored: Option<&Path>,
     client_aliases: &[ClientAlias],
     build_dir: &Path,
 ) -> Result<String> {
-    use sui_compiler::emit::synthetic::AuthoredController;
+    use sail_compiler::emit::synthetic::AuthoredController;
 
-    let source = std::fs::read_to_string(repo.join(view_rel))
-        .with_context(|| format!("read view {view_rel}"))?;
+    let source = std::fs::read_to_string(repo.join(route_rel))
+        .with_context(|| format!("read view {route_rel}"))?;
     let manifest_src = std::fs::read_to_string(repo.join(manifest_rel))
         .with_context(|| format!("read manifest {manifest_rel}"))?;
-    let program =
-        parse(&source).map_err(|e| anyhow!("parse view: {}", e.render(&source)))?;
+    // SAIL sources may declare a `<controller>…</controller>` block alongside
+    // the template — the synthetic emit reads it as a paired controller.
+    // The template-only parser expects the block to be stripped first; the
+    // CLI does this in `parse::preprocess`, the SSR bundler must too.
+    let (stripped, inline) = extract_controller_block(&source);
+    let program = parse(&stripped).map_err(|e| anyhow!("parse view: {}", e.render(&stripped)))?;
     let mut manifest = AppManifest::parse(&manifest_src)
         .map_err(|e| anyhow!("parse manifest: {}", e.render(&manifest_src)))?;
     // Deck declares its host context (route/navigate -> @ship/deck/router) into
-    // the manifest seam; the app's own entries win. SUI names no host.
+    // the manifest seam; the app's own entries win. SAIL names no host.
     for (name, client) in deck_core::host_context::host_context_clients() {
         manifest.clients.entry(name).or_insert(client);
     }
-    let authored = authored.map(|p| AuthoredController { specifier: path_str(p) });
-    let out =
-        emit_synthetic(&program, &manifest, authored.as_ref(), "./page.synthetic.controller.ts", mode, None)
-            .map_err(|e| anyhow!("synthesize: {}", e.render(&source)))?;
-
-    std::fs::create_dir_all(build_dir)
-        .with_context(|| format!("mkdir {}", build_dir.display()))?;
-    std::fs::write(build_dir.join("page.synthetic.controller.ts"), &out.controller_ts)?;
+    std::fs::create_dir_all(build_dir).with_context(|| format!("mkdir {}", build_dir.display()))?;
+    // The controller IS the .sail's own `<controller>` block; an explicit
+    // `authored` path (test-only) overrides it. For an inline block, write it to a
+    // module beside the synthetic controller and import it by the same absolute
+    // specifier an authored sibling would use.
+    let authored = if let Some(p) = authored {
+        Some(AuthoredController {
+            specifier: path_str(p),
+        })
+    } else if let Some(inline_src) = inline.as_deref() {
+        let wrapped = materialize_inline_controller(inline_src)?;
+        let inline_path = build_dir.join("page.inline.controller.ts");
+        std::fs::write(&inline_path, &wrapped)
+            .with_context(|| format!("write inline controller {}", inline_path.display()))?;
+        Some(AuthoredController {
+            specifier: path_str(&inline_path),
+        })
+    } else {
+        None
+    };
+    let out = emit_synthetic(
+        &program,
+        &manifest,
+        authored.as_ref(),
+        "./page.synthetic.controller.ts",
+        mode,
+        None,
+    )
+    .map_err(|e| anyhow!("synthesize: {}", e.render(&source)))?;
+    // The typed `Scope` companion, beside the synthesized pair. An authored
+    // controller annotates itself `(ctx: Scope)` off `import type { Scope } from
+    // './page.sail'`, and TS resolves that to `page.sail.d.ts` — so the members
+    // deck grants (`route`, `navigate`) and the app's declared clients are typed
+    // where the controller reads them, instead of being bolted on by a
+    // hand-maintained runtime wrapper. Capabilities come from the SAME merged
+    // manifest the synthetic controller imports from, so the two cannot drift.
+    // (No `ParsedController` here: controller scope-factory fields are omitted
+    // from `Scope` by design — they are typed solely by the controller's own
+    // inferred return.)
+    std::fs::write(
+        build_dir.join("page.sail.d.ts"),
+        sail_compiler::emit::dts::emit_dts(
+            &program,
+            None,
+            &deck_core::host_context::host_context_capabilities(&manifest),
+        ),
+    )?;
+    std::fs::write(
+        build_dir.join("page.synthetic.controller.ts"),
+        &out.controller_ts,
+    )?;
     std::fs::write(build_dir.join("page.render.ts"), &out.render_ts)?;
     // The SSR entry (server-DOM + host-dispatch + serialize), from the crate.
     let ssr_entry = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("ssr/ssr-entry.ts");
@@ -101,12 +173,68 @@ pub async fn synthesize_and_bundle_with(
 }
 
 async fn bundle(repo: &Path, build_dir: &Path, client_aliases: &[ClientAlias]) -> Result<String> {
-    let runtime_server = repo.join("packages/sui/runtime/src/server.ts");
+    let runtime_server = repo.join("packages/sail/runtime/src/server.ts");
+    let runtime_internal = repo.join("packages/sail/runtime/src/internal.ts");
+    let runtime_actions = repo.join("packages/sail/runtime/src/actions/index.ts");
     let route_server = repo.join("packages/deck/router/src/server.ts");
     let mut alias = vec![
-        ("@ship/sui-runtime".to_string(), vec![Some(path_str(&runtime_server))]),
-        ("@ship/deck/router".to_string(), vec![Some(path_str(&route_server))]),
+        (
+            "@ship/sail-runtime".to_string(),
+            vec![Some(path_str(&runtime_server))],
+        ),
+        (
+            "@ship/sail-runtime/internal".to_string(),
+            vec![Some(path_str(&runtime_internal))],
+        ),
+        (
+            "@ship/sail-runtime/actions".to_string(),
+            vec![Some(path_str(&runtime_actions))],
+        ),
+        (
+            "@ship/sail-runtime/motion".to_string(),
+            vec![Some(path_str(
+                &repo.join("packages/sail/runtime/src/motion-bundle.ts"),
+            ))],
+        ),
+        (
+            "@ship/sail-runtime/query".to_string(),
+            vec![Some(path_str(
+                &repo.join("packages/sail/runtime/src/query.ts"),
+            ))],
+        ),
+        (
+            "@ship/sail-runtime/virtual".to_string(),
+            vec![Some(path_str(
+                &repo.join("packages/sail/runtime/src/virtual.ts"),
+            ))],
+        ),
+        (
+            "@ship/deck/router".to_string(),
+            vec![Some(path_str(&route_server))],
+        ),
     ];
+    // App/workspace packages used by SSR shell (Studio) — repo-root node_modules
+    // does not hoist every workspace link, so alias to source like sail-runtime.
+    for (spec, rel) in [
+        (
+            "@ship/sail-studio-shell",
+            "packages/sail/studio-shell/src/index.ts",
+        ),
+        (
+            "@ship/sail-studio-client",
+            "packages/sail/studio-client/src/index.ts",
+        ),
+        ("@ship/studio/edit", "apps/studio/src/edit/index.ts"),
+        ("@ship/studio/checks", "apps/studio/src/checks/index.ts"),
+        ("@ship/studio/design", "apps/studio/src/design/index.ts"),
+        ("@ship/studio/tasks", "apps/studio/src/tasks/index.ts"),
+        ("@ship/studio/shell", "apps/studio/src/shell/index.ts"),
+    ] {
+        let p = repo.join(rel);
+        if p.is_file() {
+            alias.push((spec.to_string(), vec![Some(path_str(&p))]));
+        }
+    }
     for c in client_aliases {
         alias.push((c.specifier.clone(), vec![Some(path_str(&c.server_entry))]));
     }
@@ -119,10 +247,16 @@ async fn bundle(repo: &Path, build_dir: &Path, client_aliases: &[ClientAlias]) -
         }]),
         cwd: Some(repo.to_path_buf()),
         format: Some(OutputFormat::Esm),
+        // Isolate only evaluates one module string; multi-chunk `import './x.js'` is denied.
+        code_splitting: Some(CodeSplittingMode::Bool(false)),
         external: Some(vec!["ship".to_string()].into()),
         resolve: Some(ResolveOptions {
             alias: Some(alias),
-            extensions: Some(vec![".ts".to_string(), ".js".to_string(), ".mjs".to_string()]),
+            extensions: Some(vec![
+                ".ts".to_string(),
+                ".js".to_string(),
+                ".mjs".to_string(),
+            ]),
             ..Default::default()
         }),
         ..Default::default()
@@ -131,7 +265,10 @@ async fn bundle(repo: &Path, build_dir: &Path, client_aliases: &[ClientAlias]) -
         .with_options(options)
         .build()
         .map_err(|e| anyhow!("rolldown build: {e:?}"))?;
-    let generated = bundler.generate().await.map_err(|e| anyhow!("rolldown generate: {e:?}"))?;
+    let generated = bundler
+        .generate()
+        .await
+        .map_err(|e| anyhow!("rolldown generate: {e:?}"))?;
     for asset in generated.assets {
         if let Output::Chunk(c) = asset
             && c.is_entry

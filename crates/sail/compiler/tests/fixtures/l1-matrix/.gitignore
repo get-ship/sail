@@ -1,0 +1,16 @@
+node_modules/
+dist/
+*.tsbuildinfo
+*.log
+.DS_Store
+.deck/
+routes.gen.ts
+entry.gen.ts
+components.gen.ts
+layout-diags.json
+*.sail.d.ts
+*.controller.ts
+.env
+.env.*
+!.env.example
+.sail/

@@ -1,6 +1,6 @@
 //! Host-side form-action injection.
 //!
-//! The SUI compiler emits `mutation="bN"` markers on `<form>` elements but
+//! The SAIL compiler emits `mutation="bN"` markers on `<form>` elements but
 //! does NOT bake the `/_deck/mutation/…` URL into the SSR output — that is the
 //! host's job, because only the host knows which daemon it is running.
 //!
@@ -18,7 +18,7 @@ use crate::routes::mutation_action;
 /// computed `action` + `method` attributes immediately before the closing `>`.
 ///
 /// Idempotent: forms that already have `action=` are left untouched.
-pub fn inject_form_actions(html: &str, view_name: &str) -> String {
+pub fn inject_form_actions(html: &str, route_name: &str) -> String {
     let mut out = String::with_capacity(html.len() + 64);
     let mut rest = html;
 
@@ -56,7 +56,7 @@ pub fn inject_form_actions(html: &str, view_name: &str) -> String {
         }
 
         // Emit the open-tag with injected action + method before the ">".
-        let action = mutation_action(view_name, &key);
+        let action = mutation_action(route_name, &key);
         out.push_str(&rest[..tag_start]); // text before "<form"
         out.push_str("<form");
         out.push_str(tag_inner);
@@ -150,8 +150,14 @@ mod tests {
             out.contains(r#"action="/_deck/mutation/todos?form=b0""#),
             "action must be injected; got: {out}"
         );
-        assert!(out.contains(r#"method="post""#), "method must be injected; got: {out}");
-        assert!(out.contains(r#"mutation="b0""#), "marker must be preserved; got: {out}");
+        assert!(
+            out.contains(r#"method="post""#),
+            "method must be injected; got: {out}"
+        );
+        assert!(
+            out.contains(r#"mutation="b0""#),
+            "marker must be preserved; got: {out}"
+        );
     }
 
     #[test]
@@ -177,7 +183,8 @@ mod tests {
 
     #[test]
     fn idempotent_on_already_injected_html() {
-        let html = r#"<form mutation="b0" action="/_deck/mutation/todos?form=b0" method="post"></form>"#;
+        let html =
+            r#"<form mutation="b0" action="/_deck/mutation/todos?form=b0" method="post"></form>"#;
         let out = inject_form_actions(html, "todos");
         // The action is already present — must not double-inject.
         let count = out.matches("/_deck/mutation/todos?form=b0").count();
@@ -187,8 +194,14 @@ mod tests {
     #[test]
     fn handles_multiple_forms() {
         let html = r#"<form mutation="b0"></form><form mutation="b2"></form>"#;
-        let out = inject_form_actions(html, "myview");
-        assert!(out.contains(r#"action="/_deck/mutation/myview?form=b0""#), "first form; got: {out}");
-        assert!(out.contains(r#"action="/_deck/mutation/myview?form=b2""#), "second form; got: {out}");
+        let out = inject_form_actions(html, "myroute");
+        assert!(
+            out.contains(r#"action="/_deck/mutation/myroute?form=b0""#),
+            "first form; got: {out}"
+        );
+        assert!(
+            out.contains(r#"action="/_deck/mutation/myroute?form=b2""#),
+            "second form; got: {out}"
+        );
     }
 }

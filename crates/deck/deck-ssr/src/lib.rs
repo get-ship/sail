@@ -1,15 +1,15 @@
-//! Server-render a SYNTHESIZED SUI view through ship-js (deno_core/V8).
+//! Server-render a SYNTHESIZED SAIL route through ship-js (deno_core/V8).
 //!
 //! The pipeline ([`build`] + [`run`]):
 //!   1. [`build::synthesize_and_bundle`] runs the synthetic emitter
-//!      (`emit_synthetic`, pure) for a `.sui` + app manifest, then drives
-//!      Rolldown into ONE self-contained ES module — `@ship/sui-runtime`
+//!      (`emit_synthetic`, pure) for a `.sail` + app manifest, then drives
+//!      Rolldown into ONE self-contained ES module — `@ship/sail-runtime`
 //!      and `@ship/deck/router` aliased to their **server** entries, app
 //!      `<client>` modules to their server entries, and only `import "ship"`
 //!      (the host wire) left external.
 //!   2. [`run::render`] runs that module in the deno_core/V8 isolate via
 //!      `ship_js::deno::run_module`, with a [`host::SsrDispatch`] answering
-//!      `route.current` (the matched request) and `<data>`/client ops over
+//!      `route.current` (the matched request) and controller data/client ops over
 //!      the real op surface. A minimal server-DOM lets the SAME synthesized
 //!      render run unchanged and serialize to a first-paint HTML string.
 //!
@@ -28,18 +28,13 @@ pub mod serve;
 /// a value out of the headless run. The host decides what `call` is allowed
 /// to reach; this is just the wire.
 ///
-/// `call` also maintains an in-flight counter exposed as
-/// `globalThis.__shipPending()`, so the SSR entry can flush async `live()`
-/// sources DETERMINISTICALLY — drain while host work is pending instead of
-/// spinning a fixed number of microtask ticks (see `ssr/ssr-entry.ts`).
+/// The SSR entry's data-flush no longer polls a raw in-flight-call counter
+/// off this SDK: it awaits `@ship/sail-runtime`'s `whenCacheSettled()`,
+/// which brackets a `query()` PULL fetch from start to the moment its
+/// outcome lands in the cache (see `native-cache.ts`) — a signal scoped to
+/// what SSR actually needs to wait for, not every raw host call.
 pub const SHIP_SDK: &str = "\
-let __pending = 0;
-globalThis.__shipPending = () => __pending;
-export const call = (op, args) => {
-  __pending++;
-  return Promise.resolve(Deno.core.ops.op_ship_call(op, args ?? {}))
-    .finally(() => { __pending--; });
-};
+export const call = (op, args) => Promise.resolve(Deno.core.ops.op_ship_call(op, args ?? {}));
 export const emit = (v) => Deno.core.ops.op_emit(v);";
 
 /// What one SSR run produces.

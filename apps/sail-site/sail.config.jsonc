@@ -1,0 +1,28 @@
+{
+  // App-level Sail config (theme + deck serve). Project themes: themes/*.json.
+  // `enabled` catalog allowlist:
+  //   omit / []  → thin (no catalog themes)
+  //   ["sail"]   → only those catalog ids
+  //   "all"      → explicit full catalog (marketing site)
+  "theme": {
+    "default": "sail",
+    "defaultMode": "dark",
+    "enabled": "all"
+  },
+  "icons": {
+    "pack": "lucide",
+    "version": "1.28.0"
+  },
+  "app": {
+    "title": "Sail",
+    "description": "A language for building user interfaces, and the framework that hosts it.",
+    "lang": "en"
+  },
+  // Deck bundler/serve (SPEC-SAIL-CONFIG-1). clientsModule is side-effect-only.
+  "deck": {
+    "entry": {
+      "clientsModule": "./src/clients.ts",
+      "exposeNames": []
+    }
+  }
+}

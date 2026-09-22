@@ -1,0 +1,31 @@
+[package]
+name = "sail-render"
+version = "0.1.0"
+edition = "2024"
+license.workspace = true
+publish = false
+description = "Render a .sail page to a painted, themed PNG screenshot without a browser."
+
+[lib]
+name = "sail_render"
+path = "src/lib.rs"
+
+[dependencies]
+sail-compiler = { path = "../compiler" }
+sail-lint = { path = "../lint" }
+spinnaker = { path = "../spinnaker" }
+
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+takumi = { workspace = true }
+# resolver pin; workspace.dependencies alone does not constrain transitives.
+takumi-raster = { workspace = true }
+png = "0.17"
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[lints]
+workspace = true

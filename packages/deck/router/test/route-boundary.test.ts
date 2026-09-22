@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
-// Same mock strategy as mount-router.test.ts: the real @ship/sui-runtime pulls
+// Same mock strategy as mount-router.test.ts: the real @ship/sail-runtime pulls
 // a cycle vitest can't resolve. We provide a FAITHFUL re-implementation of the
 // error-boundary helpers (identical Symbol key + DOM walk + runProtected
 // try/catch) so a throw routed through `runProtected` reaches the boundary
 // exactly as it does against the real runtime.
-vi.mock('@ship/sui-runtime', () => {
-  const BOUNDARY_KEY = Symbol.for('sui:error-boundary')
+vi.mock('@ship/sail-runtime', () => {
+  const BOUNDARY_KEY = Symbol.for('sail:error-boundary')
   const attachBoundary = (host: any, handle: unknown) => { host[BOUNDARY_KEY] = handle }
   const detachBoundary = (host: any) => { delete host[BOUNDARY_KEY] }
   const findNearestBoundary = (node: any): unknown => {
@@ -30,9 +30,9 @@ vi.mock('@ship/sui-runtime', () => {
 })
 
 import { installRouteBoundary, isDevMode } from '../src/route-boundary'
-// The faithful runProtected from the mock — used to simulate a view throwing
+// The faithful runProtected from the mock — used to simulate a route throwing
 // through the runtime's protected call site, the way bindFor/bindIf/effect do.
-import { runProtected, findNearestBoundary } from '@ship/sui-runtime'
+import { runProtected, findNearestBoundary } from '@ship/sail-runtime'
 
 let outlet: HTMLElement
 
@@ -56,9 +56,9 @@ const setDevMeta = (on: boolean) => {
   }
 }
 
-const defineSuiErrorState = () => {
-  if (!customElements.get('sui-error-state')) {
-    customElements.define('sui-error-state', class extends HTMLElement {})
+const defineSailErrorState = () => {
+  if (!customElements.get('sail-error-state')) {
+    customElements.define('sail-error-state', class extends HTMLElement {})
   }
 }
 
@@ -72,34 +72,34 @@ describe('isDevMode', () => {
 })
 
 describe('installRouteBoundary — throwing route degrades to a card', () => {
-  it('renders <sui-error-state> (not a crash) when a view throws on render', () => {
-    defineSuiErrorState()
+  it('renders <sail-error-state> (not a crash) when a route throws on render', () => {
+    defineSailErrorState()
     installRouteBoundary(outlet, { onReset: () => {}, dev: true })
 
-    // Simulate the view mounting a node and then throwing during render — the
+    // Simulate the route mounting a node and then throwing during render — the
     // runtime's render primitives wrap such call sites in runProtected().
     const viewNode = document.createElement('span')
     outlet.appendChild(viewNode)
     expect(() =>
       runProtected(viewNode, 'render', () => {
-        throw new Error('probe: view exploded on render')
+        throw new Error('probe: route exploded on render')
       }),
     ).not.toThrow()
 
-    const card = outlet.querySelector('sui-error-state')
+    const card = outlet.querySelector('sail-error-state')
     expect(card).not.toBeNull()
     expect(outlet.hasAttribute('data-route-error')).toBe(true)
-    // Broken view DOM is gone — degraded, not dead.
+    // Broken route DOM is gone — degraded, not dead.
     expect(outlet.querySelector('span')).toBeNull()
   })
 
   it('shows the error message + stack in dev, redacts in prod', () => {
-    defineSuiErrorState()
+    defineSailErrorState()
 
     // Dev outlet
     installRouteBoundary(outlet, { onReset: () => {}, dev: true })
     runProtected(outlet, 'render', () => { throw new Error('boom-dev') })
-    const devCard = outlet.querySelector('sui-error-state')!
+    const devCard = outlet.querySelector('sail-error-state')!
     expect(devCard.getAttribute('code')).toBe('boom-dev')
     expect(devCard.querySelector('pre[slot="details"]')).not.toBeNull()
     expect(devCard.querySelector('button[slot="action"]')).not.toBeNull()
@@ -109,14 +109,14 @@ describe('installRouteBoundary — throwing route degrades to a card', () => {
     document.body.appendChild(prodOutlet)
     installRouteBoundary(prodOutlet, { onReset: () => {}, dev: false })
     runProtected(prodOutlet, 'render', () => { throw new Error('boom-prod-secret') })
-    const prodCard = prodOutlet.querySelector('sui-error-state')!
+    const prodCard = prodOutlet.querySelector('sail-error-state')!
     expect(prodCard.getAttribute('code')).toBeNull()
     expect(prodCard.querySelector('pre[slot="details"]')).toBeNull()
     expect(prodCard.getAttribute('body') ?? '').not.toContain('boom-prod-secret')
   })
 
   it('retry clears the error state and re-runs the route mount', () => {
-    defineSuiErrorState()
+    defineSailErrorState()
     const onReset = vi.fn()
     installRouteBoundary(outlet, { onReset, dev: true })
     runProtected(outlet, 'render', () => { throw new Error('retry-me') })

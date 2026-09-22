@@ -2,14 +2,14 @@
 //
 // Resource-symmetry integration test.
 //
-// Goal: every checked-in view, when mounted in jsdom and immediately
+// Goal: every checked-in route, when mounted in jsdom and immediately
 // disposed, leaks zero EventSources, zero MutationObservers, zero
 // ResizeObservers, zero IntersectionObservers, and zero setIntervals.
 //
 // This catches the leak class fixed in two recent commits:
 //   - 87cf3223 — `live()` discarded its effect's stop fn, so the
 //     EventSource opened by a `LiveSource.subscribe(sig)` was never
-//     closed; `<data live>` views OOM'd tabs after a few-dozen
+//     closed; live-querying routes OOM'd tabs after a few-dozen
 //     navigations.
 //   - 0efea6d7 — `mount()` was dropping the `() => …` cleanup that
 //     controllers return from their `mount()` lifecycle hook.
@@ -21,10 +21,10 @@
 //   1. Synthetic leak-class scenarios that directly target the bug
 //      shapes named above. These are the most precise regression
 //      gates — a future revert of either commit fails them.
-//   2. A per-view smoke loop: every controller in `views/<name>/`
-//      (and the named subviews) is mounted via the runtime's
+//   2. A per-route smoke loop: every controller in `views/<name>/`
+//      (and the named subroutes) is mounted via the runtime's
 //      `mount()` with a synthetic compiled-module wrapper, then
-//      disposed. Catches the broader class of "some new view
+//      disposed. Catches the broader class of "some new route
 //      allocates a resource and forgets to release it on dispose."
 //
 // See `.artifacts/job-spec.md` § Part B for the full design.
@@ -33,13 +33,12 @@ import { describe, expect, it, beforeEach, afterEach } from 'vitest'
 import { readdirSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
-  mount,
-  live,
   signal,
+  queryKeyed,
   type LiveSource,
   type LiveState,
-  type ViewPayload,
-} from '@ship/sui-runtime'
+} from '@ship/sail-runtime'
+import { mount, type RoutePayload } from '@ship/sail-runtime/internal'
 import {
   installWrappers,
   snapshot,
@@ -76,30 +75,37 @@ interface SimpleModule {
 }
 
 /** Convenience: build a minimal payload with empty SSR + no scope. */
-function emptyPayload(name = 'test'): ViewPayload {
+function emptyPayload(name = 'test'): RoutePayload {
   return { name, html: '<div></div>', css: '', scope: {}, moduleUrl: '/test' }
 }
 
 describe('resource-symmetry — synthetic leak-class scenarios', () => {
-  it('live(LiveSource) closes its EventSource on dispose [87cf3223]', async () => {
+  it('query(LiveSource) closes its EventSource on dispose [87cf3223]', async () => {
     // Synthetic LiveSource that opens an EventSource on subscribe and
-    // closes it on disposer. live() must register the disposer with
-    // the mount's effect scope; a regression of 87cf3223 would skip
+    // closes it on disposer. query's push path must register the disposer
+    // with the mount's effect scope; a regression of 87cf3223 would skip
     // that registration and the EventSource would leak.
     const before = snapshot(counters)
     const target = makeContainer()
     const mod: SimpleModule = {
       default: {
         setup: () => {
-          const sig = live<string>(() => ({
-            subscribe: (out) => {
-              const es = new EventSource('/test/sse')
-              es.addEventListener('message', (e) => {
-                out.set({ kind: 'ok', value: String((e as MessageEvent).data) } as LiveState<string>)
-              })
-              return () => es.close()
-            },
-          }))
+          const sig = queryKeyed<string>(
+            () => ['resource-symmetry', 'sse'],
+            () =>
+              ({
+                subscribe: (out) => {
+                  const es = new EventSource('/test/sse')
+                  es.addEventListener('message', (e) => {
+                    out.set({
+                      kind: 'ok',
+                      value: String((e as MessageEvent).data),
+                    } as LiveState<string>)
+                  })
+                  return () => es.close()
+                },
+              }) satisfies LiveSource<string>,
+          )
           return { sig }
         },
       },
@@ -192,7 +198,7 @@ describe('resource-symmetry — synthetic leak-class scenarios', () => {
   it('payload __subscribe__ opens then closes the live SSE channel', async () => {
     const before = snapshot(counters)
     const target = makeContainer()
-    const payload: ViewPayload = {
+    const payload: RoutePayload = {
       name: 'live-channel',
       html: '<div></div>',
       css: '',
@@ -212,17 +218,17 @@ describe('resource-symmetry — synthetic leak-class scenarios', () => {
   })
 })
 
-// ── Per-view smoke loop ────────────────────────────────────────────────
+// ── Per-route smoke loop ────────────────────────────────────────────────
 //
-// For every controller paired with a `.sui` template under `views/`, we
+// For every controller paired with a `.sail` template under `views/`, we
 // build a synthetic compiled-module wrapper that mirrors what the real
 // compiler emits — `setup(ctx)` runs the controller's resolveController,
 // merges the resulting bindings into a flat scope, and exposes any
 // `__shipSetLifecycle` so `mount()` finds it. We mount with a minimal
 // payload + ship stub, dispose, and assert symmetry.
 //
-// This doesn't drive every code path each view uses (no template
-// rendering, no derived signal exercise) — that's covered by per-view
+// This doesn't drive every code path each route uses (no template
+// rendering, no derived signal exercise) — that's covered by per-route
 // vitest suites elsewhere. Here we gate the lifecycle's resource
 // hygiene specifically.
 
@@ -257,7 +263,7 @@ const noopShip = new Proxy(
 )
 
 // Discovered, not hardcoded: walk `views/*/controller.ts` at module load
-// so the list stays honest as views come and go. The previous list
+// so the list stays honest as routes come and go. The previous list
 // (counter, agents, home, demos/*, studio-components) drifted out of
 // existence and the test went offline because the first import failed.
 // We can't dynamic-`import()` a runtime-built path through vitest's
@@ -283,9 +289,9 @@ const VIEW_FIXTURES: ViewFixture[] = (() => {
   const SCOPE_SEEDS: Record<string, Record<string, unknown>> = {
     git: { overview: { kind: 'loading' as const } },
   }
-  // Static import map. A view only appears in the discovered list
+  // Static import map. A route only appears in the discovered list
   // when both its controller.ts exists on disk AND a loader is
-  // registered here. Add a new entry when a new view lands.
+  // registered here. Add a new entry when a new route lands.
   const LOADERS: Record<string, () => Promise<unknown>> = {
     artifacts: () => import('../../views/artifacts/controller'),
     authority: () => import('../../views/authority/controller'),
@@ -311,7 +317,7 @@ interface ControllerExportLike {
   setup: (ctx: unknown) => Record<string, unknown>
 }
 
-describe('resource-symmetry — every checked-in view mounts + disposes clean', () => {
+describe('resource-symmetry — every checked-in route mounts + disposes clean', () => {
   for (const fx of VIEW_FIXTURES) {
     it(`views/${fx.name} → mount + dispose leaks nothing`, async () => {
       const mod = (await fx.controller()) as { default: ControllerExportLike | null }

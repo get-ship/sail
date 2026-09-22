@@ -1,0 +1,4166 @@
+{
+  "version": 2,
+  "schema": "spinnaker.registry.v2",
+  "source": "packages/sail/tokens/model",
+  "generated": true,
+  "metadata": {
+    "spaceN": 4.0,
+    "chromaticRoles": [
+      "primary",
+      "accent",
+      "secondary",
+      "success",
+      "warning",
+      "info",
+      "danger",
+      "neutral"
+    ],
+    "chromaticSteps": [
+      "solid",
+      "hover",
+      "subtle",
+      "border",
+      "text"
+    ]
+  },
+  "contrastPairs": [
+    {
+      "fg": "foreground",
+      "bg": "background",
+      "ratio": 18.38,
+      "floor": 4.5,
+      "ok": true,
+      "soft": false
+    },
+    {
+      "fg": "primary-foreground",
+      "bg": "primary",
+      "ratio": 6.0,
+      "floor": 4.5,
+      "ok": true,
+      "soft": false
+    },
+    {
+      "fg": "accent-foreground",
+      "bg": "accent",
+      "ratio": 4.59,
+      "floor": 4.5,
+      "ok": true,
+      "soft": false
+    },
+    {
+      "fg": "muted-foreground",
+      "bg": "muted",
+      "ratio": 8.0,
+      "floor": 4.5,
+      "ok": true,
+      "soft": true
+    },
+    {
+      "fg": "muted-foreground",
+      "bg": "background",
+      "ratio": 8.62,
+      "floor": 4.5,
+      "ok": true,
+      "soft": true
+    }
+  ],
+  "names": [
+    "accent",
+    "accent-border",
+    "accent-foreground",
+    "accent-hover",
+    "accent-subtle",
+    "active-bg",
+    "active-strength",
+    "backdrop",
+    "background",
+    "bg-app-color",
+    "bg-inset-color",
+    "bg-overlay-color",
+    "bg-subtle-color",
+    "bg-surface-color",
+    "border",
+    "border-default-b-color",
+    "border-default-b-style",
+    "border-default-b-width",
+    "border-default-color",
+    "border-default-l-color",
+    "border-default-l-style",
+    "border-default-l-width",
+    "border-default-r-color",
+    "border-default-r-style",
+    "border-default-r-width",
+    "border-default-style",
+    "border-default-t-color",
+    "border-default-t-style",
+    "border-default-t-width",
+    "border-default-width",
+    "border-none-b-color",
+    "border-none-b-style",
+    "border-none-b-width",
+    "border-none-color",
+    "border-none-l-color",
+    "border-none-l-style",
+    "border-none-l-width",
+    "border-none-r-color",
+    "border-none-r-style",
+    "border-none-r-width",
+    "border-none-style",
+    "border-none-t-color",
+    "border-none-t-style",
+    "border-none-t-width",
+    "border-none-width",
+    "border-strong",
+    "border-strong-b-color",
+    "border-strong-b-style",
+    "border-strong-b-width",
+    "border-strong-color",
+    "border-strong-l-color",
+    "border-strong-l-style",
+    "border-strong-l-width",
+    "border-strong-r-color",
+    "border-strong-r-style",
+    "border-strong-r-width",
+    "border-strong-style",
+    "border-strong-t-color",
+    "border-strong-t-style",
+    "border-strong-t-width",
+    "border-strong-width",
+    "border-subtle",
+    "border-subtle-b-color",
+    "border-subtle-b-style",
+    "border-subtle-b-width",
+    "border-subtle-color",
+    "border-subtle-l-color",
+    "border-subtle-l-style",
+    "border-subtle-l-width",
+    "border-subtle-r-color",
+    "border-subtle-r-style",
+    "border-subtle-r-width",
+    "border-subtle-style",
+    "border-subtle-t-color",
+    "border-subtle-t-style",
+    "border-subtle-t-width",
+    "border-subtle-width",
+    "border-width",
+    "breakpoint-desktop",
+    "breakpoint-mobile",
+    "breakpoint-tablet",
+    "breakpoint-wide",
+    "control-frame",
+    "control-h-2xs",
+    "control-h-lg",
+    "control-h-md",
+    "control-h-sm",
+    "control-h-xl",
+    "control-h-xs",
+    "control-lift",
+    "control-stroke",
+    "danger",
+    "danger-border",
+    "danger-foreground",
+    "danger-hover",
+    "danger-subtle",
+    "density-icon",
+    "density-row-gap",
+    "density-row-px",
+    "density-row-py",
+    "density-text",
+    "divider",
+    "duration-deliberate",
+    "duration-fast",
+    "duration-instant",
+    "duration-medium",
+    "duration-slow",
+    "ease-in",
+    "ease-in-out",
+    "ease-out",
+    "ease-out-soft",
+    "ease-spring",
+    "elevation-lg-shadow",
+    "elevation-md-shadow",
+    "elevation-none-shadow",
+    "elevation-sm-shadow",
+    "elevation-xl-shadow",
+    "elevation-xs-shadow",
+    "fg-foreground-color",
+    "fg-muted-color",
+    "filter-backdrop",
+    "focus-ring",
+    "focus-ring-offset",
+    "font-body",
+    "font-display",
+    "font-heading",
+    "font-mono",
+    "font-weight-bold",
+    "font-weight-medium",
+    "font-weight-normal",
+    "font-weight-semibold",
+    "foreground",
+    "glow-accent",
+    "glow-primary",
+    "gradient-accent",
+    "gradient-primary",
+    "gradient-surface",
+    "hover-bg",
+    "hover-strength",
+    "hue-amber",
+    "hue-blue",
+    "hue-cyan",
+    "hue-fuchsia",
+    "hue-green",
+    "hue-indigo",
+    "hue-lime",
+    "hue-orange",
+    "hue-pink",
+    "hue-purple",
+    "hue-red",
+    "hue-rose",
+    "hue-sky",
+    "hue-teal",
+    "hue-violet",
+    "hue-yellow",
+    "icon-size-2xl",
+    "icon-size-2xs",
+    "icon-size-3xl",
+    "icon-size-3xs",
+    "icon-size-lg",
+    "icon-size-md",
+    "icon-size-sm",
+    "icon-size-xl",
+    "icon-size-xs",
+    "image-corner",
+    "image-texture",
+    "image-texture-blend",
+    "image-texture-opacity",
+    "info",
+    "info-border",
+    "info-foreground",
+    "info-hover",
+    "info-subtle",
+    "inset",
+    "knob",
+    "leading-none",
+    "leading-normal",
+    "leading-relaxed",
+    "leading-snug",
+    "leading-tight",
+    "mix-bg",
+    "mix-border",
+    "mix-hover",
+    "muted",
+    "muted-foreground",
+    "neutral",
+    "neutral-border",
+    "neutral-foreground",
+    "neutral-hover",
+    "neutral-subtle",
+    "overlay",
+    "overlay-blend",
+    "overlay-fill",
+    "overlay-opacity",
+    "pad-page-lg-x",
+    "pad-page-md-x",
+    "pad-page-x",
+    "panel-max-h-lg",
+    "panel-max-h-md",
+    "panel-max-h-sm",
+    "panel-max-w-lg",
+    "panel-max-w-md",
+    "panel-max-w-sm",
+    "panel-min-w-lg",
+    "panel-min-w-md",
+    "panel-min-w-sm",
+    "panel-vh-lg",
+    "panel-vh-md",
+    "panel-vh-sm",
+    "play-colors-property",
+    "play-control-property",
+    "play-surface-property",
+    "press-scale",
+    "press-shadow",
+    "press-translate",
+    "primary",
+    "primary-border",
+    "primary-foreground",
+    "primary-hover",
+    "primary-subtle",
+    "radius-default",
+    "radius-full",
+    "radius-lg",
+    "radius-md",
+    "radius-sm",
+    "radius-xl",
+    "ring",
+    "ring-color",
+    "ring-offset",
+    "ring-opacity",
+    "ring-width",
+    "scrim",
+    "scrollbar-radius",
+    "scrollbar-thumb",
+    "scrollbar-thumb-hover",
+    "scrollbar-track",
+    "scrollbar-width",
+    "scrollbar-width-thin",
+    "secondary",
+    "secondary-border",
+    "secondary-foreground",
+    "secondary-hover",
+    "secondary-subtle",
+    "selected-bg",
+    "selected-border",
+    "selected-strength",
+    "shadow-accent",
+    "shadow-card-rest",
+    "shadow-edge-highlight",
+    "shadow-edge-top",
+    "shadow-hover",
+    "shadow-inset-ring",
+    "shadow-inset-soft",
+    "shadow-lg",
+    "shadow-md",
+    "shadow-sm",
+    "shadow-sticky",
+    "shadow-xl",
+    "shadow-xs",
+    "size-control-lg-h",
+    "size-control-md-h",
+    "size-control-sm-h",
+    "size-icon-lg-h",
+    "size-icon-lg-w",
+    "size-icon-md-h",
+    "size-icon-md-w",
+    "size-icon-sm-h",
+    "size-icon-sm-w",
+    "size-icon-xs-h",
+    "size-icon-xs-w",
+    "size-measure-lg-max-w",
+    "size-measure-max-w",
+    "size-measure-md-max-w",
+    "size-measure-sm-max-w",
+    "space-1",
+    "space-10",
+    "space-11",
+    "space-12",
+    "space-14",
+    "space-16",
+    "space-1_5",
+    "space-2",
+    "space-20",
+    "space-24",
+    "space-28",
+    "space-2_5",
+    "space-3",
+    "space-32",
+    "space-36",
+    "space-4",
+    "space-40",
+    "space-44",
+    "space-48",
+    "space-5",
+    "space-52",
+    "space-56",
+    "space-6",
+    "space-60",
+    "space-64",
+    "space-7",
+    "space-8",
+    "space-9",
+    "space-half",
+    "space-px",
+    "success",
+    "success-border",
+    "success-foreground",
+    "success-hover",
+    "success-subtle",
+    "surface",
+    "syntax-attr",
+    "syntax-comment",
+    "syntax-function",
+    "syntax-keyword",
+    "syntax-number",
+    "syntax-string",
+    "syntax-tag",
+    "syntax-type",
+    "syntax-variable",
+    "text-2xl",
+    "text-3xl",
+    "text-4xl",
+    "text-base",
+    "text-display",
+    "text-lg",
+    "text-md",
+    "text-sm",
+    "text-xl",
+    "text-xs",
+    "tooltip-hide-delay",
+    "tooltip-show-delay",
+    "tracking-normal",
+    "tracking-tight",
+    "tracking-tighter",
+    "tracking-wide",
+    "tracking-wider",
+    "type-body-family",
+    "type-body-leading",
+    "type-body-semibold-family",
+    "type-body-semibold-leading",
+    "type-body-semibold-size",
+    "type-body-semibold-tracking",
+    "type-body-semibold-weight",
+    "type-body-size",
+    "type-body-sm-family",
+    "type-body-sm-leading",
+    "type-body-sm-size",
+    "type-body-sm-tracking",
+    "type-body-sm-weight",
+    "type-body-tracking",
+    "type-body-weight",
+    "type-display-family",
+    "type-display-leading",
+    "type-display-size",
+    "type-display-sm-family",
+    "type-display-sm-leading",
+    "type-display-sm-size",
+    "type-display-sm-tracking",
+    "type-display-sm-weight",
+    "type-display-tracking",
+    "type-display-weight",
+    "type-heading-case",
+    "type-heading-family",
+    "type-heading-leading",
+    "type-heading-size",
+    "type-heading-tracking",
+    "type-heading-weight",
+    "type-label-case",
+    "type-label-family",
+    "type-label-leading",
+    "type-label-size",
+    "type-label-tracking",
+    "type-label-weight",
+    "type-mono-family",
+    "type-mono-leading",
+    "type-mono-size",
+    "type-mono-sm-family",
+    "type-mono-sm-leading",
+    "type-mono-sm-size",
+    "type-mono-sm-tracking",
+    "type-mono-sm-weight",
+    "type-mono-tracking",
+    "type-mono-weight",
+    "warning",
+    "warning-border",
+    "warning-foreground",
+    "warning-hover",
+    "warning-subtle",
+    "z-base",
+    "z-dialog",
+    "z-dropdown",
+    "z-elevated",
+    "z-max",
+    "z-popover",
+    "z-sticky",
+    "z-toast"
+  ],
+  "colors": [
+    "accent",
+    "accent-border",
+    "accent-foreground",
+    "accent-hover",
+    "accent-subtle",
+    "active-bg",
+    "backdrop",
+    "background",
+    "bg-app-color",
+    "bg-inset-color",
+    "bg-overlay-color",
+    "bg-subtle-color",
+    "bg-surface-color",
+    "border",
+    "border-default-b-color",
+    "border-default-color",
+    "border-default-l-color",
+    "border-default-r-color",
+    "border-default-t-color",
+    "border-none-b-color",
+    "border-none-color",
+    "border-none-l-color",
+    "border-none-r-color",
+    "border-none-t-color",
+    "border-strong",
+    "border-strong-b-color",
+    "border-strong-color",
+    "border-strong-l-color",
+    "border-strong-r-color",
+    "border-strong-t-color",
+    "border-subtle",
+    "border-subtle-b-color",
+    "border-subtle-color",
+    "border-subtle-l-color",
+    "border-subtle-r-color",
+    "border-subtle-t-color",
+    "danger",
+    "danger-border",
+    "danger-foreground",
+    "danger-hover",
+    "danger-subtle",
+    "divider",
+    "fg-foreground-color",
+    "fg-muted-color",
+    "foreground",
+    "hover-bg",
+    "hue-amber",
+    "hue-blue",
+    "hue-cyan",
+    "hue-fuchsia",
+    "hue-green",
+    "hue-indigo",
+    "hue-lime",
+    "hue-orange",
+    "hue-pink",
+    "hue-purple",
+    "hue-red",
+    "hue-rose",
+    "hue-sky",
+    "hue-teal",
+    "hue-violet",
+    "hue-yellow",
+    "info",
+    "info-border",
+    "info-foreground",
+    "info-hover",
+    "info-subtle",
+    "inset",
+    "knob",
+    "muted",
+    "muted-foreground",
+    "neutral",
+    "neutral-border",
+    "neutral-foreground",
+    "neutral-hover",
+    "neutral-subtle",
+    "overlay",
+    "primary",
+    "primary-border",
+    "primary-foreground",
+    "primary-hover",
+    "primary-subtle",
+    "ring",
+    "ring-color",
+    "scrim",
+    "scrollbar-thumb",
+    "scrollbar-thumb-hover",
+    "secondary",
+    "secondary-border",
+    "secondary-foreground",
+    "secondary-hover",
+    "secondary-subtle",
+    "selected-bg",
+    "selected-border",
+    "success",
+    "success-border",
+    "success-foreground",
+    "success-hover",
+    "success-subtle",
+    "surface",
+    "syntax-attr",
+    "syntax-comment",
+    "syntax-function",
+    "syntax-keyword",
+    "syntax-number",
+    "syntax-string",
+    "syntax-tag",
+    "syntax-type",
+    "syntax-variable",
+    "warning",
+    "warning-border",
+    "warning-foreground",
+    "warning-hover",
+    "warning-subtle"
+  ],
+  "tokens": {
+    "space-px": {
+      "path": "space.px",
+      "cssName": "space-px",
+      "type": "dimension",
+      "value": "1px"
+    },
+    "space-half": {
+      "path": "space.half",
+      "cssName": "space-half",
+      "type": "dimension",
+      "value": "2px"
+    },
+    "space-1_5": {
+      "path": "space.1_5",
+      "cssName": "space-1_5",
+      "type": "dimension",
+      "value": "6px"
+    },
+    "space-2_5": {
+      "path": "space.2_5",
+      "cssName": "space-2_5",
+      "type": "dimension",
+      "value": "10px"
+    },
+    "space-1": {
+      "path": "space.1",
+      "cssName": "space-1",
+      "type": "dimension",
+      "value": "4px"
+    },
+    "space-2": {
+      "path": "space.2",
+      "cssName": "space-2",
+      "type": "dimension",
+      "value": "8px"
+    },
+    "space-3": {
+      "path": "space.3",
+      "cssName": "space-3",
+      "type": "dimension",
+      "value": "12px"
+    },
+    "space-4": {
+      "path": "space.4",
+      "cssName": "space-4",
+      "type": "dimension",
+      "value": "16px"
+    },
+    "space-5": {
+      "path": "space.5",
+      "cssName": "space-5",
+      "type": "dimension",
+      "value": "20px"
+    },
+    "space-6": {
+      "path": "space.6",
+      "cssName": "space-6",
+      "type": "dimension",
+      "value": "24px"
+    },
+    "space-7": {
+      "path": "space.7",
+      "cssName": "space-7",
+      "type": "dimension",
+      "value": "28px"
+    },
+    "space-8": {
+      "path": "space.8",
+      "cssName": "space-8",
+      "type": "dimension",
+      "value": "32px"
+    },
+    "space-9": {
+      "path": "space.9",
+      "cssName": "space-9",
+      "type": "dimension",
+      "value": "36px"
+    },
+    "space-10": {
+      "path": "space.10",
+      "cssName": "space-10",
+      "type": "dimension",
+      "value": "40px"
+    },
+    "space-11": {
+      "path": "space.11",
+      "cssName": "space-11",
+      "type": "dimension",
+      "value": "44px"
+    },
+    "space-12": {
+      "path": "space.12",
+      "cssName": "space-12",
+      "type": "dimension",
+      "value": "48px"
+    },
+    "space-14": {
+      "path": "space.14",
+      "cssName": "space-14",
+      "type": "dimension",
+      "value": "56px"
+    },
+    "space-16": {
+      "path": "space.16",
+      "cssName": "space-16",
+      "type": "dimension",
+      "value": "64px"
+    },
+    "space-20": {
+      "path": "space.20",
+      "cssName": "space-20",
+      "type": "dimension",
+      "value": "80px"
+    },
+    "space-24": {
+      "path": "space.24",
+      "cssName": "space-24",
+      "type": "dimension",
+      "value": "96px"
+    },
+    "space-28": {
+      "path": "space.28",
+      "cssName": "space-28",
+      "type": "dimension",
+      "value": "112px"
+    },
+    "space-32": {
+      "path": "space.32",
+      "cssName": "space-32",
+      "type": "dimension",
+      "value": "128px"
+    },
+    "space-36": {
+      "path": "space.36",
+      "cssName": "space-36",
+      "type": "dimension",
+      "value": "144px"
+    },
+    "space-40": {
+      "path": "space.40",
+      "cssName": "space-40",
+      "type": "dimension",
+      "value": "160px"
+    },
+    "space-44": {
+      "path": "space.44",
+      "cssName": "space-44",
+      "type": "dimension",
+      "value": "176px"
+    },
+    "space-48": {
+      "path": "space.48",
+      "cssName": "space-48",
+      "type": "dimension",
+      "value": "192px"
+    },
+    "space-52": {
+      "path": "space.52",
+      "cssName": "space-52",
+      "type": "dimension",
+      "value": "208px"
+    },
+    "space-56": {
+      "path": "space.56",
+      "cssName": "space-56",
+      "type": "dimension",
+      "value": "224px"
+    },
+    "space-60": {
+      "path": "space.60",
+      "cssName": "space-60",
+      "type": "dimension",
+      "value": "240px"
+    },
+    "space-64": {
+      "path": "space.64",
+      "cssName": "space-64",
+      "type": "dimension",
+      "value": "256px"
+    },
+    "radius-sm": {
+      "path": "radius.sm",
+      "cssName": "radius-sm",
+      "type": "dimension",
+      "value": "4px"
+    },
+    "radius-md": {
+      "path": "radius.md",
+      "cssName": "radius-md",
+      "type": "dimension",
+      "value": "6px"
+    },
+    "radius-lg": {
+      "path": "radius.lg",
+      "cssName": "radius-lg",
+      "type": "dimension",
+      "value": "10px"
+    },
+    "radius-xl": {
+      "path": "radius.xl",
+      "cssName": "radius-xl",
+      "type": "dimension",
+      "value": "14px"
+    },
+    "radius-full": {
+      "path": "radius.full",
+      "cssName": "radius-full",
+      "type": "dimension",
+      "value": "9999px"
+    },
+    "radius-default": {
+      "path": "radius.default",
+      "cssName": "radius-default",
+      "type": "dimension",
+      "value": "var(--radius-lg)"
+    },
+    "icon-size-3xs": {
+      "path": "icon.3xs",
+      "cssName": "icon-size-3xs",
+      "type": "dimension",
+      "value": "8px"
+    },
+    "icon-size-2xs": {
+      "path": "icon.2xs",
+      "cssName": "icon-size-2xs",
+      "type": "dimension",
+      "value": "10px"
+    },
+    "icon-size-xs": {
+      "path": "icon.xs",
+      "cssName": "icon-size-xs",
+      "type": "dimension",
+      "value": "12px"
+    },
+    "icon-size-sm": {
+      "path": "icon.sm",
+      "cssName": "icon-size-sm",
+      "type": "dimension",
+      "value": "14px"
+    },
+    "icon-size-md": {
+      "path": "icon.md",
+      "cssName": "icon-size-md",
+      "type": "dimension",
+      "value": "16px"
+    },
+    "icon-size-lg": {
+      "path": "icon.lg",
+      "cssName": "icon-size-lg",
+      "type": "dimension",
+      "value": "18px"
+    },
+    "icon-size-xl": {
+      "path": "icon.xl",
+      "cssName": "icon-size-xl",
+      "type": "dimension",
+      "value": "20px"
+    },
+    "icon-size-2xl": {
+      "path": "icon.2xl",
+      "cssName": "icon-size-2xl",
+      "type": "dimension",
+      "value": "24px"
+    },
+    "icon-size-3xl": {
+      "path": "icon.3xl",
+      "cssName": "icon-size-3xl",
+      "type": "dimension",
+      "value": "28px"
+    },
+    "control-h-2xs": {
+      "path": "control.h-2xs",
+      "cssName": "control-h-2xs",
+      "type": "dimension",
+      "value": "22px"
+    },
+    "control-h-xs": {
+      "path": "control.h-xs",
+      "cssName": "control-h-xs",
+      "type": "dimension",
+      "value": "24px"
+    },
+    "control-h-sm": {
+      "path": "control.h-sm",
+      "cssName": "control-h-sm",
+      "type": "dimension",
+      "value": "28px"
+    },
+    "control-h-md": {
+      "path": "control.h-md",
+      "cssName": "control-h-md",
+      "type": "dimension",
+      "value": "34px"
+    },
+    "control-h-lg": {
+      "path": "control.h-lg",
+      "cssName": "control-h-lg",
+      "type": "dimension",
+      "value": "40px"
+    },
+    "control-h-xl": {
+      "path": "control.h-xl",
+      "cssName": "control-h-xl",
+      "type": "dimension",
+      "value": "44px"
+    },
+    "control-stroke": {
+      "path": "control.stroke",
+      "cssName": "control-stroke",
+      "type": "dimension",
+      "value": "2px"
+    },
+    "control-frame": {
+      "path": "control.frame",
+      "cssName": "control-frame",
+      "type": "shadow",
+      "value": "0 0 0 0 transparent"
+    },
+    "control-lift": {
+      "path": "control.lift",
+      "cssName": "control-lift",
+      "type": "dimension",
+      "value": "-1px"
+    },
+    "press-translate": {
+      "path": "control.press.translate",
+      "cssName": "press-translate",
+      "type": "dimension",
+      "value": "1px"
+    },
+    "press-scale": {
+      "path": "control.press.scale",
+      "cssName": "press-scale",
+      "type": "number",
+      "value": "0.98"
+    },
+    "press-shadow": {
+      "path": "control.press.shadow",
+      "cssName": "press-shadow",
+      "type": "shadow",
+      "value": "0 0 0 0 transparent"
+    },
+    "panel-max-w-sm": {
+      "path": "panel.max-w-sm",
+      "cssName": "panel-max-w-sm",
+      "type": "dimension",
+      "value": "320px"
+    },
+    "panel-max-w-md": {
+      "path": "panel.max-w-md",
+      "cssName": "panel-max-w-md",
+      "type": "dimension",
+      "value": "480px"
+    },
+    "panel-max-w-lg": {
+      "path": "panel.max-w-lg",
+      "cssName": "panel-max-w-lg",
+      "type": "dimension",
+      "value": "720px"
+    },
+    "panel-max-h-sm": {
+      "path": "panel.max-h-sm",
+      "cssName": "panel-max-h-sm",
+      "type": "dimension",
+      "value": "240px"
+    },
+    "panel-max-h-md": {
+      "path": "panel.max-h-md",
+      "cssName": "panel-max-h-md",
+      "type": "dimension",
+      "value": "480px"
+    },
+    "panel-max-h-lg": {
+      "path": "panel.max-h-lg",
+      "cssName": "panel-max-h-lg",
+      "type": "dimension",
+      "value": "720px"
+    },
+    "panel-min-w-sm": {
+      "path": "panel.min-w-sm",
+      "cssName": "panel-min-w-sm",
+      "type": "dimension",
+      "value": "180px"
+    },
+    "panel-min-w-md": {
+      "path": "panel.min-w-md",
+      "cssName": "panel-min-w-md",
+      "type": "dimension",
+      "value": "240px"
+    },
+    "panel-min-w-lg": {
+      "path": "panel.min-w-lg",
+      "cssName": "panel-min-w-lg",
+      "type": "dimension",
+      "value": "320px"
+    },
+    "panel-vh-sm": {
+      "path": "panel.vh-sm",
+      "cssName": "panel-vh-sm",
+      "type": "dimension",
+      "value": "50vh"
+    },
+    "panel-vh-md": {
+      "path": "panel.vh-md",
+      "cssName": "panel-vh-md",
+      "type": "dimension",
+      "value": "80vh"
+    },
+    "panel-vh-lg": {
+      "path": "panel.vh-lg",
+      "cssName": "panel-vh-lg",
+      "type": "dimension",
+      "value": "90vh"
+    },
+    "text-xs": {
+      "path": "typography.text.xs",
+      "cssName": "text-xs",
+      "type": "dimension",
+      "value": "11px"
+    },
+    "text-sm": {
+      "path": "typography.text.sm",
+      "cssName": "text-sm",
+      "type": "dimension",
+      "value": "12px"
+    },
+    "text-base": {
+      "path": "typography.text.base",
+      "cssName": "text-base",
+      "type": "dimension",
+      "value": "13px"
+    },
+    "text-md": {
+      "path": "typography.text.md",
+      "cssName": "text-md",
+      "type": "dimension",
+      "value": "14px"
+    },
+    "text-lg": {
+      "path": "typography.text.lg",
+      "cssName": "text-lg",
+      "type": "dimension",
+      "value": "16px"
+    },
+    "text-xl": {
+      "path": "typography.text.xl",
+      "cssName": "text-xl",
+      "type": "dimension",
+      "value": "20px"
+    },
+    "text-2xl": {
+      "path": "typography.text.2xl",
+      "cssName": "text-2xl",
+      "type": "dimension",
+      "value": "24px"
+    },
+    "text-3xl": {
+      "path": "typography.text.3xl",
+      "cssName": "text-3xl",
+      "type": "dimension",
+      "value": "28px"
+    },
+    "text-4xl": {
+      "path": "typography.text.4xl",
+      "cssName": "text-4xl",
+      "type": "dimension",
+      "value": "36px"
+    },
+    "text-display": {
+      "path": "typography.text.display",
+      "cssName": "text-display",
+      "type": "dimension",
+      "value": "clamp(3rem, 9vw, 8.5rem)"
+    },
+    "font-body": {
+      "path": "typography.font.body",
+      "cssName": "font-body",
+      "type": "fontFamily",
+      "value": "\"DM Sans Variable\", \"DM Sans\", \"Inter\", sans-serif"
+    },
+    "font-heading": {
+      "path": "typography.font.heading",
+      "cssName": "font-heading",
+      "type": "fontFamily",
+      "value": "\"Syne Variable\", \"Syne\", \"Inter\", sans-serif"
+    },
+    "font-mono": {
+      "path": "typography.font.mono",
+      "cssName": "font-mono",
+      "type": "fontFamily",
+      "value": "\"JetBrains Mono Variable\", \"JetBrains Mono\", ui-monospace, \"SFMono-Regular\", Menlo, Consolas, monospace"
+    },
+    "font-display": {
+      "path": "typography.font.display",
+      "cssName": "font-display",
+      "type": "fontFamily",
+      "value": "\"Syne Variable\", \"Syne\", \"Inter\", sans-serif"
+    },
+    "font-weight-normal": {
+      "path": "typography.font.weight-normal",
+      "cssName": "font-weight-normal",
+      "type": "number",
+      "value": "400"
+    },
+    "font-weight-medium": {
+      "path": "typography.font.weight-medium",
+      "cssName": "font-weight-medium",
+      "type": "number",
+      "value": "500"
+    },
+    "font-weight-semibold": {
+      "path": "typography.font.weight-semibold",
+      "cssName": "font-weight-semibold",
+      "type": "number",
+      "value": "600"
+    },
+    "font-weight-bold": {
+      "path": "typography.font.weight-bold",
+      "cssName": "font-weight-bold",
+      "type": "number",
+      "value": "700"
+    },
+    "leading-none": {
+      "path": "typography.leading.none",
+      "cssName": "leading-none",
+      "type": "number",
+      "value": "1"
+    },
+    "leading-tight": {
+      "path": "typography.leading.tight",
+      "cssName": "leading-tight",
+      "type": "number",
+      "value": "1.2"
+    },
+    "leading-snug": {
+      "path": "typography.leading.snug",
+      "cssName": "leading-snug",
+      "type": "number",
+      "value": "1.35"
+    },
+    "leading-normal": {
+      "path": "typography.leading.normal",
+      "cssName": "leading-normal",
+      "type": "number",
+      "value": "1.5"
+    },
+    "leading-relaxed": {
+      "path": "typography.leading.relaxed",
+      "cssName": "leading-relaxed",
+      "type": "number",
+      "value": "1.7"
+    },
+    "tracking-tighter": {
+      "path": "typography.tracking.tighter",
+      "cssName": "tracking-tighter",
+      "type": "dimension",
+      "value": "-0.03em"
+    },
+    "tracking-tight": {
+      "path": "typography.tracking.tight",
+      "cssName": "tracking-tight",
+      "type": "dimension",
+      "value": "-0.01em"
+    },
+    "tracking-normal": {
+      "path": "typography.tracking.normal",
+      "cssName": "tracking-normal",
+      "type": "dimension",
+      "value": "0"
+    },
+    "tracking-wide": {
+      "path": "typography.tracking.wide",
+      "cssName": "tracking-wide",
+      "type": "dimension",
+      "value": "0.04em"
+    },
+    "tracking-wider": {
+      "path": "typography.tracking.wider",
+      "cssName": "tracking-wider",
+      "type": "dimension",
+      "value": "0.1em"
+    },
+    "background": {
+      "path": "color.background",
+      "cssName": "background",
+      "type": "color",
+      "value": "oklch(0.9750 0.0020 106.42)",
+      "luminance": 0.9271331539461347
+    },
+    "foreground": {
+      "path": "color.foreground",
+      "cssName": "foreground",
+      "type": "color",
+      "value": "oklch(0.1470 0.0040 49.25)",
+      "luminance": 0.0031570251183193902
+    },
+    "muted": {
+      "path": "color.muted.default",
+      "cssName": "muted",
+      "type": "color",
+      "value": "oklch(0.9500 0.0030 106.42)",
+      "luminance": 0.857763937758394
+    },
+    "muted-foreground": {
+      "path": "color.muted.foreground",
+      "cssName": "muted-foreground",
+      "type": "color",
+      "value": "oklch(0.4000 0.0200 58.07)",
+      "luminance": 0.06341771346831952
+    },
+    "surface": {
+      "path": "color.surface",
+      "cssName": "surface",
+      "type": "color",
+      "value": "oklch(1.0000 0.0000 0.00)",
+      "luminance": 1.0
+    },
+    "inset": {
+      "path": "color.inset",
+      "cssName": "inset",
+      "type": "color",
+      "value": "var(--background)"
+    },
+    "overlay": {
+      "path": "color.overlay",
+      "cssName": "overlay",
+      "type": "color",
+      "value": "oklch(1.0000 0.0000 0.00)",
+      "luminance": 1.0
+    },
+    "border": {
+      "path": "color.border.default",
+      "cssName": "border",
+      "type": "color",
+      "value": "oklch(0.1470 0.0040 49.25 / 0.250)",
+      "luminance": 0.0031570251183193902
+    },
+    "border-subtle": {
+      "path": "color.border.subtle",
+      "cssName": "border-subtle",
+      "type": "color",
+      "value": "color-mix(in oklch, var(--border) 60.00%, transparent)"
+    },
+    "border-strong": {
+      "path": "color.border.strong",
+      "cssName": "border-strong",
+      "type": "color",
+      "value": "color-mix(in oklch, var(--foreground) 55.00%, transparent)"
+    },
+    "knob": {
+      "path": "color.knob",
+      "cssName": "knob",
+      "type": "color",
+      "value": "oklch(1.0000 0.0000 0.00)",
+      "luminance": 1.0
+    },
+    "hue-red": {
+      "path": "color.hue.red",
+      "cssName": "hue-red",
+      "type": "color",
+      "value": "oklch(0.6200 0.2100 25.00)",
+      "luminance": 0.21021554767083112
+    },
+    "hue-orange": {
+      "path": "color.hue.orange",
+      "cssName": "hue-orange",
+      "type": "color",
+      "value": "oklch(0.6800 0.1800 50.00)",
+      "luminance": 0.29226902578910674
+    },
+    "hue-amber": {
+      "path": "color.hue.amber",
+      "cssName": "hue-amber",
+      "type": "color",
+      "value": "oklch(0.7400 0.1600 75.00)",
+      "luminance": 0.3946128499303536
+    },
+    "hue-yellow": {
+      "path": "color.hue.yellow",
+      "cssName": "hue-yellow",
+      "type": "color",
+      "value": "oklch(0.8200 0.1600 95.00)",
+      "luminance": 0.5524071757968184
+    },
+    "hue-lime": {
+      "path": "color.hue.lime",
+      "cssName": "hue-lime",
+      "type": "color",
+      "value": "oklch(0.7800 0.1800 130.00)",
+      "luminance": 0.5002503503826301
+    },
+    "hue-green": {
+      "path": "color.hue.green",
+      "cssName": "hue-green",
+      "type": "color",
+      "value": "oklch(0.6200 0.1600 150.00)",
+      "luminance": 0.25886407111064363
+    },
+    "hue-teal": {
+      "path": "color.hue.teal",
+      "cssName": "hue-teal",
+      "type": "color",
+      "value": "oklch(0.6200 0.1300 185.00)",
+      "luminance": 0.266228951087432
+    },
+    "hue-cyan": {
+      "path": "color.hue.cyan",
+      "cssName": "hue-cyan",
+      "type": "color",
+      "value": "oklch(0.6800 0.1300 220.00)",
+      "luminance": 0.33174037731127687
+    },
+    "hue-sky": {
+      "path": "color.hue.sky",
+      "cssName": "hue-sky",
+      "type": "color",
+      "value": "oklch(0.6500 0.1600 235.00)",
+      "luminance": 0.29090292893379044
+    },
+    "hue-blue": {
+      "path": "color.hue.blue",
+      "cssName": "hue-blue",
+      "type": "color",
+      "value": "oklch(0.5500 0.2000 260.00)",
+      "luminance": 0.15931193068390206
+    },
+    "hue-indigo": {
+      "path": "color.hue.indigo",
+      "cssName": "hue-indigo",
+      "type": "color",
+      "value": "oklch(0.5000 0.2000 280.00)",
+      "luminance": 0.11195290371975289
+    },
+    "hue-violet": {
+      "path": "color.hue.violet",
+      "cssName": "hue-violet",
+      "type": "color",
+      "value": "oklch(0.5500 0.2200 295.00)",
+      "luminance": 0.14488624459044305
+    },
+    "hue-purple": {
+      "path": "color.hue.purple",
+      "cssName": "hue-purple",
+      "type": "color",
+      "value": "oklch(0.5500 0.2200 310.00)",
+      "luminance": 0.14251292823645703
+    },
+    "hue-fuchsia": {
+      "path": "color.hue.fuchsia",
+      "cssName": "hue-fuchsia",
+      "type": "color",
+      "value": "oklch(0.6000 0.2500 330.00)",
+      "luminance": 0.18190209794532816
+    },
+    "hue-pink": {
+      "path": "color.hue.pink",
+      "cssName": "hue-pink",
+      "type": "color",
+      "value": "oklch(0.6800 0.2000 345.00)",
+      "luminance": 0.2793534418592826
+    },
+    "hue-rose": {
+      "path": "color.hue.rose",
+      "cssName": "hue-rose",
+      "type": "color",
+      "value": "oklch(0.6200 0.2100 5.00)",
+      "luminance": 0.20818778110902858
+    },
+    "syntax-keyword": {
+      "path": "color.syntax.keyword",
+      "cssName": "syntax-keyword",
+      "type": "color",
+      "value": "var(--hue-indigo)"
+    },
+    "syntax-string": {
+      "path": "color.syntax.string",
+      "cssName": "syntax-string",
+      "type": "color",
+      "value": "var(--hue-green)"
+    },
+    "syntax-number": {
+      "path": "color.syntax.number",
+      "cssName": "syntax-number",
+      "type": "color",
+      "value": "var(--hue-blue)"
+    },
+    "syntax-function": {
+      "path": "color.syntax.function",
+      "cssName": "syntax-function",
+      "type": "color",
+      "value": "var(--hue-purple)"
+    },
+    "syntax-type": {
+      "path": "color.syntax.type",
+      "cssName": "syntax-type",
+      "type": "color",
+      "value": "var(--hue-cyan)"
+    },
+    "syntax-tag": {
+      "path": "color.syntax.tag",
+      "cssName": "syntax-tag",
+      "type": "color",
+      "value": "var(--hue-red)"
+    },
+    "syntax-attr": {
+      "path": "color.syntax.attr",
+      "cssName": "syntax-attr",
+      "type": "color",
+      "value": "var(--hue-amber)"
+    },
+    "syntax-comment": {
+      "path": "color.syntax.comment",
+      "cssName": "syntax-comment",
+      "type": "color",
+      "value": "var(--muted-foreground)"
+    },
+    "syntax-variable": {
+      "path": "color.syntax.variable",
+      "cssName": "syntax-variable",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
+    "backdrop": {
+      "path": "color.backdrop",
+      "cssName": "backdrop",
+      "type": "color",
+      "value": "oklch(0.0000 0.0000 0.00 / 0.400)",
+      "luminance": 0.0
+    },
+    "scrim": {
+      "path": "color.scrim",
+      "cssName": "scrim",
+      "type": "color",
+      "value": "oklch(0.0000 0.0000 0.00 / 0.200)",
+      "luminance": 0.0
+    },
+    "divider": {
+      "path": "color.divider",
+      "cssName": "divider",
+      "type": "color",
+      "value": "var(--border-subtle)"
+    },
+    "gradient-primary": {
+      "path": "color.gradient.primary",
+      "cssName": "gradient-primary",
+      "type": "gradient",
+      "value": "linear-gradient(180deg, var(--primary) 0%, transparent 92%)"
+    },
+    "gradient-accent": {
+      "path": "color.gradient.accent",
+      "cssName": "gradient-accent",
+      "type": "gradient",
+      "value": "linear-gradient(180deg, var(--accent) 0%, transparent 92%)"
+    },
+    "gradient-surface": {
+      "path": "color.gradient.surface",
+      "cssName": "gradient-surface",
+      "type": "string",
+      "value": "none"
+    },
+    "glow-primary": {
+      "path": "color.glow.primary",
+      "cssName": "glow-primary",
+      "type": "gradient",
+      "value": "radial-gradient(color-mix(in oklch, var(--primary) 8.00%, transparent), transparent 60%)"
+    },
+    "glow-accent": {
+      "path": "color.glow.accent",
+      "cssName": "glow-accent",
+      "type": "gradient",
+      "value": "radial-gradient(color-mix(in oklch, var(--accent) 8.00%, transparent), transparent 60%)"
+    },
+    "primary": {
+      "path": "color.primary.solid",
+      "cssName": "primary",
+      "type": "color",
+      "value": "oklch(0.6700 0.1600 58.00)",
+      "luminance": 0.2845510813982442
+    },
+    "primary-hover": {
+      "path": "color.primary.hover",
+      "cssName": "primary-hover",
+      "type": "color",
+      "value": "oklch(0.6072 0.1413 56.95)",
+      "luminance": 0.2119131647056237
+    },
+    "primary-subtle": {
+      "path": "color.primary.subtle",
+      "cssName": "primary-subtle",
+      "type": "color",
+      "value": "oklch(0.9384 0.0210 100.61)",
+      "luminance": 0.8282093632495545
+    },
+    "primary-border": {
+      "path": "color.primary.border",
+      "cssName": "primary-border",
+      "type": "color",
+      "value": "oklch(0.8896 0.0462 92.86)",
+      "luminance": 0.7054683665365954
+    },
+    "primary-foreground": {
+      "path": "color.primary.text",
+      "cssName": "primary-foreground",
+      "type": "color",
+      "value": "oklch(0.1800 0.0096 58.00)",
+      "luminance": 0.005775019042339701
+    },
+    "accent": {
+      "path": "color.accent.solid",
+      "cssName": "accent",
+      "type": "color",
+      "value": "oklch(0.6100 0.2300 303.00)",
+      "luminance": 0.19804624923008468
+    },
+    "accent-hover": {
+      "path": "color.accent.hover",
+      "cssName": "accent-hover",
+      "type": "color",
+      "value": "oklch(0.5544 0.2029 315.75)",
+      "luminance": 0.14791769183612222
+    },
+    "accent-subtle": {
+      "path": "color.accent.subtle",
+      "cssName": "accent-subtle",
+      "type": "color",
+      "value": "oklch(0.9312 0.0294 86.81)",
+      "luminance": 0.8076309627532294
+    },
+    "accent-border": {
+      "path": "color.accent.border",
+      "cssName": "accent-border",
+      "type": "color",
+      "value": "oklch(0.8728 0.0658 60.66)",
+      "luminance": 0.6561837783964406
+    },
+    "accent-foreground": {
+      "path": "color.accent.text",
+      "cssName": "accent-foreground",
+      "type": "color",
+      "value": "oklch(0.1600 0.0138 303.00)",
+      "luminance": 0.00400399763455624
+    },
+    "secondary": {
+      "path": "color.secondary.solid",
+      "cssName": "secondary",
+      "type": "color",
+      "value": "oklch(0.9500 0.0200 302.00)",
+      "luminance": 0.8530479815971515
+    },
+    "secondary-hover": {
+      "path": "color.secondary.hover",
+      "cssName": "secondary-hover",
+      "type": "color",
+      "value": "oklch(0.8536 0.0181 314.87)",
+      "luminance": 0.6180089309197221
+    },
+    "secondary-subtle": {
+      "path": "color.secondary.subtle",
+      "cssName": "secondary-subtle",
+      "type": "color",
+      "value": "oklch(0.9720 0.0042 86.69)",
+      "luminance": 0.9183885743870634
+    },
+    "secondary-border": {
+      "path": "color.secondary.border",
+      "cssName": "secondary-border",
+      "type": "color",
+      "value": "oklch(0.9680 0.0070 60.38)",
+      "luminance": 0.9060081873017611
+    },
+    "secondary-foreground": {
+      "path": "color.secondary.text",
+      "cssName": "secondary-foreground",
+      "type": "color",
+      "value": "oklch(0.1800 0.0012 302.00)",
+      "luminance": 0.005822812979511667
+    },
+    "success": {
+      "path": "color.success.solid",
+      "cssName": "success",
+      "type": "color",
+      "value": "oklch(0.6500 0.2000 150.00)",
+      "luminance": 0.3089790434243503
+    },
+    "success-hover": {
+      "path": "color.success.hover",
+      "cssName": "success-hover",
+      "type": "color",
+      "value": "oklch(0.5896 0.1765 137.91)",
+      "luminance": 0.22161630701625148
+    },
+    "success-subtle": {
+      "path": "color.success.subtle",
+      "cssName": "success-subtle",
+      "type": "color",
+      "value": "oklch(0.9360 0.0258 111.65)",
+      "luminance": 0.8238333172844201
+    },
+    "success-border": {
+      "path": "color.success.border",
+      "cssName": "success-border",
+      "type": "color",
+      "value": "oklch(0.8840 0.0574 118.62)",
+      "luminance": 0.6997872786712105
+    },
+    "success-foreground": {
+      "path": "color.success.text",
+      "cssName": "success-foreground",
+      "type": "color",
+      "value": "oklch(0.1800 0.0120 150.00)",
+      "luminance": 0.005966278161611495
+    },
+    "warning": {
+      "path": "color.warning.solid",
+      "cssName": "warning",
+      "type": "color",
+      "value": "oklch(0.7500 0.1500 75.00)",
+      "luminance": 0.41154347511744943
+    },
+    "warning-hover": {
+      "path": "color.warning.hover",
+      "cssName": "warning-hover",
+      "type": "color",
+      "value": "oklch(0.6776 0.1325 71.91)",
+      "luminance": 0.3026060369290525
+    },
+    "warning-subtle": {
+      "path": "color.warning.subtle",
+      "cssName": "warning-subtle",
+      "type": "color",
+      "value": "oklch(0.9480 0.0198 102.65)",
+      "luminance": 0.8540033778864472
+    },
+    "warning-border": {
+      "path": "color.warning.border",
+      "cssName": "warning-border",
+      "type": "color",
+      "value": "oklch(0.9120 0.0434 97.62)",
+      "luminance": 0.7611751430482787
+    },
+    "warning-foreground": {
+      "path": "color.warning.text",
+      "cssName": "warning-foreground",
+      "type": "color",
+      "value": "oklch(0.1800 0.0090 75.00)",
+      "luminance": 0.005809262647453225
+    },
+    "info": {
+      "path": "color.info.solid",
+      "cssName": "info",
+      "type": "color",
+      "value": "oklch(0.6000 0.1800 260.00)",
+      "luminance": 0.2102692130835034
+    },
+    "info-hover": {
+      "path": "color.info.hover",
+      "cssName": "info-hover",
+      "type": "color",
+      "value": "oklch(0.5456 0.1589 277.91)",
+      "luminance": 0.15285859305935984
+    },
+    "info-subtle": {
+      "path": "color.info.subtle",
+      "cssName": "info-subtle",
+      "type": "color",
+      "value": "oklch(0.9300 0.0234 124.85)",
+      "luminance": 0.8092959538916789
+    },
+    "info-border": {
+      "path": "color.info.border",
+      "cssName": "info-border",
+      "type": "color",
+      "value": "oklch(0.8700 0.0518 149.42)",
+      "luminance": 0.6719910270144658
+    },
+    "info-foreground": {
+      "path": "color.info.text",
+      "cssName": "info-foreground",
+      "type": "color",
+      "value": "oklch(0.1800 0.0108 260.00)",
+      "luminance": 0.005834546489053828
+    },
+    "danger": {
+      "path": "color.danger.solid",
+      "cssName": "danger",
+      "type": "color",
+      "value": "oklch(0.5770 0.2450 27.32)",
+      "luminance": 0.17037133047416192
+    },
+    "danger-hover": {
+      "path": "color.danger.hover",
+      "cssName": "danger-hover",
+      "type": "color",
+      "value": "oklch(0.5254 0.2161 29.96)",
+      "luminance": 0.12471743102997505
+    },
+    "danger-subtle": {
+      "path": "color.danger.subtle",
+      "cssName": "danger-subtle",
+      "type": "color",
+      "value": "oklch(0.9272 0.0312 96.93)",
+      "luminance": 0.7990651021789212
+    },
+    "danger-border": {
+      "path": "color.danger.border",
+      "cssName": "danger-border",
+      "type": "color",
+      "value": "oklch(0.8636 0.0700 84.28)",
+      "luminance": 0.642656931588388
+    },
+    "danger-foreground": {
+      "path": "color.danger.text",
+      "cssName": "danger-foreground",
+      "type": "color",
+      "value": "oklch(0.9900 0.0098 27.32)",
+      "luminance": 0.9672054104161413
+    },
+    "neutral": {
+      "path": "color.neutral.solid",
+      "cssName": "neutral",
+      "type": "color",
+      "value": "oklch(0.5000 0.0100 58.00)",
+      "luminance": 0.12456299680675118
+    },
+    "neutral-hover": {
+      "path": "color.neutral.hover",
+      "cssName": "neutral-hover",
+      "type": "color",
+      "value": "oklch(0.4576 0.0093 56.95)",
+      "luminance": 0.09546786085299819
+    },
+    "neutral-subtle": {
+      "path": "color.neutral.subtle",
+      "cssName": "neutral-subtle",
+      "type": "color",
+      "value": "oklch(0.9180 0.0030 100.61)",
+      "luminance": 0.7738907965606057
+    },
+    "neutral-border": {
+      "path": "color.neutral.border",
+      "cssName": "neutral-border",
+      "type": "color",
+      "value": "oklch(0.8420 0.0042 92.86)",
+      "luminance": 0.5971132768986033
+    },
+    "neutral-foreground": {
+      "path": "color.neutral.text",
+      "cssName": "neutral-foreground",
+      "type": "color",
+      "value": "oklch(0.9900 0.0004 58.00)",
+      "luminance": 0.970232447312069
+    },
+    "pad-page-x": {
+      "path": "pad.page.x",
+      "cssName": "pad-page-x",
+      "type": "dimension",
+      "value": "var(--space-4)",
+      "breakpoints": {
+        "base": "var(--space-4)",
+        "tablet": "var(--space-6)"
+      }
+    },
+    "pad-page-md-x": {
+      "path": "pad.page-md.x",
+      "cssName": "pad-page-md-x",
+      "type": "dimension",
+      "value": "var(--space-6)"
+    },
+    "pad-page-lg-x": {
+      "path": "pad.page-lg.x",
+      "cssName": "pad-page-lg-x",
+      "type": "dimension",
+      "value": "var(--space-8)"
+    },
+    "border-width": {
+      "path": "border.width",
+      "cssName": "border-width",
+      "type": "dimension",
+      "value": "1px"
+    },
+    "border-none-color": {
+      "path": "border.none.color",
+      "cssName": "border-none-color",
+      "type": "color",
+      "value": "transparent"
+    },
+    "border-none-width": {
+      "path": "border.none.width",
+      "cssName": "border-none-width",
+      "type": "dimension",
+      "value": "0px"
+    },
+    "border-none-style": {
+      "path": "border.none.style",
+      "cssName": "border-none-style",
+      "type": "string",
+      "value": "none"
+    },
+    "border-default-color": {
+      "path": "border.default.color",
+      "cssName": "border-default-color",
+      "type": "color",
+      "value": "var(--border)"
+    },
+    "border-default-width": {
+      "path": "border.default.width",
+      "cssName": "border-default-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-default-style": {
+      "path": "border.default.style",
+      "cssName": "border-default-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-subtle-color": {
+      "path": "border.subtle.color",
+      "cssName": "border-subtle-color",
+      "type": "color",
+      "value": "var(--border-subtle)"
+    },
+    "border-subtle-width": {
+      "path": "border.subtle.width",
+      "cssName": "border-subtle-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-subtle-style": {
+      "path": "border.subtle.style",
+      "cssName": "border-subtle-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-strong-color": {
+      "path": "border.strong.color",
+      "cssName": "border-strong-color",
+      "type": "color",
+      "value": "var(--border-strong)"
+    },
+    "border-strong-width": {
+      "path": "border.strong.width",
+      "cssName": "border-strong-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-strong-style": {
+      "path": "border.strong.style",
+      "cssName": "border-strong-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "size-control-sm-h": {
+      "path": "size.control-sm.h",
+      "cssName": "size-control-sm-h",
+      "type": "dimension",
+      "value": "var(--control-h-sm)"
+    },
+    "size-control-md-h": {
+      "path": "size.control-md.h",
+      "cssName": "size-control-md-h",
+      "type": "dimension",
+      "value": "var(--control-h-md)"
+    },
+    "size-control-lg-h": {
+      "path": "size.control-lg.h",
+      "cssName": "size-control-lg-h",
+      "type": "dimension",
+      "value": "var(--control-h-lg)"
+    },
+    "size-measure-max-w": {
+      "path": "size.measure.max-w",
+      "cssName": "size-measure-max-w",
+      "type": "dimension",
+      "value": "38ch"
+    },
+    "size-measure-sm-max-w": {
+      "path": "size.measure-sm.max-w",
+      "cssName": "size-measure-sm-max-w",
+      "type": "dimension",
+      "value": "20rem"
+    },
+    "size-measure-md-max-w": {
+      "path": "size.measure-md.max-w",
+      "cssName": "size-measure-md-max-w",
+      "type": "dimension",
+      "value": "38ch"
+    },
+    "size-measure-lg-max-w": {
+      "path": "size.measure-lg.max-w",
+      "cssName": "size-measure-lg-max-w",
+      "type": "dimension",
+      "value": "60ch"
+    },
+    "size-icon-xs-w": {
+      "path": "size.icon-xs.w",
+      "cssName": "size-icon-xs-w",
+      "type": "dimension",
+      "value": "var(--icon-size-xs)"
+    },
+    "size-icon-xs-h": {
+      "path": "size.icon-xs.h",
+      "cssName": "size-icon-xs-h",
+      "type": "dimension",
+      "value": "var(--icon-size-xs)"
+    },
+    "size-icon-sm-w": {
+      "path": "size.icon-sm.w",
+      "cssName": "size-icon-sm-w",
+      "type": "dimension",
+      "value": "var(--icon-size-sm)"
+    },
+    "size-icon-sm-h": {
+      "path": "size.icon-sm.h",
+      "cssName": "size-icon-sm-h",
+      "type": "dimension",
+      "value": "var(--icon-size-sm)"
+    },
+    "size-icon-md-w": {
+      "path": "size.icon-md.w",
+      "cssName": "size-icon-md-w",
+      "type": "dimension",
+      "value": "var(--icon-size-md)"
+    },
+    "size-icon-md-h": {
+      "path": "size.icon-md.h",
+      "cssName": "size-icon-md-h",
+      "type": "dimension",
+      "value": "var(--icon-size-md)"
+    },
+    "size-icon-lg-w": {
+      "path": "size.icon-lg.w",
+      "cssName": "size-icon-lg-w",
+      "type": "dimension",
+      "value": "var(--icon-size-lg)"
+    },
+    "size-icon-lg-h": {
+      "path": "size.icon-lg.h",
+      "cssName": "size-icon-lg-h",
+      "type": "dimension",
+      "value": "var(--icon-size-lg)"
+    },
+    "type-body-family": {
+      "path": "type.body.family",
+      "cssName": "type-body-family",
+      "type": "fontFamily",
+      "value": "var(--font-body)"
+    },
+    "type-body-size": {
+      "path": "type.body.size",
+      "cssName": "type-body-size",
+      "type": "dimension",
+      "value": "var(--text-base)"
+    },
+    "type-body-weight": {
+      "path": "type.body.weight",
+      "cssName": "type-body-weight",
+      "type": "number",
+      "value": "var(--font-weight-normal)"
+    },
+    "type-body-leading": {
+      "path": "type.body.leading",
+      "cssName": "type-body-leading",
+      "type": "number",
+      "value": "var(--leading-normal)"
+    },
+    "type-body-tracking": {
+      "path": "type.body.tracking",
+      "cssName": "type-body-tracking",
+      "type": "dimension",
+      "value": "var(--tracking-normal)"
+    },
+    "type-body-sm-family": {
+      "path": "type.body-sm.family",
+      "cssName": "type-body-sm-family",
+      "type": "fontFamily",
+      "value": "var(--font-body)"
+    },
+    "type-body-sm-size": {
+      "path": "type.body-sm.size",
+      "cssName": "type-body-sm-size",
+      "type": "dimension",
+      "value": "var(--text-sm)"
+    },
+    "type-body-sm-weight": {
+      "path": "type.body-sm.weight",
+      "cssName": "type-body-sm-weight",
+      "type": "number",
+      "value": "var(--font-weight-normal)"
+    },
+    "type-body-sm-leading": {
+      "path": "type.body-sm.leading",
+      "cssName": "type-body-sm-leading",
+      "type": "number",
+      "value": "var(--leading-normal)"
+    },
+    "type-body-sm-tracking": {
+      "path": "type.body-sm.tracking",
+      "cssName": "type-body-sm-tracking",
+      "type": "dimension",
+      "value": "var(--tracking-normal)"
+    },
+    "type-body-semibold-family": {
+      "path": "type.body-semibold.family",
+      "cssName": "type-body-semibold-family",
+      "type": "fontFamily",
+      "value": "var(--font-body)"
+    },
+    "type-body-semibold-size": {
+      "path": "type.body-semibold.size",
+      "cssName": "type-body-semibold-size",
+      "type": "dimension",
+      "value": "var(--text-base)"
+    },
+    "type-body-semibold-weight": {
+      "path": "type.body-semibold.weight",
+      "cssName": "type-body-semibold-weight",
+      "type": "number",
+      "value": "var(--font-weight-semibold)"
+    },
+    "type-body-semibold-leading": {
+      "path": "type.body-semibold.leading",
+      "cssName": "type-body-semibold-leading",
+      "type": "number",
+      "value": "var(--leading-normal)"
+    },
+    "type-body-semibold-tracking": {
+      "path": "type.body-semibold.tracking",
+      "cssName": "type-body-semibold-tracking",
+      "type": "dimension",
+      "value": "var(--tracking-normal)"
+    },
+    "type-label-family": {
+      "path": "type.label.family",
+      "cssName": "type-label-family",
+      "type": "fontFamily",
+      "value": "var(--font-body)"
+    },
+    "type-label-size": {
+      "path": "type.label.size",
+      "cssName": "type-label-size",
+      "type": "dimension",
+      "value": "var(--text-xs)"
+    },
+    "type-label-weight": {
+      "path": "type.label.weight",
+      "cssName": "type-label-weight",
+      "type": "number",
+      "value": "var(--font-weight-semibold)"
+    },
+    "type-label-leading": {
+      "path": "type.label.leading",
+      "cssName": "type-label-leading",
+      "type": "number",
+      "value": "var(--leading-snug)"
+    },
+    "type-label-tracking": {
+      "path": "type.label.tracking",
+      "cssName": "type-label-tracking",
+      "type": "dimension",
+      "value": "var(--tracking-wide)"
+    },
+    "type-label-case": {
+      "path": "type.label.case",
+      "cssName": "type-label-case",
+      "type": "string",
+      "value": "uppercase"
+    },
+    "type-heading-family": {
+      "path": "type.heading.family",
+      "cssName": "type-heading-family",
+      "type": "fontFamily",
+      "value": "var(--font-heading)"
+    },
+    "type-heading-size": {
+      "path": "type.heading.size",
+      "cssName": "type-heading-size",
+      "type": "dimension",
+      "value": "var(--text-xl)"
+    },
+    "type-heading-weight": {
+      "path": "type.heading.weight",
+      "cssName": "type-heading-weight",
+      "type": "number",
+      "value": "var(--font-weight-semibold)"
+    },
+    "type-heading-leading": {
+      "path": "type.heading.leading",
+      "cssName": "type-heading-leading",
+      "type": "number",
+      "value": "var(--leading-tight)"
+    },
+    "type-heading-tracking": {
+      "path": "type.heading.tracking",
+      "cssName": "type-heading-tracking",
+      "type": "dimension",
+      "value": "var(--tracking-tight)"
+    },
+    "type-heading-case": {
+      "path": "type.heading.case",
+      "cssName": "type-heading-case",
+      "type": "string",
+      "value": "none"
+    },
+    "type-mono-family": {
+      "path": "type.mono.family",
+      "cssName": "type-mono-family",
+      "type": "fontFamily",
+      "value": "var(--font-mono)"
+    },
+    "type-mono-size": {
+      "path": "type.mono.size",
+      "cssName": "type-mono-size",
+      "type": "dimension",
+      "value": "var(--text-sm)"
+    },
+    "type-mono-weight": {
+      "path": "type.mono.weight",
+      "cssName": "type-mono-weight",
+      "type": "number",
+      "value": "var(--font-weight-normal)"
+    },
+    "type-mono-leading": {
+      "path": "type.mono.leading",
+      "cssName": "type-mono-leading",
+      "type": "number",
+      "value": "var(--leading-relaxed)"
+    },
+    "type-mono-tracking": {
+      "path": "type.mono.tracking",
+      "cssName": "type-mono-tracking",
+      "type": "dimension",
+      "value": "var(--tracking-normal)"
+    },
+    "type-mono-sm-family": {
+      "path": "type.mono-sm.family",
+      "cssName": "type-mono-sm-family",
+      "type": "fontFamily",
+      "value": "var(--font-mono)"
+    },
+    "type-mono-sm-size": {
+      "path": "type.mono-sm.size",
+      "cssName": "type-mono-sm-size",
+      "type": "dimension",
+      "value": "var(--text-xs)"
+    },
+    "type-mono-sm-weight": {
+      "path": "type.mono-sm.weight",
+      "cssName": "type-mono-sm-weight",
+      "type": "number",
+      "value": "var(--font-weight-normal)"
+    },
+    "type-mono-sm-leading": {
+      "path": "type.mono-sm.leading",
+      "cssName": "type-mono-sm-leading",
+      "type": "number",
+      "value": "var(--leading-relaxed)"
+    },
+    "type-mono-sm-tracking": {
+      "path": "type.mono-sm.tracking",
+      "cssName": "type-mono-sm-tracking",
+      "type": "dimension",
+      "value": "var(--tracking-normal)"
+    },
+    "type-display-family": {
+      "path": "type.display.family",
+      "cssName": "type-display-family",
+      "type": "fontFamily",
+      "value": "var(--font-display)"
+    },
+    "type-display-size": {
+      "path": "type.display.size",
+      "cssName": "type-display-size",
+      "type": "dimension",
+      "value": "var(--text-display)"
+    },
+    "type-display-weight": {
+      "path": "type.display.weight",
+      "cssName": "type-display-weight",
+      "type": "number",
+      "value": "var(--font-weight-semibold)"
+    },
+    "type-display-leading": {
+      "path": "type.display.leading",
+      "cssName": "type-display-leading",
+      "type": "number",
+      "value": "var(--leading-tight)"
+    },
+    "type-display-tracking": {
+      "path": "type.display.tracking",
+      "cssName": "type-display-tracking",
+      "type": "dimension",
+      "value": "var(--tracking-tight)"
+    },
+    "type-display-sm-family": {
+      "path": "type.display-sm.family",
+      "cssName": "type-display-sm-family",
+      "type": "fontFamily",
+      "value": "var(--font-display)"
+    },
+    "type-display-sm-size": {
+      "path": "type.display-sm.size",
+      "cssName": "type-display-sm-size",
+      "type": "dimension",
+      "value": "var(--text-4xl)"
+    },
+    "type-display-sm-weight": {
+      "path": "type.display-sm.weight",
+      "cssName": "type-display-sm-weight",
+      "type": "number",
+      "value": "var(--font-weight-semibold)"
+    },
+    "type-display-sm-leading": {
+      "path": "type.display-sm.leading",
+      "cssName": "type-display-sm-leading",
+      "type": "number",
+      "value": "var(--leading-tight)"
+    },
+    "type-display-sm-tracking": {
+      "path": "type.display-sm.tracking",
+      "cssName": "type-display-sm-tracking",
+      "type": "dimension",
+      "value": "var(--tracking-tight)"
+    },
+    "elevation-xs-shadow": {
+      "path": "elevation.xs.shadow",
+      "cssName": "elevation-xs-shadow",
+      "type": "shadow",
+      "value": "var(--shadow-xs)"
+    },
+    "elevation-sm-shadow": {
+      "path": "elevation.sm.shadow",
+      "cssName": "elevation-sm-shadow",
+      "type": "shadow",
+      "value": "var(--shadow-sm)"
+    },
+    "elevation-md-shadow": {
+      "path": "elevation.md.shadow",
+      "cssName": "elevation-md-shadow",
+      "type": "shadow",
+      "value": "var(--shadow-md)"
+    },
+    "elevation-lg-shadow": {
+      "path": "elevation.lg.shadow",
+      "cssName": "elevation-lg-shadow",
+      "type": "shadow",
+      "value": "var(--shadow-lg)"
+    },
+    "elevation-xl-shadow": {
+      "path": "elevation.xl.shadow",
+      "cssName": "elevation-xl-shadow",
+      "type": "shadow",
+      "value": "var(--shadow-xl)"
+    },
+    "elevation-none-shadow": {
+      "path": "elevation.none.shadow",
+      "cssName": "elevation-none-shadow",
+      "type": "shadow",
+      "value": "none"
+    },
+    "bg-app-color": {
+      "path": "bg.app.color",
+      "cssName": "bg-app-color",
+      "type": "color",
+      "value": "var(--background)"
+    },
+    "bg-subtle-color": {
+      "path": "bg.subtle.color",
+      "cssName": "bg-subtle-color",
+      "type": "color",
+      "value": "var(--muted)"
+    },
+    "bg-surface-color": {
+      "path": "bg.surface.color",
+      "cssName": "bg-surface-color",
+      "type": "color",
+      "value": "var(--surface)"
+    },
+    "bg-inset-color": {
+      "path": "bg.inset.color",
+      "cssName": "bg-inset-color",
+      "type": "color",
+      "value": "var(--inset)"
+    },
+    "bg-overlay-color": {
+      "path": "bg.overlay.color",
+      "cssName": "bg-overlay-color",
+      "type": "color",
+      "value": "var(--overlay)"
+    },
+    "fg-foreground-color": {
+      "path": "fg.foreground.color",
+      "cssName": "fg-foreground-color",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
+    "fg-muted-color": {
+      "path": "fg.muted.color",
+      "cssName": "fg-muted-color",
+      "type": "color",
+      "value": "var(--muted-foreground)"
+    },
+    "z-base": {
+      "path": "z.base",
+      "cssName": "z-base",
+      "type": "number",
+      "value": "0"
+    },
+    "z-elevated": {
+      "path": "z.elevated",
+      "cssName": "z-elevated",
+      "type": "number",
+      "value": "1"
+    },
+    "z-dropdown": {
+      "path": "z.dropdown",
+      "cssName": "z-dropdown",
+      "type": "number",
+      "value": "10"
+    },
+    "z-sticky": {
+      "path": "z.sticky",
+      "cssName": "z-sticky",
+      "type": "number",
+      "value": "20"
+    },
+    "z-popover": {
+      "path": "z.popover",
+      "cssName": "z-popover",
+      "type": "number",
+      "value": "30"
+    },
+    "z-dialog": {
+      "path": "z.dialog",
+      "cssName": "z-dialog",
+      "type": "number",
+      "value": "40"
+    },
+    "z-toast": {
+      "path": "z.toast",
+      "cssName": "z-toast",
+      "type": "number",
+      "value": "50"
+    },
+    "z-max": {
+      "path": "z.max",
+      "cssName": "z-max",
+      "type": "number",
+      "value": "100"
+    },
+    "ease-out": {
+      "path": "motion.ease.out",
+      "cssName": "ease-out",
+      "type": "cubicBezier",
+      "value": "cubic-bezier(0.16, 1, 0.3, 1)"
+    },
+    "ease-out-soft": {
+      "path": "motion.ease.out-soft",
+      "cssName": "ease-out-soft",
+      "type": "cubicBezier",
+      "value": "cubic-bezier(0.33, 1, 0.68, 1)"
+    },
+    "ease-in": {
+      "path": "motion.ease.in",
+      "cssName": "ease-in",
+      "type": "cubicBezier",
+      "value": "cubic-bezier(0.7, 0, 0.84, 0)"
+    },
+    "ease-in-out": {
+      "path": "motion.ease.in-out",
+      "cssName": "ease-in-out",
+      "type": "cubicBezier",
+      "value": "cubic-bezier(0.65, 0, 0.35, 1)"
+    },
+    "ease-spring": {
+      "path": "motion.ease.spring",
+      "cssName": "ease-spring",
+      "type": "cubicBezier",
+      "value": "cubic-bezier(0.34, 1.56, 0.64, 1)"
+    },
+    "duration-instant": {
+      "path": "motion.duration.instant",
+      "cssName": "duration-instant",
+      "type": "duration",
+      "value": "60ms"
+    },
+    "duration-fast": {
+      "path": "motion.duration.fast",
+      "cssName": "duration-fast",
+      "type": "duration",
+      "value": "120ms"
+    },
+    "duration-medium": {
+      "path": "motion.duration.medium",
+      "cssName": "duration-medium",
+      "type": "duration",
+      "value": "180ms"
+    },
+    "duration-slow": {
+      "path": "motion.duration.slow",
+      "cssName": "duration-slow",
+      "type": "duration",
+      "value": "280ms"
+    },
+    "duration-deliberate": {
+      "path": "motion.duration.deliberate",
+      "cssName": "duration-deliberate",
+      "type": "duration",
+      "value": "420ms"
+    },
+    "tooltip-show-delay": {
+      "path": "motion.tooltip.show-delay",
+      "cssName": "tooltip-show-delay",
+      "type": "duration",
+      "value": "300ms"
+    },
+    "tooltip-hide-delay": {
+      "path": "motion.tooltip.hide-delay",
+      "cssName": "tooltip-hide-delay",
+      "type": "duration",
+      "value": "100ms"
+    },
+    "focus-ring": {
+      "path": "interaction.focus.ring",
+      "cssName": "focus-ring",
+      "type": "dimension",
+      "value": "2px solid var(--ring-color)"
+    },
+    "focus-ring-offset": {
+      "path": "interaction.focus.ring-offset",
+      "cssName": "focus-ring-offset",
+      "type": "dimension",
+      "value": "2px"
+    },
+    "hover-strength": {
+      "path": "interaction.hover.strength",
+      "cssName": "hover-strength",
+      "type": "number",
+      "value": "6%"
+    },
+    "hover-bg": {
+      "path": "interaction.hover.bg",
+      "cssName": "hover-bg",
+      "type": "color",
+      "value": "color-mix(in oklch, var(--foreground) 6.00%, transparent)"
+    },
+    "active-strength": {
+      "path": "interaction.active.strength",
+      "cssName": "active-strength",
+      "type": "number",
+      "value": "10%"
+    },
+    "active-bg": {
+      "path": "interaction.active.bg",
+      "cssName": "active-bg",
+      "type": "color",
+      "value": "color-mix(in oklch, var(--foreground) 10.00%, transparent)"
+    },
+    "selected-strength": {
+      "path": "interaction.selected.strength",
+      "cssName": "selected-strength",
+      "type": "number",
+      "value": "14%"
+    },
+    "selected-bg": {
+      "path": "interaction.selected.bg",
+      "cssName": "selected-bg",
+      "type": "color",
+      "value": "color-mix(in oklch, var(--primary) 14.00%, transparent)"
+    },
+    "selected-border": {
+      "path": "interaction.selected.border",
+      "cssName": "selected-border",
+      "type": "color",
+      "value": "color-mix(in oklch, var(--primary) 40.00%, transparent)"
+    },
+    "ring-width": {
+      "path": "interaction.ring.width",
+      "cssName": "ring-width",
+      "type": "dimension",
+      "value": "3px"
+    },
+    "ring-offset": {
+      "path": "interaction.ring.offset",
+      "cssName": "ring-offset",
+      "type": "dimension",
+      "value": "2px"
+    },
+    "ring-opacity": {
+      "path": "interaction.ring.opacity",
+      "cssName": "ring-opacity",
+      "type": "number",
+      "value": "25%"
+    },
+    "ring": {
+      "path": "interaction.ring.default",
+      "cssName": "ring",
+      "type": "color",
+      "value": "oklch(0.6700 0.1600 58.00 / 0.400)",
+      "luminance": 0.2845510813982442
+    },
+    "ring-color": {
+      "path": "interaction.ring.color",
+      "cssName": "ring-color",
+      "type": "color",
+      "value": "var(--primary)"
+    },
+    "mix-bg": {
+      "path": "interaction.mix.bg",
+      "cssName": "mix-bg",
+      "type": "number",
+      "value": "18%"
+    },
+    "mix-border": {
+      "path": "interaction.mix.border",
+      "cssName": "mix-border",
+      "type": "number",
+      "value": "35%"
+    },
+    "mix-hover": {
+      "path": "interaction.mix.hover",
+      "cssName": "mix-hover",
+      "type": "number",
+      "value": "24%"
+    },
+    "breakpoint-mobile": {
+      "path": "breakpoint.mobile",
+      "cssName": "breakpoint-mobile",
+      "type": "dimension",
+      "value": "390px"
+    },
+    "breakpoint-tablet": {
+      "path": "breakpoint.tablet",
+      "cssName": "breakpoint-tablet",
+      "type": "dimension",
+      "value": "768px"
+    },
+    "breakpoint-desktop": {
+      "path": "breakpoint.desktop",
+      "cssName": "breakpoint-desktop",
+      "type": "dimension",
+      "value": "1280px"
+    },
+    "breakpoint-wide": {
+      "path": "breakpoint.wide",
+      "cssName": "breakpoint-wide",
+      "type": "dimension",
+      "value": "1600px"
+    },
+    "density-row-py": {
+      "path": "density.row-py",
+      "cssName": "density-row-py",
+      "type": "dimension",
+      "value": "var(--space-2)"
+    },
+    "density-row-px": {
+      "path": "density.row-px",
+      "cssName": "density-row-px",
+      "type": "dimension",
+      "value": "var(--space-3)"
+    },
+    "density-row-gap": {
+      "path": "density.row-gap",
+      "cssName": "density-row-gap",
+      "type": "dimension",
+      "value": "var(--space-2)"
+    },
+    "density-text": {
+      "path": "density.text",
+      "cssName": "density-text",
+      "type": "dimension",
+      "value": "var(--text-base)"
+    },
+    "density-icon": {
+      "path": "density.icon",
+      "cssName": "density-icon",
+      "type": "dimension",
+      "value": "16px"
+    },
+    "shadow-xs": {
+      "path": "shadow.xs",
+      "cssName": "shadow-xs",
+      "type": "shadow",
+      "value": "0 1px 2px 0 oklch(0.0000 0.0000 0.00 / 0.050)"
+    },
+    "shadow-sm": {
+      "path": "shadow.sm",
+      "cssName": "shadow-sm",
+      "type": "shadow",
+      "value": "0 1px 3px 0 oklch(0.0000 0.0000 0.00 / 0.070), 0 1px 2px -1px oklch(0.0000 0.0000 0.00 / 0.050)"
+    },
+    "shadow-md": {
+      "path": "shadow.md",
+      "cssName": "shadow-md",
+      "type": "shadow",
+      "value": "0 4px 12px -2px oklch(0.0000 0.0000 0.00 / 0.090), 0 2px 4px -2px oklch(0.0000 0.0000 0.00 / 0.060)"
+    },
+    "shadow-lg": {
+      "path": "shadow.lg",
+      "cssName": "shadow-lg",
+      "type": "shadow",
+      "value": "0 12px 32px -6px oklch(0.0000 0.0000 0.00 / 0.130), 0 4px 12px -4px oklch(0.0000 0.0000 0.00 / 0.080)"
+    },
+    "shadow-xl": {
+      "path": "shadow.xl",
+      "cssName": "shadow-xl",
+      "type": "shadow",
+      "value": "0 24px 64px -12px oklch(0.0000 0.0000 0.00 / 0.180), 0 8px 24px -8px oklch(0.0000 0.0000 0.00 / 0.100)"
+    },
+    "shadow-card-rest": {
+      "path": "shadow.card-rest",
+      "cssName": "shadow-card-rest",
+      "type": "shadow",
+      "value": "0 1px 3px 0 oklch(0.2000 0.0400 60.00 / 0.060), 0 0 0 1px oklch(0.2000 0.0400 60.00 / 0.060)"
+    },
+    "shadow-hover": {
+      "path": "shadow.hover",
+      "cssName": "shadow-hover",
+      "type": "shadow",
+      "value": "0 8px 20px 0 oklch(0.2000 0.0400 60.00 / 0.120), 0 0 0 1px oklch(0.2000 0.0400 60.00 / 0.080)"
+    },
+    "shadow-sticky": {
+      "path": "shadow.sticky",
+      "cssName": "shadow-sticky",
+      "type": "shadow",
+      "value": "0 2px 6px -2px oklch(0.0000 0.0000 0.00 / 0.080), 0 1px 2px 0 oklch(0.0000 0.0000 0.00 / 0.040)"
+    },
+    "shadow-accent": {
+      "path": "shadow.accent",
+      "cssName": "shadow-accent",
+      "type": "shadow",
+      "value": "0 0 0 3px color-mix(in oklch, var(--primary) 22.00%, transparent)"
+    },
+    "shadow-inset-soft": {
+      "path": "shadow.inset-soft",
+      "cssName": "shadow-inset-soft",
+      "type": "shadow",
+      "value": "inset 0 1px 2px 0 oklch(0.0000 0.0000 0.00 / 0.050)"
+    },
+    "shadow-inset-ring": {
+      "path": "shadow.inset-ring",
+      "cssName": "shadow-inset-ring",
+      "type": "shadow",
+      "value": "inset 0 0 0 1px var(--border), inset 0 1px 0 0 var(--background)"
+    },
+    "shadow-edge-top": {
+      "path": "shadow.edge-top",
+      "cssName": "shadow-edge-top",
+      "type": "shadow",
+      "value": "0 -8px 24px -8px oklch(0.0000 0.0000 0.00 / 0.080), 0 -1px 0 0 oklch(0.0000 0.0000 0.00 / 0.040)"
+    },
+    "shadow-edge-highlight": {
+      "path": "shadow.edge-highlight",
+      "cssName": "shadow-edge-highlight",
+      "type": "shadow",
+      "value": "inset 0 1px 0 0 var(--hover-bg)"
+    },
+    "scrollbar-thumb": {
+      "path": "scrollbar.thumb",
+      "cssName": "scrollbar-thumb",
+      "type": "color",
+      "value": "color-mix(in oklch, var(--foreground) 22.00%, transparent)"
+    },
+    "scrollbar-thumb-hover": {
+      "path": "scrollbar.thumb-hover",
+      "cssName": "scrollbar-thumb-hover",
+      "type": "color",
+      "value": "color-mix(in oklch, var(--foreground) 38.00%, transparent)"
+    },
+    "scrollbar-track": {
+      "path": "scrollbar.track",
+      "cssName": "scrollbar-track",
+      "type": "string",
+      "value": "transparent"
+    },
+    "scrollbar-width": {
+      "path": "scrollbar.width",
+      "cssName": "scrollbar-width",
+      "type": "dimension",
+      "value": "10px"
+    },
+    "scrollbar-width-thin": {
+      "path": "scrollbar.width-thin",
+      "cssName": "scrollbar-width-thin",
+      "type": "dimension",
+      "value": "6px"
+    },
+    "scrollbar-radius": {
+      "path": "scrollbar.radius",
+      "cssName": "scrollbar-radius",
+      "type": "dimension",
+      "value": "999px"
+    },
+    "filter-backdrop": {
+      "path": "filter.backdrop",
+      "cssName": "filter-backdrop",
+      "type": "string",
+      "value": "none"
+    },
+    "image-texture": {
+      "path": "image.texture",
+      "cssName": "image-texture",
+      "type": "string",
+      "value": "none"
+    },
+    "image-texture-blend": {
+      "path": "image.texture-blend",
+      "cssName": "image-texture-blend",
+      "type": "string",
+      "value": "overlay"
+    },
+    "image-texture-opacity": {
+      "path": "image.texture-opacity",
+      "cssName": "image-texture-opacity",
+      "type": "number",
+      "value": "1"
+    },
+    "image-corner": {
+      "path": "image.corner",
+      "cssName": "image-corner",
+      "type": "string",
+      "value": "none"
+    },
+    "overlay-fill": {
+      "path": "overlay.fill",
+      "cssName": "overlay-fill",
+      "type": "string",
+      "value": "none"
+    },
+    "overlay-blend": {
+      "path": "overlay.blend",
+      "cssName": "overlay-blend",
+      "type": "string",
+      "value": "overlay"
+    },
+    "overlay-opacity": {
+      "path": "overlay.opacity",
+      "cssName": "overlay-opacity",
+      "type": "number",
+      "value": "1"
+    },
+    "play-colors-property": {
+      "path": "play.colors.property",
+      "cssName": "play-colors-property",
+      "type": "string",
+      "value": "color, background-color, border-color, outline-color, fill, stroke"
+    },
+    "play-control-property": {
+      "path": "play.control.property",
+      "cssName": "play-control-property",
+      "type": "string",
+      "value": "color, background-color, border-color, outline-color, transform, box-shadow, opacity"
+    },
+    "play-surface-property": {
+      "path": "play.surface.property",
+      "cssName": "play-surface-property",
+      "type": "string",
+      "value": "color, background-color, border-color, box-shadow, transform, opacity"
+    },
+    "border-none-b-color": {
+      "path": "border.none-b.color",
+      "cssName": "border-none-b-color",
+      "type": "color",
+      "value": "transparent"
+    },
+    "border-none-b-width": {
+      "path": "border.none-b.width",
+      "cssName": "border-none-b-width",
+      "type": "dimension",
+      "value": "0px"
+    },
+    "border-none-b-style": {
+      "path": "border.none-b.style",
+      "cssName": "border-none-b-style",
+      "type": "string",
+      "value": "none"
+    },
+    "border-none-r-color": {
+      "path": "border.none-r.color",
+      "cssName": "border-none-r-color",
+      "type": "color",
+      "value": "transparent"
+    },
+    "border-none-r-width": {
+      "path": "border.none-r.width",
+      "cssName": "border-none-r-width",
+      "type": "dimension",
+      "value": "0px"
+    },
+    "border-none-r-style": {
+      "path": "border.none-r.style",
+      "cssName": "border-none-r-style",
+      "type": "string",
+      "value": "none"
+    },
+    "border-none-l-color": {
+      "path": "border.none-l.color",
+      "cssName": "border-none-l-color",
+      "type": "color",
+      "value": "transparent"
+    },
+    "border-none-l-width": {
+      "path": "border.none-l.width",
+      "cssName": "border-none-l-width",
+      "type": "dimension",
+      "value": "0px"
+    },
+    "border-none-l-style": {
+      "path": "border.none-l.style",
+      "cssName": "border-none-l-style",
+      "type": "string",
+      "value": "none"
+    },
+    "border-none-t-color": {
+      "path": "border.none-t.color",
+      "cssName": "border-none-t-color",
+      "type": "color",
+      "value": "transparent"
+    },
+    "border-none-t-width": {
+      "path": "border.none-t.width",
+      "cssName": "border-none-t-width",
+      "type": "dimension",
+      "value": "0px"
+    },
+    "border-none-t-style": {
+      "path": "border.none-t.style",
+      "cssName": "border-none-t-style",
+      "type": "string",
+      "value": "none"
+    },
+    "border-default-b-color": {
+      "path": "border.default-b.color",
+      "cssName": "border-default-b-color",
+      "type": "color",
+      "value": "var(--border)"
+    },
+    "border-default-b-width": {
+      "path": "border.default-b.width",
+      "cssName": "border-default-b-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-default-b-style": {
+      "path": "border.default-b.style",
+      "cssName": "border-default-b-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-default-r-color": {
+      "path": "border.default-r.color",
+      "cssName": "border-default-r-color",
+      "type": "color",
+      "value": "var(--border)"
+    },
+    "border-default-r-width": {
+      "path": "border.default-r.width",
+      "cssName": "border-default-r-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-default-r-style": {
+      "path": "border.default-r.style",
+      "cssName": "border-default-r-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-default-l-color": {
+      "path": "border.default-l.color",
+      "cssName": "border-default-l-color",
+      "type": "color",
+      "value": "var(--border)"
+    },
+    "border-default-l-width": {
+      "path": "border.default-l.width",
+      "cssName": "border-default-l-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-default-l-style": {
+      "path": "border.default-l.style",
+      "cssName": "border-default-l-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-default-t-color": {
+      "path": "border.default-t.color",
+      "cssName": "border-default-t-color",
+      "type": "color",
+      "value": "var(--border)"
+    },
+    "border-default-t-width": {
+      "path": "border.default-t.width",
+      "cssName": "border-default-t-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-default-t-style": {
+      "path": "border.default-t.style",
+      "cssName": "border-default-t-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-subtle-b-color": {
+      "path": "border.subtle-b.color",
+      "cssName": "border-subtle-b-color",
+      "type": "color",
+      "value": "var(--border-subtle)"
+    },
+    "border-subtle-b-width": {
+      "path": "border.subtle-b.width",
+      "cssName": "border-subtle-b-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-subtle-b-style": {
+      "path": "border.subtle-b.style",
+      "cssName": "border-subtle-b-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-subtle-r-color": {
+      "path": "border.subtle-r.color",
+      "cssName": "border-subtle-r-color",
+      "type": "color",
+      "value": "var(--border-subtle)"
+    },
+    "border-subtle-r-width": {
+      "path": "border.subtle-r.width",
+      "cssName": "border-subtle-r-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-subtle-r-style": {
+      "path": "border.subtle-r.style",
+      "cssName": "border-subtle-r-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-subtle-l-color": {
+      "path": "border.subtle-l.color",
+      "cssName": "border-subtle-l-color",
+      "type": "color",
+      "value": "var(--border-subtle)"
+    },
+    "border-subtle-l-width": {
+      "path": "border.subtle-l.width",
+      "cssName": "border-subtle-l-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-subtle-l-style": {
+      "path": "border.subtle-l.style",
+      "cssName": "border-subtle-l-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-subtle-t-color": {
+      "path": "border.subtle-t.color",
+      "cssName": "border-subtle-t-color",
+      "type": "color",
+      "value": "var(--border-subtle)"
+    },
+    "border-subtle-t-width": {
+      "path": "border.subtle-t.width",
+      "cssName": "border-subtle-t-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-subtle-t-style": {
+      "path": "border.subtle-t.style",
+      "cssName": "border-subtle-t-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-strong-b-color": {
+      "path": "border.strong-b.color",
+      "cssName": "border-strong-b-color",
+      "type": "color",
+      "value": "var(--border-strong)"
+    },
+    "border-strong-b-width": {
+      "path": "border.strong-b.width",
+      "cssName": "border-strong-b-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-strong-b-style": {
+      "path": "border.strong-b.style",
+      "cssName": "border-strong-b-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-strong-r-color": {
+      "path": "border.strong-r.color",
+      "cssName": "border-strong-r-color",
+      "type": "color",
+      "value": "var(--border-strong)"
+    },
+    "border-strong-r-width": {
+      "path": "border.strong-r.width",
+      "cssName": "border-strong-r-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-strong-r-style": {
+      "path": "border.strong-r.style",
+      "cssName": "border-strong-r-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-strong-l-color": {
+      "path": "border.strong-l.color",
+      "cssName": "border-strong-l-color",
+      "type": "color",
+      "value": "var(--border-strong)"
+    },
+    "border-strong-l-width": {
+      "path": "border.strong-l.width",
+      "cssName": "border-strong-l-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-strong-l-style": {
+      "path": "border.strong-l.style",
+      "cssName": "border-strong-l-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-strong-t-color": {
+      "path": "border.strong-t.color",
+      "cssName": "border-strong-t-color",
+      "type": "color",
+      "value": "var(--border-strong)"
+    },
+    "border-strong-t-width": {
+      "path": "border.strong-t.width",
+      "cssName": "border-strong-t-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-strong-t-style": {
+      "path": "border.strong-t.style",
+      "cssName": "border-strong-t-style",
+      "type": "string",
+      "value": "solid"
+    }
+  },
+  "paths": {
+    "color.accent.solid": "accent",
+    "color.accent.border": "accent-border",
+    "color.accent.text": "accent-foreground",
+    "color.accent.hover": "accent-hover",
+    "color.accent.subtle": "accent-subtle",
+    "interaction.active.bg": "active-bg",
+    "interaction.active.strength": "active-strength",
+    "color.backdrop": "backdrop",
+    "color.background": "background",
+    "bg.app.color": "bg-app-color",
+    "bg.inset.color": "bg-inset-color",
+    "bg.overlay.color": "bg-overlay-color",
+    "bg.subtle.color": "bg-subtle-color",
+    "bg.surface.color": "bg-surface-color",
+    "color.border.default": "border",
+    "border.default-b.color": "border-default-b-color",
+    "border.default-b.style": "border-default-b-style",
+    "border.default-b.width": "border-default-b-width",
+    "border.default.color": "border-default-color",
+    "border.default-l.color": "border-default-l-color",
+    "border.default-l.style": "border-default-l-style",
+    "border.default-l.width": "border-default-l-width",
+    "border.default-r.color": "border-default-r-color",
+    "border.default-r.style": "border-default-r-style",
+    "border.default-r.width": "border-default-r-width",
+    "border.default.style": "border-default-style",
+    "border.default-t.color": "border-default-t-color",
+    "border.default-t.style": "border-default-t-style",
+    "border.default-t.width": "border-default-t-width",
+    "border.default.width": "border-default-width",
+    "border.none-b.color": "border-none-b-color",
+    "border.none-b.style": "border-none-b-style",
+    "border.none-b.width": "border-none-b-width",
+    "border.none.color": "border-none-color",
+    "border.none-l.color": "border-none-l-color",
+    "border.none-l.style": "border-none-l-style",
+    "border.none-l.width": "border-none-l-width",
+    "border.none-r.color": "border-none-r-color",
+    "border.none-r.style": "border-none-r-style",
+    "border.none-r.width": "border-none-r-width",
+    "border.none.style": "border-none-style",
+    "border.none-t.color": "border-none-t-color",
+    "border.none-t.style": "border-none-t-style",
+    "border.none-t.width": "border-none-t-width",
+    "border.none.width": "border-none-width",
+    "color.border.strong": "border-strong",
+    "border.strong-b.color": "border-strong-b-color",
+    "border.strong-b.style": "border-strong-b-style",
+    "border.strong-b.width": "border-strong-b-width",
+    "border.strong.color": "border-strong-color",
+    "border.strong-l.color": "border-strong-l-color",
+    "border.strong-l.style": "border-strong-l-style",
+    "border.strong-l.width": "border-strong-l-width",
+    "border.strong-r.color": "border-strong-r-color",
+    "border.strong-r.style": "border-strong-r-style",
+    "border.strong-r.width": "border-strong-r-width",
+    "border.strong.style": "border-strong-style",
+    "border.strong-t.color": "border-strong-t-color",
+    "border.strong-t.style": "border-strong-t-style",
+    "border.strong-t.width": "border-strong-t-width",
+    "border.strong.width": "border-strong-width",
+    "color.border.subtle": "border-subtle",
+    "border.subtle-b.color": "border-subtle-b-color",
+    "border.subtle-b.style": "border-subtle-b-style",
+    "border.subtle-b.width": "border-subtle-b-width",
+    "border.subtle.color": "border-subtle-color",
+    "border.subtle-l.color": "border-subtle-l-color",
+    "border.subtle-l.style": "border-subtle-l-style",
+    "border.subtle-l.width": "border-subtle-l-width",
+    "border.subtle-r.color": "border-subtle-r-color",
+    "border.subtle-r.style": "border-subtle-r-style",
+    "border.subtle-r.width": "border-subtle-r-width",
+    "border.subtle.style": "border-subtle-style",
+    "border.subtle-t.color": "border-subtle-t-color",
+    "border.subtle-t.style": "border-subtle-t-style",
+    "border.subtle-t.width": "border-subtle-t-width",
+    "border.subtle.width": "border-subtle-width",
+    "border.width": "border-width",
+    "breakpoint.desktop": "breakpoint-desktop",
+    "breakpoint.mobile": "breakpoint-mobile",
+    "breakpoint.tablet": "breakpoint-tablet",
+    "breakpoint.wide": "breakpoint-wide",
+    "control.frame": "control-frame",
+    "control.h-2xs": "control-h-2xs",
+    "control.h-lg": "control-h-lg",
+    "control.h-md": "control-h-md",
+    "control.h-sm": "control-h-sm",
+    "control.h-xl": "control-h-xl",
+    "control.h-xs": "control-h-xs",
+    "control.lift": "control-lift",
+    "control.stroke": "control-stroke",
+    "color.danger.solid": "danger",
+    "color.danger.border": "danger-border",
+    "color.danger.text": "danger-foreground",
+    "color.danger.hover": "danger-hover",
+    "color.danger.subtle": "danger-subtle",
+    "density.icon": "density-icon",
+    "density.row-gap": "density-row-gap",
+    "density.row-px": "density-row-px",
+    "density.row-py": "density-row-py",
+    "density.text": "density-text",
+    "color.divider": "divider",
+    "motion.duration.deliberate": "duration-deliberate",
+    "motion.duration.fast": "duration-fast",
+    "motion.duration.instant": "duration-instant",
+    "motion.duration.medium": "duration-medium",
+    "motion.duration.slow": "duration-slow",
+    "motion.ease.in": "ease-in",
+    "motion.ease.in-out": "ease-in-out",
+    "motion.ease.out": "ease-out",
+    "motion.ease.out-soft": "ease-out-soft",
+    "motion.ease.spring": "ease-spring",
+    "elevation.lg.shadow": "elevation-lg-shadow",
+    "elevation.md.shadow": "elevation-md-shadow",
+    "elevation.none.shadow": "elevation-none-shadow",
+    "elevation.sm.shadow": "elevation-sm-shadow",
+    "elevation.xl.shadow": "elevation-xl-shadow",
+    "elevation.xs.shadow": "elevation-xs-shadow",
+    "fg.foreground.color": "fg-foreground-color",
+    "fg.muted.color": "fg-muted-color",
+    "filter.backdrop": "filter-backdrop",
+    "interaction.focus.ring": "focus-ring",
+    "interaction.focus.ring-offset": "focus-ring-offset",
+    "typography.font.body": "font-body",
+    "typography.font.display": "font-display",
+    "typography.font.heading": "font-heading",
+    "typography.font.mono": "font-mono",
+    "typography.font.weight-bold": "font-weight-bold",
+    "typography.font.weight-medium": "font-weight-medium",
+    "typography.font.weight-normal": "font-weight-normal",
+    "typography.font.weight-semibold": "font-weight-semibold",
+    "color.foreground": "foreground",
+    "color.glow.accent": "glow-accent",
+    "color.glow.primary": "glow-primary",
+    "color.gradient.accent": "gradient-accent",
+    "color.gradient.primary": "gradient-primary",
+    "color.gradient.surface": "gradient-surface",
+    "interaction.hover.bg": "hover-bg",
+    "interaction.hover.strength": "hover-strength",
+    "color.hue.amber": "hue-amber",
+    "color.hue.blue": "hue-blue",
+    "color.hue.cyan": "hue-cyan",
+    "color.hue.fuchsia": "hue-fuchsia",
+    "color.hue.green": "hue-green",
+    "color.hue.indigo": "hue-indigo",
+    "color.hue.lime": "hue-lime",
+    "color.hue.orange": "hue-orange",
+    "color.hue.pink": "hue-pink",
+    "color.hue.purple": "hue-purple",
+    "color.hue.red": "hue-red",
+    "color.hue.rose": "hue-rose",
+    "color.hue.sky": "hue-sky",
+    "color.hue.teal": "hue-teal",
+    "color.hue.violet": "hue-violet",
+    "color.hue.yellow": "hue-yellow",
+    "icon.2xl": "icon-size-2xl",
+    "icon.2xs": "icon-size-2xs",
+    "icon.3xl": "icon-size-3xl",
+    "icon.3xs": "icon-size-3xs",
+    "icon.lg": "icon-size-lg",
+    "icon.md": "icon-size-md",
+    "icon.sm": "icon-size-sm",
+    "icon.xl": "icon-size-xl",
+    "icon.xs": "icon-size-xs",
+    "image.corner": "image-corner",
+    "image.texture": "image-texture",
+    "image.texture-blend": "image-texture-blend",
+    "image.texture-opacity": "image-texture-opacity",
+    "color.info.solid": "info",
+    "color.info.border": "info-border",
+    "color.info.text": "info-foreground",
+    "color.info.hover": "info-hover",
+    "color.info.subtle": "info-subtle",
+    "color.inset": "inset",
+    "color.knob": "knob",
+    "typography.leading.none": "leading-none",
+    "typography.leading.normal": "leading-normal",
+    "typography.leading.relaxed": "leading-relaxed",
+    "typography.leading.snug": "leading-snug",
+    "typography.leading.tight": "leading-tight",
+    "interaction.mix.bg": "mix-bg",
+    "interaction.mix.border": "mix-border",
+    "interaction.mix.hover": "mix-hover",
+    "color.muted.default": "muted",
+    "color.muted.foreground": "muted-foreground",
+    "color.neutral.solid": "neutral",
+    "color.neutral.border": "neutral-border",
+    "color.neutral.text": "neutral-foreground",
+    "color.neutral.hover": "neutral-hover",
+    "color.neutral.subtle": "neutral-subtle",
+    "color.overlay": "overlay",
+    "overlay.blend": "overlay-blend",
+    "overlay.fill": "overlay-fill",
+    "overlay.opacity": "overlay-opacity",
+    "pad.page-lg.x": "pad-page-lg-x",
+    "pad.page-md.x": "pad-page-md-x",
+    "pad.page.x": "pad-page-x",
+    "panel.max-h-lg": "panel-max-h-lg",
+    "panel.max-h-md": "panel-max-h-md",
+    "panel.max-h-sm": "panel-max-h-sm",
+    "panel.max-w-lg": "panel-max-w-lg",
+    "panel.max-w-md": "panel-max-w-md",
+    "panel.max-w-sm": "panel-max-w-sm",
+    "panel.min-w-lg": "panel-min-w-lg",
+    "panel.min-w-md": "panel-min-w-md",
+    "panel.min-w-sm": "panel-min-w-sm",
+    "panel.vh-lg": "panel-vh-lg",
+    "panel.vh-md": "panel-vh-md",
+    "panel.vh-sm": "panel-vh-sm",
+    "play.colors.property": "play-colors-property",
+    "play.control.property": "play-control-property",
+    "play.surface.property": "play-surface-property",
+    "control.press.scale": "press-scale",
+    "control.press.shadow": "press-shadow",
+    "control.press.translate": "press-translate",
+    "color.primary.solid": "primary",
+    "color.primary.border": "primary-border",
+    "color.primary.text": "primary-foreground",
+    "color.primary.hover": "primary-hover",
+    "color.primary.subtle": "primary-subtle",
+    "radius.default": "radius-default",
+    "radius.full": "radius-full",
+    "radius.lg": "radius-lg",
+    "radius.md": "radius-md",
+    "radius.sm": "radius-sm",
+    "radius.xl": "radius-xl",
+    "interaction.ring.default": "ring",
+    "interaction.ring.color": "ring-color",
+    "interaction.ring.offset": "ring-offset",
+    "interaction.ring.opacity": "ring-opacity",
+    "interaction.ring.width": "ring-width",
+    "color.scrim": "scrim",
+    "scrollbar.radius": "scrollbar-radius",
+    "scrollbar.thumb": "scrollbar-thumb",
+    "scrollbar.thumb-hover": "scrollbar-thumb-hover",
+    "scrollbar.track": "scrollbar-track",
+    "scrollbar.width": "scrollbar-width",
+    "scrollbar.width-thin": "scrollbar-width-thin",
+    "color.secondary.solid": "secondary",
+    "color.secondary.border": "secondary-border",
+    "color.secondary.text": "secondary-foreground",
+    "color.secondary.hover": "secondary-hover",
+    "color.secondary.subtle": "secondary-subtle",
+    "interaction.selected.bg": "selected-bg",
+    "interaction.selected.border": "selected-border",
+    "interaction.selected.strength": "selected-strength",
+    "shadow.accent": "shadow-accent",
+    "shadow.card-rest": "shadow-card-rest",
+    "shadow.edge-highlight": "shadow-edge-highlight",
+    "shadow.edge-top": "shadow-edge-top",
+    "shadow.hover": "shadow-hover",
+    "shadow.inset-ring": "shadow-inset-ring",
+    "shadow.inset-soft": "shadow-inset-soft",
+    "shadow.lg": "shadow-lg",
+    "shadow.md": "shadow-md",
+    "shadow.sm": "shadow-sm",
+    "shadow.sticky": "shadow-sticky",
+    "shadow.xl": "shadow-xl",
+    "shadow.xs": "shadow-xs",
+    "size.control-lg.h": "size-control-lg-h",
+    "size.control-md.h": "size-control-md-h",
+    "size.control-sm.h": "size-control-sm-h",
+    "size.icon-lg.h": "size-icon-lg-h",
+    "size.icon-lg.w": "size-icon-lg-w",
+    "size.icon-md.h": "size-icon-md-h",
+    "size.icon-md.w": "size-icon-md-w",
+    "size.icon-sm.h": "size-icon-sm-h",
+    "size.icon-sm.w": "size-icon-sm-w",
+    "size.icon-xs.h": "size-icon-xs-h",
+    "size.icon-xs.w": "size-icon-xs-w",
+    "size.measure-lg.max-w": "size-measure-lg-max-w",
+    "size.measure.max-w": "size-measure-max-w",
+    "size.measure-md.max-w": "size-measure-md-max-w",
+    "size.measure-sm.max-w": "size-measure-sm-max-w",
+    "space.1": "space-1",
+    "space.10": "space-10",
+    "space.11": "space-11",
+    "space.12": "space-12",
+    "space.14": "space-14",
+    "space.16": "space-16",
+    "space.1_5": "space-1_5",
+    "space.2": "space-2",
+    "space.20": "space-20",
+    "space.24": "space-24",
+    "space.28": "space-28",
+    "space.2_5": "space-2_5",
+    "space.3": "space-3",
+    "space.32": "space-32",
+    "space.36": "space-36",
+    "space.4": "space-4",
+    "space.40": "space-40",
+    "space.44": "space-44",
+    "space.48": "space-48",
+    "space.5": "space-5",
+    "space.52": "space-52",
+    "space.56": "space-56",
+    "space.6": "space-6",
+    "space.60": "space-60",
+    "space.64": "space-64",
+    "space.7": "space-7",
+    "space.8": "space-8",
+    "space.9": "space-9",
+    "space.half": "space-half",
+    "space.px": "space-px",
+    "color.success.solid": "success",
+    "color.success.border": "success-border",
+    "color.success.text": "success-foreground",
+    "color.success.hover": "success-hover",
+    "color.success.subtle": "success-subtle",
+    "color.surface": "surface",
+    "color.syntax.attr": "syntax-attr",
+    "color.syntax.comment": "syntax-comment",
+    "color.syntax.function": "syntax-function",
+    "color.syntax.keyword": "syntax-keyword",
+    "color.syntax.number": "syntax-number",
+    "color.syntax.string": "syntax-string",
+    "color.syntax.tag": "syntax-tag",
+    "color.syntax.type": "syntax-type",
+    "color.syntax.variable": "syntax-variable",
+    "typography.text.2xl": "text-2xl",
+    "typography.text.3xl": "text-3xl",
+    "typography.text.4xl": "text-4xl",
+    "typography.text.base": "text-base",
+    "typography.text.display": "text-display",
+    "typography.text.lg": "text-lg",
+    "typography.text.md": "text-md",
+    "typography.text.sm": "text-sm",
+    "typography.text.xl": "text-xl",
+    "typography.text.xs": "text-xs",
+    "motion.tooltip.hide-delay": "tooltip-hide-delay",
+    "motion.tooltip.show-delay": "tooltip-show-delay",
+    "typography.tracking.normal": "tracking-normal",
+    "typography.tracking.tight": "tracking-tight",
+    "typography.tracking.tighter": "tracking-tighter",
+    "typography.tracking.wide": "tracking-wide",
+    "typography.tracking.wider": "tracking-wider",
+    "type.body.family": "type-body-family",
+    "type.body.leading": "type-body-leading",
+    "type.body-semibold.family": "type-body-semibold-family",
+    "type.body-semibold.leading": "type-body-semibold-leading",
+    "type.body-semibold.size": "type-body-semibold-size",
+    "type.body-semibold.tracking": "type-body-semibold-tracking",
+    "type.body-semibold.weight": "type-body-semibold-weight",
+    "type.body.size": "type-body-size",
+    "type.body-sm.family": "type-body-sm-family",
+    "type.body-sm.leading": "type-body-sm-leading",
+    "type.body-sm.size": "type-body-sm-size",
+    "type.body-sm.tracking": "type-body-sm-tracking",
+    "type.body-sm.weight": "type-body-sm-weight",
+    "type.body.tracking": "type-body-tracking",
+    "type.body.weight": "type-body-weight",
+    "type.display.family": "type-display-family",
+    "type.display.leading": "type-display-leading",
+    "type.display.size": "type-display-size",
+    "type.display-sm.family": "type-display-sm-family",
+    "type.display-sm.leading": "type-display-sm-leading",
+    "type.display-sm.size": "type-display-sm-size",
+    "type.display-sm.tracking": "type-display-sm-tracking",
+    "type.display-sm.weight": "type-display-sm-weight",
+    "type.display.tracking": "type-display-tracking",
+    "type.display.weight": "type-display-weight",
+    "type.heading.case": "type-heading-case",
+    "type.heading.family": "type-heading-family",
+    "type.heading.leading": "type-heading-leading",
+    "type.heading.size": "type-heading-size",
+    "type.heading.tracking": "type-heading-tracking",
+    "type.heading.weight": "type-heading-weight",
+    "type.label.case": "type-label-case",
+    "type.label.family": "type-label-family",
+    "type.label.leading": "type-label-leading",
+    "type.label.size": "type-label-size",
+    "type.label.tracking": "type-label-tracking",
+    "type.label.weight": "type-label-weight",
+    "type.mono.family": "type-mono-family",
+    "type.mono.leading": "type-mono-leading",
+    "type.mono.size": "type-mono-size",
+    "type.mono-sm.family": "type-mono-sm-family",
+    "type.mono-sm.leading": "type-mono-sm-leading",
+    "type.mono-sm.size": "type-mono-sm-size",
+    "type.mono-sm.tracking": "type-mono-sm-tracking",
+    "type.mono-sm.weight": "type-mono-sm-weight",
+    "type.mono.tracking": "type-mono-tracking",
+    "type.mono.weight": "type-mono-weight",
+    "color.warning.solid": "warning",
+    "color.warning.border": "warning-border",
+    "color.warning.text": "warning-foreground",
+    "color.warning.hover": "warning-hover",
+    "color.warning.subtle": "warning-subtle",
+    "z.base": "z-base",
+    "z.dialog": "z-dialog",
+    "z.dropdown": "z-dropdown",
+    "z.elevated": "z-elevated",
+    "z.max": "z-max",
+    "z.popover": "z-popover",
+    "z.sticky": "z-sticky",
+    "z.toast": "z-toast"
+  },
+  "aliases": {},
+  "composites": {
+    "pad.page": {
+      "path": "pad.page",
+      "cssName": "pad.page",
+      "type": "pad",
+      "members": {
+        "x": "pad-page-x"
+      }
+    },
+    "pad.page-md": {
+      "path": "pad.page-md",
+      "cssName": "pad.page-md",
+      "type": "pad",
+      "members": {
+        "x": "pad-page-md-x"
+      }
+    },
+    "pad.page-lg": {
+      "path": "pad.page-lg",
+      "cssName": "pad.page-lg",
+      "type": "pad",
+      "members": {
+        "x": "pad-page-lg-x"
+      }
+    },
+    "border.none": {
+      "path": "border.none",
+      "cssName": "border.none",
+      "type": "border",
+      "members": {
+        "color": "border-none-color",
+        "width": "border-none-width",
+        "style": "border-none-style"
+      }
+    },
+    "border.default": {
+      "path": "border.default",
+      "cssName": "border.default",
+      "type": "border",
+      "members": {
+        "color": "border-default-color",
+        "width": "border-default-width",
+        "style": "border-default-style"
+      }
+    },
+    "border.subtle": {
+      "path": "border.subtle",
+      "cssName": "border.subtle",
+      "type": "border",
+      "members": {
+        "color": "border-subtle-color",
+        "width": "border-subtle-width",
+        "style": "border-subtle-style"
+      }
+    },
+    "border.strong": {
+      "path": "border.strong",
+      "cssName": "border.strong",
+      "type": "border",
+      "members": {
+        "color": "border-strong-color",
+        "width": "border-strong-width",
+        "style": "border-strong-style"
+      }
+    },
+    "size.control-sm": {
+      "path": "size.control-sm",
+      "cssName": "size.control-sm",
+      "type": "size",
+      "members": {
+        "h": "size-control-sm-h"
+      }
+    },
+    "size.control-md": {
+      "path": "size.control-md",
+      "cssName": "size.control-md",
+      "type": "size",
+      "members": {
+        "h": "size-control-md-h"
+      }
+    },
+    "size.control-lg": {
+      "path": "size.control-lg",
+      "cssName": "size.control-lg",
+      "type": "size",
+      "members": {
+        "h": "size-control-lg-h"
+      }
+    },
+    "size.measure": {
+      "path": "size.measure",
+      "cssName": "size.measure",
+      "type": "size",
+      "members": {
+        "max-w": "size-measure-max-w"
+      }
+    },
+    "size.measure-sm": {
+      "path": "size.measure-sm",
+      "cssName": "size.measure-sm",
+      "type": "size",
+      "members": {
+        "max-w": "size-measure-sm-max-w"
+      }
+    },
+    "size.measure-md": {
+      "path": "size.measure-md",
+      "cssName": "size.measure-md",
+      "type": "size",
+      "members": {
+        "max-w": "size-measure-md-max-w"
+      }
+    },
+    "size.measure-lg": {
+      "path": "size.measure-lg",
+      "cssName": "size.measure-lg",
+      "type": "size",
+      "members": {
+        "max-w": "size-measure-lg-max-w"
+      }
+    },
+    "size.icon-xs": {
+      "path": "size.icon-xs",
+      "cssName": "size.icon-xs",
+      "type": "size",
+      "members": {
+        "w": "size-icon-xs-w",
+        "h": "size-icon-xs-h"
+      }
+    },
+    "size.icon-sm": {
+      "path": "size.icon-sm",
+      "cssName": "size.icon-sm",
+      "type": "size",
+      "members": {
+        "w": "size-icon-sm-w",
+        "h": "size-icon-sm-h"
+      }
+    },
+    "size.icon-md": {
+      "path": "size.icon-md",
+      "cssName": "size.icon-md",
+      "type": "size",
+      "members": {
+        "w": "size-icon-md-w",
+        "h": "size-icon-md-h"
+      }
+    },
+    "size.icon-lg": {
+      "path": "size.icon-lg",
+      "cssName": "size.icon-lg",
+      "type": "size",
+      "members": {
+        "w": "size-icon-lg-w",
+        "h": "size-icon-lg-h"
+      }
+    },
+    "type.body": {
+      "path": "type.body",
+      "cssName": "type.body",
+      "type": "type",
+      "members": {
+        "family": "type-body-family",
+        "size": "type-body-size",
+        "weight": "type-body-weight",
+        "leading": "type-body-leading",
+        "tracking": "type-body-tracking"
+      }
+    },
+    "type.body-sm": {
+      "path": "type.body-sm",
+      "cssName": "type.body-sm",
+      "type": "type",
+      "members": {
+        "family": "type-body-sm-family",
+        "size": "type-body-sm-size",
+        "weight": "type-body-sm-weight",
+        "leading": "type-body-sm-leading",
+        "tracking": "type-body-sm-tracking"
+      }
+    },
+    "type.body-semibold": {
+      "path": "type.body-semibold",
+      "cssName": "type.body-semibold",
+      "type": "type",
+      "members": {
+        "family": "type-body-semibold-family",
+        "size": "type-body-semibold-size",
+        "weight": "type-body-semibold-weight",
+        "leading": "type-body-semibold-leading",
+        "tracking": "type-body-semibold-tracking"
+      }
+    },
+    "type.label": {
+      "path": "type.label",
+      "cssName": "type.label",
+      "type": "type",
+      "members": {
+        "family": "type-label-family",
+        "size": "type-label-size",
+        "weight": "type-label-weight",
+        "leading": "type-label-leading",
+        "tracking": "type-label-tracking",
+        "case": "type-label-case"
+      }
+    },
+    "type.heading": {
+      "path": "type.heading",
+      "cssName": "type.heading",
+      "type": "type",
+      "members": {
+        "family": "type-heading-family",
+        "size": "type-heading-size",
+        "weight": "type-heading-weight",
+        "leading": "type-heading-leading",
+        "tracking": "type-heading-tracking",
+        "case": "type-heading-case"
+      }
+    },
+    "type.mono": {
+      "path": "type.mono",
+      "cssName": "type.mono",
+      "type": "type",
+      "members": {
+        "family": "type-mono-family",
+        "size": "type-mono-size",
+        "weight": "type-mono-weight",
+        "leading": "type-mono-leading",
+        "tracking": "type-mono-tracking"
+      }
+    },
+    "type.mono-sm": {
+      "path": "type.mono-sm",
+      "cssName": "type.mono-sm",
+      "type": "type",
+      "members": {
+        "family": "type-mono-sm-family",
+        "size": "type-mono-sm-size",
+        "weight": "type-mono-sm-weight",
+        "leading": "type-mono-sm-leading",
+        "tracking": "type-mono-sm-tracking"
+      }
+    },
+    "type.display": {
+      "path": "type.display",
+      "cssName": "type.display",
+      "type": "type",
+      "members": {
+        "family": "type-display-family",
+        "size": "type-display-size",
+        "weight": "type-display-weight",
+        "leading": "type-display-leading",
+        "tracking": "type-display-tracking"
+      }
+    },
+    "type.display-sm": {
+      "path": "type.display-sm",
+      "cssName": "type.display-sm",
+      "type": "type",
+      "members": {
+        "family": "type-display-sm-family",
+        "size": "type-display-sm-size",
+        "weight": "type-display-sm-weight",
+        "leading": "type-display-sm-leading",
+        "tracking": "type-display-sm-tracking"
+      }
+    },
+    "elevation.xs": {
+      "path": "elevation.xs",
+      "cssName": "elevation.xs",
+      "type": "elevation",
+      "members": {
+        "shadow": "elevation-xs-shadow"
+      }
+    },
+    "elevation.sm": {
+      "path": "elevation.sm",
+      "cssName": "elevation.sm",
+      "type": "elevation",
+      "members": {
+        "shadow": "elevation-sm-shadow"
+      }
+    },
+    "elevation.md": {
+      "path": "elevation.md",
+      "cssName": "elevation.md",
+      "type": "elevation",
+      "members": {
+        "shadow": "elevation-md-shadow"
+      }
+    },
+    "elevation.lg": {
+      "path": "elevation.lg",
+      "cssName": "elevation.lg",
+      "type": "elevation",
+      "members": {
+        "shadow": "elevation-lg-shadow"
+      }
+    },
+    "elevation.xl": {
+      "path": "elevation.xl",
+      "cssName": "elevation.xl",
+      "type": "elevation",
+      "members": {
+        "shadow": "elevation-xl-shadow"
+      }
+    },
+    "elevation.none": {
+      "path": "elevation.none",
+      "cssName": "elevation.none",
+      "type": "elevation",
+      "members": {
+        "shadow": "elevation-none-shadow"
+      }
+    },
+    "bg.app": {
+      "path": "bg.app",
+      "cssName": "bg.app",
+      "type": "bg",
+      "members": {
+        "color": "bg-app-color"
+      }
+    },
+    "bg.subtle": {
+      "path": "bg.subtle",
+      "cssName": "bg.subtle",
+      "type": "bg",
+      "members": {
+        "color": "bg-subtle-color"
+      }
+    },
+    "bg.surface": {
+      "path": "bg.surface",
+      "cssName": "bg.surface",
+      "type": "bg",
+      "members": {
+        "color": "bg-surface-color"
+      }
+    },
+    "bg.inset": {
+      "path": "bg.inset",
+      "cssName": "bg.inset",
+      "type": "bg",
+      "members": {
+        "color": "bg-inset-color"
+      }
+    },
+    "bg.overlay": {
+      "path": "bg.overlay",
+      "cssName": "bg.overlay",
+      "type": "bg",
+      "members": {
+        "color": "bg-overlay-color"
+      }
+    },
+    "fg.foreground": {
+      "path": "fg.foreground",
+      "cssName": "fg.foreground",
+      "type": "fg",
+      "members": {
+        "color": "fg-foreground-color"
+      }
+    },
+    "fg.muted": {
+      "path": "fg.muted",
+      "cssName": "fg.muted",
+      "type": "fg",
+      "members": {
+        "color": "fg-muted-color"
+      }
+    },
+    "play.colors": {
+      "path": "play.colors",
+      "cssName": "play.colors",
+      "type": "transition",
+      "members": {
+        "property": "play-colors-property"
+      }
+    },
+    "play.control": {
+      "path": "play.control",
+      "cssName": "play.control",
+      "type": "transition",
+      "members": {
+        "property": "play-control-property"
+      }
+    },
+    "play.surface": {
+      "path": "play.surface",
+      "cssName": "play.surface",
+      "type": "transition",
+      "members": {
+        "property": "play-surface-property"
+      }
+    },
+    "border.none-b": {
+      "path": "border.none-b",
+      "cssName": "border.none-b",
+      "type": "border",
+      "members": {
+        "color": "border-none-b-color",
+        "width": "border-none-b-width",
+        "style": "border-none-b-style",
+        "edge": "b"
+      }
+    },
+    "border.none-r": {
+      "path": "border.none-r",
+      "cssName": "border.none-r",
+      "type": "border",
+      "members": {
+        "color": "border-none-r-color",
+        "width": "border-none-r-width",
+        "style": "border-none-r-style",
+        "edge": "r"
+      }
+    },
+    "border.none-l": {
+      "path": "border.none-l",
+      "cssName": "border.none-l",
+      "type": "border",
+      "members": {
+        "color": "border-none-l-color",
+        "width": "border-none-l-width",
+        "style": "border-none-l-style",
+        "edge": "l"
+      }
+    },
+    "border.none-t": {
+      "path": "border.none-t",
+      "cssName": "border.none-t",
+      "type": "border",
+      "members": {
+        "color": "border-none-t-color",
+        "width": "border-none-t-width",
+        "style": "border-none-t-style",
+        "edge": "t"
+      }
+    },
+    "border.default-b": {
+      "path": "border.default-b",
+      "cssName": "border.default-b",
+      "type": "border",
+      "members": {
+        "color": "border-default-b-color",
+        "width": "border-default-b-width",
+        "style": "border-default-b-style",
+        "edge": "b"
+      }
+    },
+    "border.default-r": {
+      "path": "border.default-r",
+      "cssName": "border.default-r",
+      "type": "border",
+      "members": {
+        "color": "border-default-r-color",
+        "width": "border-default-r-width",
+        "style": "border-default-r-style",
+        "edge": "r"
+      }
+    },
+    "border.default-l": {
+      "path": "border.default-l",
+      "cssName": "border.default-l",
+      "type": "border",
+      "members": {
+        "color": "border-default-l-color",
+        "width": "border-default-l-width",
+        "style": "border-default-l-style",
+        "edge": "l"
+      }
+    },
+    "border.default-t": {
+      "path": "border.default-t",
+      "cssName": "border.default-t",
+      "type": "border",
+      "members": {
+        "color": "border-default-t-color",
+        "width": "border-default-t-width",
+        "style": "border-default-t-style",
+        "edge": "t"
+      }
+    },
+    "border.subtle-b": {
+      "path": "border.subtle-b",
+      "cssName": "border.subtle-b",
+      "type": "border",
+      "members": {
+        "color": "border-subtle-b-color",
+        "width": "border-subtle-b-width",
+        "style": "border-subtle-b-style",
+        "edge": "b"
+      }
+    },
+    "border.subtle-r": {
+      "path": "border.subtle-r",
+      "cssName": "border.subtle-r",
+      "type": "border",
+      "members": {
+        "color": "border-subtle-r-color",
+        "width": "border-subtle-r-width",
+        "style": "border-subtle-r-style",
+        "edge": "r"
+      }
+    },
+    "border.subtle-l": {
+      "path": "border.subtle-l",
+      "cssName": "border.subtle-l",
+      "type": "border",
+      "members": {
+        "color": "border-subtle-l-color",
+        "width": "border-subtle-l-width",
+        "style": "border-subtle-l-style",
+        "edge": "l"
+      }
+    },
+    "border.subtle-t": {
+      "path": "border.subtle-t",
+      "cssName": "border.subtle-t",
+      "type": "border",
+      "members": {
+        "color": "border-subtle-t-color",
+        "width": "border-subtle-t-width",
+        "style": "border-subtle-t-style",
+        "edge": "t"
+      }
+    },
+    "border.strong-b": {
+      "path": "border.strong-b",
+      "cssName": "border.strong-b",
+      "type": "border",
+      "members": {
+        "color": "border-strong-b-color",
+        "width": "border-strong-b-width",
+        "style": "border-strong-b-style",
+        "edge": "b"
+      }
+    },
+    "border.strong-r": {
+      "path": "border.strong-r",
+      "cssName": "border.strong-r",
+      "type": "border",
+      "members": {
+        "color": "border-strong-r-color",
+        "width": "border-strong-r-width",
+        "style": "border-strong-r-style",
+        "edge": "r"
+      }
+    },
+    "border.strong-l": {
+      "path": "border.strong-l",
+      "cssName": "border.strong-l",
+      "type": "border",
+      "members": {
+        "color": "border-strong-l-color",
+        "width": "border-strong-l-width",
+        "style": "border-strong-l-style",
+        "edge": "l"
+      }
+    },
+    "border.strong-t": {
+      "path": "border.strong-t",
+      "cssName": "border.strong-t",
+      "type": "border",
+      "members": {
+        "color": "border-strong-t-color",
+        "width": "border-strong-t-width",
+        "style": "border-strong-t-style",
+        "edge": "t"
+      }
+    }
+  },
+  "styles": {},
+  "keyframes": {
+    "fade": {
+      "path": "keyframes.fade",
+      "type": "sail.keyframes",
+      "value": {
+        "from": {
+          "opacity": 0
+        },
+        "to": {
+          "opacity": 1
+        }
+      }
+    },
+    "fade-out": {
+      "path": "keyframes.fade-out",
+      "type": "sail.keyframes",
+      "value": {
+        "from": {
+          "opacity": 1
+        },
+        "to": {
+          "opacity": 0
+        }
+      }
+    },
+    "fade-scale-in": {
+      "path": "keyframes.fade-scale-in",
+      "type": "sail.keyframes",
+      "value": {
+        "from": {
+          "opacity": 0,
+          "transform": "scale(0.96)"
+        },
+        "to": {
+          "opacity": 1,
+          "transform": "scale(1)"
+        }
+      }
+    },
+    "slide-up": {
+      "path": "keyframes.slide-up",
+      "type": "sail.keyframes",
+      "value": {
+        "from": {
+          "opacity": 0,
+          "transform": "translateY(8px)"
+        },
+        "to": {
+          "opacity": 1,
+          "transform": "translateY(0)"
+        }
+      }
+    },
+    "press": {
+      "path": "keyframes.press",
+      "type": "sail.keyframes",
+      "value": {
+        "from": {
+          "transform": "scale(1)"
+        },
+        "to": {
+          "transform": "scale(0.96)"
+        }
+      }
+    },
+    "spin": {
+      "path": "keyframes.spin",
+      "type": "sail.keyframes",
+      "value": {
+        "from": {
+          "transform": "rotate(0deg)"
+        },
+        "to": {
+          "transform": "rotate(360deg)"
+        }
+      }
+    },
+    "marquee": {
+      "path": "keyframes.marquee",
+      "type": "sail.keyframes",
+      "value": {
+        "from": {
+          "transform": "translateX(0)"
+        },
+        "to": {
+          "transform": "translateX(-50%)"
+        }
+      }
+    },
+    "marquee-reverse": {
+      "path": "keyframes.marquee-reverse",
+      "type": "sail.keyframes",
+      "value": {
+        "from": {
+          "transform": "translateX(0)"
+        },
+        "to": {
+          "transform": "translateX(50%)"
+        }
+      }
+    }
+  },
+  "plays": {
+    "colors": {
+      "path": "play.colors",
+      "type": "transition",
+      "value": {
+        "property": "color, background-color, border-color, outline-color, fill, stroke"
+      }
+    },
+    "control": {
+      "path": "play.control",
+      "type": "transition",
+      "value": {
+        "property": "color, background-color, border-color, outline-color, transform, box-shadow, opacity"
+      }
+    },
+    "surface": {
+      "path": "play.surface",
+      "type": "transition",
+      "value": {
+        "property": "color, background-color, border-color, box-shadow, transform, opacity"
+      }
+    }
+  },
+  "tagDefaults": {
+    "h1": {
+      "type": "heading",
+      "size": "4xl"
+    },
+    "h2": {
+      "type": "heading",
+      "size": "2xl"
+    },
+    "h3": {
+      "type": "heading",
+      "size": "xl"
+    },
+    "h4": {
+      "type": "heading",
+      "size": "lg"
+    },
+    "h5": {
+      "type": "heading",
+      "size": "md"
+    },
+    "h6": {
+      "type": "heading",
+      "size": "sm"
+    },
+    "p": {
+      "type": "body"
+    },
+    "code": {
+      "type": "mono"
+    },
+    "pre": {
+      "type": "mono"
+    },
+    "small": {
+      "type": "body-sm"
+    }
+  }
+}

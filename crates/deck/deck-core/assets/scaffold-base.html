@@ -1,12 +1,12 @@
 <!--
-  SUI scaffold base — the shared HTML skeleton every daemon-served SUI SPA
+  SAIL scaffold base — the shared HTML skeleton every daemon-served SAIL SPA
   starts from.
 
   Both apps/shell (the hub) and apps/spaces (the per-space frontend) ship
   their own `index.html`, but the head boilerplate is the same:
 
-    * charset + viewport (every SUI SPA)
-    * favicon + ship-logo SVG (every SUI SPA)
+    * charset + viewport (every SAIL SPA)
+    * favicon + ship-logo SVG (every SAIL SPA)
     * the <meta name="deck-mode"> tag (daemon rewrites in production)
     * /api/assets/view-tokens.css (design tokens — daemon-served, root-absolute)
     * /src/chrome/layout.css (the per-app chrome baseline)
@@ -16,9 +16,9 @@
 
   What differs per scaffold:
     * The HUB adds: Google Fonts (display/body/mono), six rail icon
-      prefetches, the body chrome (<sui-nav-top>, <sui-panel-dock>,
-      <sui-shell-bottom>, <sui-launcher>, <sui-toast-container>,
-      <sui-edit-overlay>), and an explicit <sui-command-bar> in the
+      prefetches, the body chrome (<sail-nav-top>, <sail-panel-dock>,
+      <sail-shell-bottom>, <sail-launcher>, <sail-toast-container>,
+      <sail-edit-overlay>), and an explicit <sail-command-bar> in the
       top-nav slot.
     * The SPACE scaffold adds: a `__suiRuntimeReady` IIFE that surfaces
       the runtime on `window.__suiRuntime` for the confined view bundles
@@ -59,16 +59,30 @@
        The layout.css href is REWRITTEN by `deck build` to the hashed
        asset URL (`/assets/layout-<hash>.css`); tokens stay static. -->
   <link rel="stylesheet" href="/api/assets/view-tokens.css" />
+  <!-- Framework stylesheet: light-DOM contracts + stdlib element skins, so
+       components/L1 elements are styled at first paint WITHOUT the runtime's
+       JS injection (SSR / no-FOUC). `data-sail-contracts` is the signal the
+       runtime's `ensureLightContracts` reads to skip its injection. -->
+  <link rel="stylesheet" href="/api/assets/sail.css" data-sail-contracts />
   <link rel="stylesheet" href="/src/chrome/layout.css" />
 
-  <!-- Pre-paint theme (FOUC guard). Reads the persisted theme from
-       localStorage BEFORE the first paint so the document.documentElement
-       carries the matching `data-theme` attribute. The same script in
-       every scaffold — copy verbatim. -->
+  <!-- Pre-paint theme + mode (FOUC guard, U2.1b). Preference may be
+       light|dark|system; data-mode is always light|dark. Keys match
+       @ship/tokens THEME_STORAGE_KEY / THEME_MODE_STORAGE_KEY. -->
   <script>
     try {
+      var _d = document.documentElement
       var _t = localStorage.getItem('ship-site-theme')
-      if (_t) document.documentElement.setAttribute('data-theme', _t)
+      if (_t) _d.setAttribute('theme', _t)
+      var _m = localStorage.getItem('ship-site-theme-mode')
+      var _paint = 'light'
+      if (_m === 'dark') _paint = 'dark'
+      else if (_m === 'light') _paint = 'light'
+      else if (_m === 'system') {
+        _paint = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          ? 'dark' : 'light'
+      }
+      _d.setAttribute('data-mode', _paint)
     } catch (_e) {}
   </script>
 
@@ -79,11 +93,11 @@
   <script type="importmap">
     {
       "imports": {
-        "@ship/sui-runtime":                "/_deck/runtime.js",
-        "@ship/sui-runtime/route":          "/_deck/runtime.js",
-        "@ship/sui-runtime/template-hooks": "/_deck/runtime.js",
-        "@ship/sui-runtime/patch":          "/_deck/runtime.js",
-        "@ship/sui-dom":                    "/_deck/dom.js",
+        "@ship/sail-runtime":                "/_deck/runtime.js",
+        "@ship/sail-runtime/route":          "/_deck/runtime.js",
+        "@ship/sail-runtime/template-hooks": "/_deck/runtime.js",
+        "@ship/sail-runtime/patch":          "/_deck/runtime.js",
+        "@ship/sail-dom":                    "/_deck/dom.js",
         "@ship/sdk-client":                 "/_deck/sdk-client.js"
       }
     }

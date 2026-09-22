@@ -125,7 +125,10 @@ impl Default for WindowSubscriptionRegistry {
 
 impl WindowSubscriptionRegistry {
     pub fn with_idle_timeout(idle_timeout_ms: u64) -> Self {
-        Self { windows: Mutex::new(HashMap::new()), idle_timeout_ms }
+        Self {
+            windows: Mutex::new(HashMap::new()),
+            idle_timeout_ms,
+        }
     }
 
     /// Mint a fresh `win.<ulid>` and create its bucket bound to `session_id`.
@@ -158,12 +161,19 @@ impl WindowSubscriptionRegistry {
     ) -> Option<SubscriptionId> {
         let bucket = self.bucket(window_id)?;
         let id = format!("sub.{}", Ulid::new());
-        bucket.insert_sub(Subscription { id: id.clone(), domain, op, args });
+        bucket.insert_sub(Subscription {
+            id: id.clone(),
+            domain,
+            op,
+            args,
+        });
         Some(id)
     }
 
     pub fn unsubscribe(&self, window_id: &str, sub_id: &str) -> bool {
-        self.bucket(window_id).map(|b| b.remove_sub(sub_id)).unwrap_or(false)
+        self.bucket(window_id)
+            .map(|b| b.remove_sub(sub_id))
+            .unwrap_or(false)
     }
 
     /// Drop `window_id` entirely (window closed / stream gone / reaped).
@@ -231,7 +241,8 @@ mod tests {
     fn subscribe_to_unknown_window_is_none() {
         let reg = WindowSubscriptionRegistry::default();
         assert!(
-            reg.subscribe("win.nope", "x".into(), "y".into(), Value::Null).is_none(),
+            reg.subscribe("win.nope", "x".into(), "y".into(), Value::Null)
+                .is_none(),
             "subscribe to an unopened window must return None"
         );
     }

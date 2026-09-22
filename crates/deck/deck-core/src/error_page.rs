@@ -1,33 +1,35 @@
-//! Human-facing error pages for the view host.
+//! Human-facing error pages for the leftover named-view host.
 //!
-//! The browser-facing view route (`/_deck/view/<name>`) serves an HTML shell.
-//! When the requested view can't be resolved, the daemon must return a
-//! *rendered* page — not the raw `{"error":{"view_not_found":…}}` JSON that
-//! the programmatic `/_deck/views/<name>` payload endpoint emits for API
-//! callers. This module owns that page: it fills the baked
-//! `view-not-found.html` shell with the requested name and the views the
-//! daemon can actually serve, then returns a `404 text/html` `DeckResponse`.
+//! Product SPA is `routes/` + `mountRouter`: unmatched paths 404 inside the
+//! client router (or the host SPA fallback). This module is not that surface.
+//! It fills the baked `view-not-found.html` shell for ship-views and returns
+//! a `404 text/html` `DeckResponse`. `/_deck/views/<name>` is not a public
+//! Deck payload URL — do not document or mint it as current.
 //!
 //! Styling rides the daemon-served design tokens (`/api/assets/view-tokens.css`,
-//! linked by the shell) so the page tracks the active theme — the same
-//! convention `view-host.html` uses. No color/hex literals live here.
+//! linked by the shell) so the page tracks the active theme. No color/hex
+//! literals live here.
 
-use crate::resolver::list_view_names;
+use crate::resolver::list_route_names;
 use crate::response::CachePolicy;
 use crate::{DaemonMode, DeckResponse};
 
 const NOT_FOUND_SHELL: &str = include_str!("../assets/view-not-found.html");
-const NAME_PLACEHOLDER: &str = "<!-- SUI_NF_NAME -->";
-const ROUTES_PLACEHOLDER: &str = "<!-- SUI_NF_ROUTES -->";
+const NAME_PLACEHOLDER: &str = "<!-- SAIL_NF_NAME -->";
+const ROUTES_PLACEHOLDER: &str = "<!-- SAIL_NF_ROUTES -->";
 
 /// Render the `404 view-not-found` HTML page for `name`.
 ///
-/// `text/html`, status 404, never cached. The available-view list is a
-/// best-effort scan of the resolver's roots (`list_view_names`) — empty when
-/// the daemon has no project root, in which case the routes block is omitted
-/// gracefully rather than rendering an empty list.
-pub fn view_not_found(mode: DaemonMode, name: &str) -> DeckResponse {
-    let routes = list_view_names();
+/// `text/html`, status 404, never cached. The available-route list is a
+/// best-effort scan of the mount's project `root` (`list_route_names`) — empty
+/// when the caller has no root (`None`), in which case the routes block is
+/// omitted gracefully rather than rendering an empty list.
+pub fn route_not_found(
+    mode: DaemonMode,
+    name: &str,
+    root: Option<&std::path::Path>,
+) -> DeckResponse {
+    let routes = root.map(list_route_names).unwrap_or_default();
     let body = NOT_FOUND_SHELL
         .replace(NAME_PLACEHOLDER, &escape_html(name))
         .replace(ROUTES_PLACEHOLDER, &routes_block(&routes));
@@ -41,9 +43,9 @@ pub fn view_not_found(mode: DaemonMode, name: &str) -> DeckResponse {
     )
 }
 
-/// Build the "available views" block: a labelled list of links to
-/// `/_deck/view/<name>`. Empty input yields an empty string so the shell shows
-/// no stray "available routes" heading over a blank list.
+/// Build the "available routes" block: leftover named-view links to
+/// `/_deck/view/<name>` (not the product SPA `routes/` path). Empty input
+/// yields an empty string so the shell shows no stray heading over a blank list.
 fn routes_block(routes: &[String]) -> String {
     if routes.is_empty() {
         return String::new();
@@ -62,7 +64,7 @@ fn routes_block(routes: &[String]) -> String {
 }
 
 /// Minimal HTML-text/attribute escape. The host path only reaches this with a
-/// name `is_valid_view_name` already accepted (alphanumeric, `_`, `-`, `/`),
+/// name `is_valid_route_name` already accepted (alphanumeric, `_`, `-`, `/`),
 /// but the page is also served for *invalid* names, so escape defensively —
 /// the name lands in both element text and an `href` attribute.
 fn escape_html(s: &str) -> String {

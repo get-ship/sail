@@ -1,0 +1,23 @@
+{
+  "name": "lab",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Sail app scaffolded by `sail create`. Run `bun run typecheck` (chains `sail types`); re-run after install or package-type changes.",
+  "scripts": {
+    "dev": "sail dev",
+    "build": "sail build",
+    "check": "sail check .",
+    "typecheck": "sail types --check",
+    "lint": "oxlint ."
+  },
+  "dependencies": {
+    "@ship/sail-runtime": "^0.3.0",
+    "@ship/sail-dom": "^0.3.0",
+    "@ship/tokens": "^0.3.0"
+  },
+  "devDependencies": {
+    "typescript": "~7.0.2",
+    "oxlint": "^1.77.0"
+  }
+}

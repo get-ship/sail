@@ -1,8 +1,0 @@
-<prop name="shadow" type="bool" default="false" />
-
-<div class="clock">
-  <p>seconds since mount: <strong>{elapsed()}</strong></p>
-  <p class="hint">paused: <strong>{paused() ? 'yes' : 'no'}</strong></p>
-  <button on:click={() => paused.set(!paused())}>{paused() ? 'resume' : 'pause'}</button>
-  <button on:click={() => elapsed.set(0)}>reset</button>
-</div>

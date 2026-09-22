@@ -1,0 +1,2 @@
+/* leftover: Style gap is not a space slot — <button> host is not <row> */
+.sail-menu-item { gap: var(--space-2_5); }

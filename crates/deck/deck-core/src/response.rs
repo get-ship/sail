@@ -6,23 +6,23 @@
 
 use crate::DaemonMode;
 
-/// Cache-control family. Bundles are immutable-in-prod; view artifacts must
+/// Cache-control family. Bundles are immutable-in-prod; route artifacts must
 /// revalidate. Picked per-response so the adapter needs no mode awareness.
 #[derive(Clone, Copy, Debug)]
 pub enum CachePolicy {
-    /// Framework bundles (runtime/dom/components/islands) + per-icon lucide SVGs.
+    /// Framework bundles (runtime/dom/components/islands) + used icon SVGs.
     Asset,
-    /// View artifacts (template/setup/css/payload/host).
-    View,
+    /// Route artifacts (template/setup/css/payload/host).
+    Route,
     /// Never cache (errors, not-found).
     None,
 }
 
 // ── HTML security headers ─────────────────────────────────────────────────────
 //
-// Every HTML response emitted by deck (`html_view`) carries a fixed set of
+// Every HTML response emitted by deck (`html_route`) carries a fixed set of
 // security headers. The set is the SINGLE mint point for these headers; the
-// `html_view_carries_security_headers` behavior test pins them so a half-edit
+// `html_route_carries_security_headers` behavior test pins them so a half-edit
 // (dropping a header, weakening the CSP, renaming X-Frame-Options) is caught
 // before it ships. The headers live as a `const &[(&str, &str)]` rather than
 // `format!`-inlined so:
@@ -37,26 +37,81 @@ pub enum CachePolicy {
 //   - `X-Content-Type-Options: nosniff` — stops browsers from MIME-sniffing a
 //     body whose declared content-type is `text/html` into something else.
 //   - `Content-Security-Policy: …` — defence-in-depth against stored XSS via
-//     SUI primitives. `'unsafe-inline'` is required because deck inlines
-//     scripts (`inject_globals`) and SUI templates may inline styles; the
+//     SAIL primitives. `'unsafe-inline'` is required because deck inlines
+//     scripts (`inject_globals`) and SAIL templates may inline styles; the
 //     policy still restricts external origins so a stored XSS cannot load
-//     attacker-controlled scripts. font-src / style-src admit Google Fonts
-//     because the shell's `index.html` loads Syne / DM Sans / JetBrains Mono
-//     from fonts.googleapis.com (see apps/shell/index.html). Without these,
-//     the design system falls back to system fonts and the page looks visually
-//     broken (icons tied to those families disappear). We could self-host; for
-//     the dev loop a CSP allow is the smallest fix. img-src 'self' data: stays
-//     tight; connect-src 'self' blocks exfiltration; frame-ancestors 'self'
-//     mirrors X-Frame-Options for browsers that honour CSP framing.
+//     attacker-controlled scripts. Fonts are self-hosted (SPEC-FONTS-1):
+//     hashed woff2 under assets/, no runtime font CDN — font-src 'self'
+//     only. img-src allows 'self',
+//     data/blob (object URLs from media), and https images (demo photos /
+//     remote media). connect-src 'self' still blocks exfiltration;
+//     frame-ancestors 'self' mirrors X-Frame-Options for CSP framing.
 pub const HTML_SECURITY_HEADERS: &[(&str, &str)] = &[
     ("X-Frame-Options", "SAMEORIGIN"),
     ("X-Content-Type-Options", "nosniff"),
     (
         "Content-Security-Policy",
-        "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'self'",
+        "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https:; connect-src 'self'; frame-ancestors 'self'",
     ),
 ];
 
+/// The CSP body shared by every `connect-src` variant — everything except the
+/// `connect-src` clause itself, which [`connect_src_directive`] derives from
+/// a package's resolved `"network"` allowlist
+/// (`sail_compiler::check::policy::Policy::network_for` /
+/// `PolicyResolution::network`). Split out so [`html_security_headers_for`]
+/// cannot drift from [`HTML_SECURITY_HEADERS`]'s hand-written string on any
+/// clause OTHER than `connect-src`.
+const CSP_PREFIX: &str = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https:;";
+const CSP_SUFFIX: &str = "frame-ancestors 'self'";
+
+/// Derive the `connect-src` CSP clause from a package's resolved `"network"`
+/// per-origin allowlist — the SAME list the `sail-controller-no-ambient-
+/// authority` lint checks fetch/WebSocket/EventSource targets against
+/// (`sail_compiler::check::policy::Policy::network_for`). Empty list (the
+/// default: no `sail.config.json`, or one that never declares `"network"`)
+/// yields `connect-src 'self'` — byte-identical to [`HTML_SECURITY_HEADERS`]'s
+/// hardcoded clause, so this is a strict generalization, not a behavior
+/// change for anyone who doesn't opt in. `"self"` in the list contributes the
+/// CSP `'self'` keyword; any other entry (`"https://api.example.com"`) is
+/// already an origin and is emitted verbatim.
+///
+/// Live path: [`DeckResponse::html_route_for`] + `serve_scaffold` resolve the
+/// app project's list via `Policy::network_for` and pass it here so the served
+/// SPA shell CSP honors `sail.config` `"network"` (EXT-1 E6).
+pub fn connect_src_directive(network: &[String]) -> String {
+    if network.is_empty() {
+        return "connect-src 'self'".to_string();
+    }
+    let parts: Vec<String> = network
+        .iter()
+        .map(|o| {
+            if o == "self" {
+                "'self'".to_string()
+            } else {
+                o.clone()
+            }
+        })
+        .collect();
+    format!("connect-src {}", parts.join(" "))
+}
+
+/// The full HTML security header set with `connect-src` derived from
+/// `network` (see [`connect_src_directive`]) instead of the hardcoded
+/// `'self'`. Same names/order/every-other-value as [`HTML_SECURITY_HEADERS`];
+/// `network: &[]` reproduces it byte-for-byte (pinned by
+/// `network_aware_headers_match_the_default_when_network_is_empty`).
+pub fn html_security_headers_for(network: &[String]) -> Vec<(&'static str, String)> {
+    let csp = format!(
+        "{CSP_PREFIX} {}; {CSP_SUFFIX}",
+        connect_src_directive(network)
+    );
+    vec![
+        ("X-Frame-Options", "SAMEORIGIN".to_string()),
+        ("X-Content-Type-Options", "nosniff".to_string()),
+        ("Content-Security-Policy", csp),
+    ]
+}
 
 impl CachePolicy {
     fn header(self, mode: DaemonMode) -> &'static str {
@@ -66,7 +121,7 @@ impl CachePolicy {
                 DaemonMode::Development => "no-cache",
                 DaemonMode::Production => "public, immutable, max-age=31536000",
             },
-            CachePolicy::View => match mode {
+            CachePolicy::Route => match mode {
                 DaemonMode::Development => "no-cache",
                 DaemonMode::Production => "must-revalidate, max-age=0",
             },
@@ -82,7 +137,7 @@ pub struct DeckResponse {
     pub cache_control: &'static str,
     /// Strong ETag (Production only); `None` omits the header.
     pub etag: Option<String>,
-    /// Additional headers beyond content-type/cache/etag (e.g. `X-Sui-View`).
+    /// Additional headers beyond content-type/cache/etag (e.g. `Location`).
     pub extra_headers: Vec<(&'static str, String)>,
     pub body: Vec<u8>,
 }
@@ -113,28 +168,83 @@ impl DeckResponse {
     }
 
     pub fn js_asset(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
-        Self::new(200, "application/javascript; charset=utf-8", CachePolicy::Asset, mode, body)
+        Self::new(
+            200,
+            "application/javascript; charset=utf-8",
+            CachePolicy::Asset,
+            mode,
+            body,
+        )
     }
-    pub fn js_view(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
-        Self::new(200, "application/javascript; charset=utf-8", CachePolicy::View, mode, body)
+    pub fn js_route(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
+        Self::new(
+            200,
+            "application/javascript; charset=utf-8",
+            CachePolicy::Route,
+            mode,
+            body,
+        )
     }
-    pub fn css_view(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
-        Self::new(200, "text/css; charset=utf-8", CachePolicy::View, mode, body)
+    pub fn css_route(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
+        Self::new(
+            200,
+            "text/css; charset=utf-8",
+            CachePolicy::Route,
+            mode,
+            body,
+        )
     }
-    pub fn html_view(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
-        // All HTML responses carry the deck-defined security header set. The
-        // values live in `HTML_SECURITY_HEADERS` (top of file) — the single
-        // mint point, with a behavior test pinning the bytes so a half-edit
-        // is caught before it ships. The error responses (`not_found`/
-        // `render_error`) carry the same set via `carrying_security_headers`.
-        Self::new(200, "text/html; charset=utf-8", CachePolicy::View, mode, body)
-            .carrying_security_headers()
+    /// A binary font asset (the bundler-emitted hashed woff2). Immutable by
+    /// construction — the hash is in the filename — so it takes the Asset
+    /// cache policy.
+    pub fn font_asset(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
+        Self::new(200, "font/woff2", CachePolicy::Asset, mode, body)
+    }
+    /// HTML response with the default security header set (`connect-src 'self'`).
+    /// Equivalent to [`Self::html_route_for`] with an empty `network` list —
+    /// byte-identical to [`HTML_SECURITY_HEADERS`]. Prefer `html_route_for`
+    /// when the call site has a resolved package `"network"` allowlist (the
+    /// live SPA shell path does).
+    pub fn html_route(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
+        Self::html_route_for(body, mode, &[])
+    }
+
+    /// HTML response whose CSP `connect-src` is derived from `network` via
+    /// [`html_security_headers_for`]. Empty `network` reproduces
+    /// [`HTML_SECURITY_HEADERS`] byte-for-byte; non-empty lists name the
+    /// granted origins. Used by `serve_scaffold` with the project's resolved
+    /// `sail.config` `"network"` list.
+    pub fn html_route_for(body: impl Into<Vec<u8>>, mode: DaemonMode, network: &[String]) -> Self {
+        // All HTML responses carry the deck-defined security header set.
+        // `html_security_headers_for` is the mint point (generalizes
+        // `HTML_SECURITY_HEADERS`); error responses (`not_found`/`render_error`)
+        // carry the empty-network default via `carrying_security_headers`.
+        Self::new(
+            200,
+            "text/html; charset=utf-8",
+            CachePolicy::Route,
+            mode,
+            body,
+        )
+        .carrying_security_headers(network)
     }
     pub fn json_asset(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
-        Self::new(200, "application/json; charset=utf-8", CachePolicy::Asset, mode, body)
+        Self::new(
+            200,
+            "application/json; charset=utf-8",
+            CachePolicy::Asset,
+            mode,
+            body,
+        )
     }
-    pub fn json_view(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
-        Self::new(200, "application/json; charset=utf-8", CachePolicy::View, mode, body)
+    pub fn json_route(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
+        Self::new(
+            200,
+            "application/json; charset=utf-8",
+            CachePolicy::Route,
+            mode,
+            body,
+        )
     }
 
     /// 404 with a plain-text reason (no cache, no etag).
@@ -149,13 +259,20 @@ impl DeckResponse {
             DaemonMode::Production => "not found".to_string(),
             DaemonMode::Development => msg.into(),
         };
-        let mut r = Self::new(404, "text/plain; charset=utf-8", CachePolicy::None, mode, body.into_bytes());
+        let mut r = Self::new(
+            404,
+            "text/plain; charset=utf-8",
+            CachePolicy::None,
+            mode,
+            body.into_bytes(),
+        );
         r.cache_control = "no-cache";
         // The 404 body in Development reflects request-derived detail (callers do
         // `format!("invalid asset path: {file}")`, etc.), so it MUST carry the
         // security header set — above all `nosniff`, so a browser never MIME-
         // sniffs the text/plain body as HTML and runs reflected markup.
-        r.carrying_security_headers()
+        // Empty network: errors are not package-scoped; keep default `'self'`.
+        r.carrying_security_headers(&[])
     }
 
     /// 500 — in Production the message is hidden; in Development it's surfaced.
@@ -166,8 +283,14 @@ impl DeckResponse {
         };
         // Same reflection risk as `not_found` (the dev body surfaces `msg`):
         // carry the security set so a reflected text/plain 500 is never sniffed.
-        Self::new(500, "text/plain; charset=utf-8", CachePolicy::None, mode, body.into_bytes())
-            .carrying_security_headers()
+        Self::new(
+            500,
+            "text/plain; charset=utf-8",
+            CachePolicy::None,
+            mode,
+            body.into_bytes(),
+        )
+        .carrying_security_headers(&[])
     }
 
     pub fn with_header(mut self, name: &'static str, value: impl Into<String>) -> Self {
@@ -175,17 +298,19 @@ impl DeckResponse {
         self
     }
 
-    /// Apply deck's security header set (`HTML_SECURITY_HEADERS`, the single mint
-    /// point) to this response. Used by `html_view` AND the error responses
+    /// Apply deck's security header set to this response, with CSP `connect-src`
+    /// derived from `network` via [`html_security_headers_for`]. Empty `network`
+    /// is byte-identical to [`HTML_SECURITY_HEADERS`]. Used by
+    /// `html_route`/`html_route_for` AND the error responses
     /// (`not_found`/`render_error`): a text/plain error body reflects request-
     /// derived detail in Development, so it MUST send `X-Content-Type-Options:
     /// nosniff` to stop a browser MIME-sniffing it as HTML and executing
     /// reflected markup; X-Frame-Options + CSP ride along as defence-in-depth.
     /// Assets deliberately skip this — a JS/CSS asset is not an HTML execution
     /// context (see `js_asset_does_not_carry_html_security_headers`).
-    fn carrying_security_headers(mut self) -> Self {
-        for (name, value) in HTML_SECURITY_HEADERS {
-            self = self.with_header(name, *value);
+    fn carrying_security_headers(mut self, network: &[String]) -> Self {
+        for (name, value) in html_security_headers_for(network) {
+            self = self.with_header(name, value);
         }
         self
     }
@@ -208,13 +333,17 @@ mod tests {
 
     fn header_value<'a>(resp: &'a DeckResponse, name: &str) -> Option<&'a str> {
         resp.extra_headers.iter().find_map(|(k, v)| {
-            if k.eq_ignore_ascii_case(name) { Some(v.as_str()) } else { None }
+            if k.eq_ignore_ascii_case(name) {
+                Some(v.as_str())
+            } else {
+                None
+            }
         })
     }
 
     #[test]
-    fn html_view_carries_security_headers() {
-        let resp = DeckResponse::html_view("<html></html>", DaemonMode::Development);
+    fn html_route_carries_security_headers() {
+        let resp = DeckResponse::html_route("<html></html>", DaemonMode::Development);
         assert_eq!(
             header_value(&resp, "X-Frame-Options"),
             Some("SAMEORIGIN"),
@@ -227,8 +356,14 @@ mod tests {
         );
         let csp = header_value(&resp, "Content-Security-Policy")
             .expect("Content-Security-Policy must be present on HTML responses");
-        assert!(csp.contains("default-src 'self'"), "CSP must restrict default-src; got: {csp}");
-        assert!(csp.contains("frame-ancestors 'self'"), "CSP must restrict frame-ancestors; got: {csp}");
+        assert!(
+            csp.contains("default-src 'self'"),
+            "CSP must restrict default-src; got: {csp}"
+        );
+        assert!(
+            csp.contains("frame-ancestors 'self'"),
+            "CSP must restrict frame-ancestors; got: {csp}"
+        );
     }
 
     #[test]
@@ -245,20 +380,20 @@ mod tests {
         );
     }
 
-    /// Behavior pin: the `extra_headers` carried by an `html_view` response
+    /// Behavior pin: the `extra_headers` carried by an `html_route` response
     /// must equal `HTML_SECURITY_HEADERS` exactly, in order, byte-for-byte.
     /// This is the transport-agnostic assertion — it catches a header added
-    /// to the const but not emitted by `html_view`, or a header emitted by
-    /// `html_view` but missing from the const. The wire-level mirror in
-    /// `deck-axum` (`html_view_security_headers_reach_the_wire`) confirms
+    /// to the const but not emitted by `html_route`, or a header emitted by
+    /// `html_route` but missing from the const. The wire-level mirror in
+    /// `deck-axum` (`html_route_security_headers_reach_the_wire`) confirms
     /// the adapter preserves them, completing the chain.
     #[test]
-    fn html_view_emits_exactly_the_security_header_set() {
-        let resp = DeckResponse::html_view("<html></html>", DaemonMode::Development);
+    fn html_route_emits_exactly_the_security_header_set() {
+        let resp = DeckResponse::html_route("<html></html>", DaemonMode::Development);
         assert_eq!(
             resp.extra_headers.len(),
             HTML_SECURITY_HEADERS.len(),
-            "html_view must emit exactly the HTML_SECURITY_HEADERS set; \
+            "html_route must emit exactly the HTML_SECURITY_HEADERS set; \
              got {} extra headers but the const declares {}",
             resp.extra_headers.len(),
             HTML_SECURITY_HEADERS.len(),
@@ -281,20 +416,16 @@ mod tests {
     /// here so the test surfaces the failure mode without spinning up a
     /// deck-axum dep.
     #[test]
-    fn html_view_security_headers_are_not_substring_matchable() {
+    fn html_route_security_headers_are_not_substring_matchable() {
         // The security-header assertion above checks the WHOLE response,
         // not a substring. If the const ever shrank to `X-Frame-Options`
-        // alone, `html_view_carries_security_headers` (which uses
+        // alone, `html_route_carries_security_headers` (which uses
         // `header_value` lookups for X-Content-Type-Options and CSP) would
         // also fail. Belt-and-suspenders: a third, exact-set equality
-        // assertion (`html_view_emits_exactly_the_security_header_set`)
+        // assertion (`html_route_emits_exactly_the_security_header_set`)
         // catches partial overlaps a single substring check would miss.
-        let resp = DeckResponse::html_view("<html></html>", DaemonMode::Development);
-        let names: Vec<&str> = resp
-            .extra_headers
-            .iter()
-            .map(|(k, _)| *k)
-            .collect();
+        let resp = DeckResponse::html_route("<html></html>", DaemonMode::Development);
+        let names: Vec<&str> = resp.extra_headers.iter().map(|(k, _)| *k).collect();
         assert!(
             names.contains(&"X-Frame-Options"),
             "X-Frame-Options missing from served HTML response (extra_headers={names:?})"
@@ -313,7 +444,76 @@ mod tests {
             resp.extra_headers.len(),
             expected_count,
             "extra_headers count drifted from HTML_SECURITY_HEADERS.len() — \
-             either `html_view` added an extra header or the const shrank",
+             either `html_route` added an extra header or the const shrank",
+        );
+    }
+
+    // ── network-aware CSP (connect-src derivation) ────────────────────────────
+
+    #[test]
+    fn network_aware_headers_match_the_default_when_network_is_empty() {
+        let derived = html_security_headers_for(&[]);
+        let expected: Vec<(&str, String)> = HTML_SECURITY_HEADERS
+            .iter()
+            .map(|(k, v)| (*k, v.to_string()))
+            .collect();
+        assert_eq!(
+            derived, expected,
+            "empty network must reproduce the hardcoded default exactly"
+        );
+    }
+
+    #[test]
+    fn network_aware_headers_name_the_granted_origins() {
+        let network = vec!["https://api.example.com".to_string()];
+        let headers = html_security_headers_for(&network);
+        let csp = headers
+            .iter()
+            .find(|(k, _)| *k == "Content-Security-Policy")
+            .unwrap()
+            .1
+            .clone();
+        assert!(
+            csp.contains("connect-src https://api.example.com"),
+            "connect-src must name the granted origin verbatim: {csp}"
+        );
+        assert!(
+            !csp.contains("connect-src 'self'"),
+            "the default 'self' must not leak in: {csp}"
+        );
+        // Every other clause is unchanged.
+        assert!(csp.contains("default-src 'self'"));
+        assert!(csp.contains("frame-ancestors 'self'"));
+    }
+
+    #[test]
+    fn network_aware_headers_translate_self_to_the_csp_keyword() {
+        let network = vec!["self".to_string()];
+        let csp = html_security_headers_for(&network)
+            .into_iter()
+            .find(|(k, _)| *k == "Content-Security-Policy")
+            .unwrap()
+            .1;
+        assert!(csp.contains("connect-src 'self'"), "{csp}");
+    }
+
+    /// `html_route_for` is the live mint point: a non-empty network must land
+    /// on the response's CSP, and empty network must match `html_route`.
+    #[test]
+    fn html_route_for_emits_network_connect_src() {
+        let network = vec!["https://api.example.com".to_string()];
+        let resp = DeckResponse::html_route_for("<html></html>", DaemonMode::Development, &network);
+        let csp = header_value(&resp, "Content-Security-Policy").expect("CSP present");
+        assert!(
+            csp.contains("connect-src https://api.example.com"),
+            "html_route_for must emit the granted origin: {csp}"
+        );
+        // Empty network path is the default html_route bytes.
+        let empty = DeckResponse::html_route("<html></html>", DaemonMode::Development);
+        let via_for = DeckResponse::html_route_for("<html></html>", DaemonMode::Development, &[]);
+        assert_eq!(
+            empty.extra_headers, via_for.extra_headers,
+            "html_route and html_route_for(&[]) must be byte-identical"
         );
     }
 
@@ -369,7 +569,10 @@ mod tests {
         assert_eq!(r.status, 404);
         let body = std::str::from_utf8(&r.body).unwrap();
         assert_eq!(body, "not found");
-        assert!(!body.contains("/abs/path"), "prod 404 must not echo on-disk paths");
+        assert!(
+            !body.contains("/abs/path"),
+            "prod 404 must not echo on-disk paths"
+        );
         // 404s are never cached and never carry an ETag, in either mode.
         assert_eq!(r.cache_control, "no-cache");
         assert!(r.etag.is_none());
@@ -406,7 +609,7 @@ mod tests {
 
         // 2. Cache-control policy×mode matrix — every byte-string Rust mints
         //    must appear in the TS `cacheControl` function.
-        for policy in [CachePolicy::Asset, CachePolicy::View, CachePolicy::None] {
+        for policy in [CachePolicy::Asset, CachePolicy::Route, CachePolicy::None] {
             for mode in [DaemonMode::Development, DaemonMode::Production] {
                 let bytes = policy.header(mode);
                 assert!(
@@ -419,7 +622,10 @@ mod tests {
         // 3. HTML security headers — name AND value, exact bytes, for the
         //    whole set (the CSP string in particular cannot drift).
         for (name, value) in HTML_SECURITY_HEADERS {
-            assert!(ts.contains(name), "TS port missing security header name `{name}`");
+            assert!(
+                ts.contains(name),
+                "TS port missing security header name `{name}`"
+            );
             assert!(
                 ts.contains(*value),
                 "TS port missing security header value for `{name}`"

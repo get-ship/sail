@@ -1,0 +1,27 @@
+{
+  "service": "SailTheme",
+  "method": "EffectiveIds",
+  "mcp_tool": "sail_theme_effective_ids",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "workspace": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ThemeEffectiveIdsRet",
+    "type": "object"
+  }
+}

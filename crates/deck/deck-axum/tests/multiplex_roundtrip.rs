@@ -12,11 +12,11 @@ use std::pin::Pin;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex as StdMutex};
 
-use deck_core::{
-    ChangeFeed, ChangeSource, DataPort, WindowSubscriptionRegistry,
-    format_mux_data, format_mux_heartbeat,
-};
 use deck_axum::multiplex::{MultiplexState, multiplex_router};
+use deck_core::{
+    ChangeFeed, ChangeSource, DataPort, WindowSubscriptionRegistry, format_mux_data,
+    format_mux_heartbeat,
+};
 use serde_json::json;
 
 // ── Fake ports ────────────────────────────────────────────────────────────────
@@ -30,12 +30,18 @@ struct FakeDataPort {
 impl FakeDataPort {
     fn with(domain: &str, op: &str, value: serde_json::Value) -> Arc<Self> {
         let port = Arc::new(Self::default());
-        port.by_key.lock().unwrap().insert(format!("{domain}.{op}"), value);
+        port.by_key
+            .lock()
+            .unwrap()
+            .insert(format!("{domain}.{op}"), value);
         port
     }
 
     fn set(&self, domain: &str, op: &str, value: serde_json::Value) {
-        self.by_key.lock().unwrap().insert(format!("{domain}.{op}"), value);
+        self.by_key
+            .lock()
+            .unwrap()
+            .insert(format!("{domain}.{op}"), value);
     }
 
     fn resolve_count(&self) -> usize {
@@ -51,7 +57,11 @@ impl DataPort for FakeDataPort {
         _args: &serde_json::Value,
     ) -> Option<serde_json::Value> {
         self.resolve_count.fetch_add(1, Ordering::SeqCst);
-        self.by_key.lock().unwrap().get(&format!("{domain}.{op}")).cloned()
+        self.by_key
+            .lock()
+            .unwrap()
+            .get(&format!("{domain}.{op}"))
+            .cloned()
     }
 }
 
@@ -66,7 +76,10 @@ struct FakeChangeSource {
 impl FakeChangeSource {
     fn new() -> Arc<Self> {
         let (tx, rx) = tokio::sync::mpsc::channel(8);
-        Arc::new(Self { tx, rx: StdMutex::new(Some(rx)) })
+        Arc::new(Self {
+            tx,
+            rx: StdMutex::new(Some(rx)),
+        })
     }
 }
 
@@ -101,10 +114,7 @@ struct Harness {
     data_port: Arc<FakeDataPort>,
 }
 
-async fn serve(
-    data_port: Arc<FakeDataPort>,
-    change_source: Arc<FakeChangeSource>,
-) -> Harness {
+async fn serve(data_port: Arc<FakeDataPort>, change_source: Arc<FakeChangeSource>) -> Harness {
     let registry = Arc::new(WindowSubscriptionRegistry::default());
     let state = MultiplexState::new(data_port.clone(), registry, change_source);
     let app = axum::Router::new()
@@ -136,7 +146,10 @@ async fn one_stream_demuxes_two_subscriptions_by_id() {
         .await
         .unwrap();
     let window_id = open["window_id"].as_str().unwrap().to_string();
-    assert!(window_id.starts_with("win."), "win.<ulid> prefix; got {window_id}");
+    assert!(
+        window_id.starts_with("win."),
+        "win.<ulid> prefix; got {window_id}"
+    );
 
     // POST /_deck/mux/subscribe × 2
     let sub_a: serde_json::Value = client
@@ -164,7 +177,10 @@ async fn one_stream_demuxes_two_subscriptions_by_id() {
     let id_a = sub_a["subscription_id"].as_str().unwrap().to_string();
     let id_b = sub_b["subscription_id"].as_str().unwrap().to_string();
     assert_ne!(id_a, id_b, "two subs must mint distinct ids");
-    assert!(id_a.starts_with("sub.") && id_b.starts_with("sub."), "sub.<ulid>");
+    assert!(
+        id_a.starts_with("sub.") && id_b.starts_with("sub."),
+        "sub.<ulid>"
+    );
 
     // GET /_deck/mux/stream/{window_id}
     let resp = client
@@ -173,8 +189,16 @@ async fn one_stream_demuxes_two_subscriptions_by_id() {
         .await
         .unwrap();
     assert_eq!(resp.status(), 200);
-    let ct = resp.headers().get("content-type").unwrap().to_str().unwrap();
-    assert!(ct.contains("text/event-stream"), "SSE content-type; got {ct}");
+    let ct = resp
+        .headers()
+        .get("content-type")
+        .unwrap()
+        .to_str()
+        .unwrap();
+    assert!(
+        ct.contains("text/event-stream"),
+        "SSE content-type; got {ct}"
+    );
 
     use futures_util::StreamExt;
     let mut stream = resp.bytes_stream();
@@ -247,7 +271,11 @@ async fn unknown_op_returns_explicit_error_not_silent_null() {
         .send()
         .await
         .unwrap();
-    assert_eq!(resp.status().as_u16(), 404, "no-resolver must surface as 404");
+    assert_eq!(
+        resp.status().as_u16(),
+        404,
+        "no-resolver must surface as 404"
+    );
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

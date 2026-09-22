@@ -1,0 +1,781 @@
+//! Gate tests for SPEC-PLATFORM-NEUTRALITY-1 §1 — per-kind type environments.
+//!
+//! Author typecheck is two envs. `type_env_for_path` classifies by FileKind
+//! only — monorepo path is not identity. Runtime / dom / compiler TS is not
+//! an author surface of this gate and is not granted DOM via a third env.
+//!
+//! Expected product surface (`sail_compiler::ambients`):
+//! - `TypeEnv` — `Sail` | `Action`
+//! - `type_env_for_kind(FileKind) -> TypeEnv`
+//! - `type_env_for_path(path, source?) -> TypeEnv` (FileKind only)
+//! - `lib_for_type_env(TypeEnv) -> &[&str]` — Sail/Action: ESNext only (no DOM)
+//! - `emit_action_observation_dts() -> String` — rAF / observers / getComputedStyle ambient
+//!
+//! Behavioral law:
+//! 1. Composition / store / controller (Sail) snippets cannot name `document`
+//! 2. Action snippets cannot name `document`
+//! 3. Action snippets can name observation set (rAF, getComputedStyle, …)
+//! 4. Author `.sail` under `packages/sail/**` (l0 is an app) is Sail
+//! 5. Runtime / dom / compiler TS is not in this gate (no DOM grant)
+//! 6. `project_map::classify` feeds kind into env selection
+
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::process::Command;
+
+use sail_compiler::ambients::{
+    PROJECT_CSS_MODULES_REL, TypeEnv, emit_action_observation_dts, lib_for_type_env,
+    type_env_for_kind, type_env_for_path, write_project_type_configs,
+};
+use sail_compiler::check::tscheck::resolve_tsgo;
+use sail_compiler::project_map::{FileKind, classify};
+
+// ── helpers ────────────────────────────────────────────────────────────────
+
+fn has_dom_lib(lib: &[&str]) -> bool {
+    lib.iter()
+        .any(|e| *e == "DOM" || *e == "DOM.Iterable" || e.starts_with("DOM."))
+}
+
+fn has_esnext_lib(lib: &[&str]) -> bool {
+    lib.iter()
+        .any(|e| *e == "ESNext" || *e == "ES2022" || e.starts_with("ES2"))
+}
+
+fn repo_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../..")
+        .canonicalize()
+        .unwrap()
+}
+
+fn require_tsc(repo: &Path) -> PathBuf {
+    let p = repo.join("node_modules/typescript/bin/tsc");
+    assert!(
+        p.is_file(),
+        "repo TypeScript wrapper missing at {} — bun install",
+        p.display()
+    );
+    p
+}
+
+/// Write a minimal tsc project for `env` and typecheck `source` as `snippet.ts`.
+/// Returns (success, combined stdout+stderr).
+fn tsc_snippet(env: TypeEnv, source: &str) -> (bool, String) {
+    tsc_snippet_with_extra(env, source, &[])
+}
+
+/// Like [`tsc_snippet`], plus extra `.d.ts` files listed under `files`.
+fn tsc_snippet_with_extra(
+    env: TypeEnv,
+    source: &str,
+    extra_dts: &[(&str, String)],
+) -> (bool, String) {
+    let repo = repo_root();
+    let tsc = require_tsc(&repo);
+
+    let work = tempfile::tempdir().expect("tempdir for type-env tsc");
+    let root = work.path();
+
+    let lib = lib_for_type_env(env);
+    let lib_json: Vec<String> = lib.iter().map(|e| format!("\"{e}\"")).collect();
+    let lib_arr = lib_json.join(", ");
+
+    let mut files_include = vec!["\"./snippet.ts\"".to_string()];
+    if env == TypeEnv::Action {
+        let obs = emit_action_observation_dts();
+        fs::write(root.join("action-observation.d.ts"), obs).unwrap();
+        files_include.push("\"./action-observation.d.ts\"".to_string());
+    }
+    for (name, body) in extra_dts {
+        fs::write(root.join(name), body).unwrap();
+        files_include.push(format!("\"./{name}\""));
+    }
+
+    let cfg = format!(
+        r#"{{
+  "compilerOptions": {{
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": [{lib_arr}],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true
+  }},
+  "files": [{files}]
+}}"#,
+        files = files_include.join(", "),
+    );
+    fs::write(root.join("tsconfig.json"), cfg).unwrap();
+    fs::write(root.join("snippet.ts"), source).unwrap();
+
+    let out = Command::new(&tsc)
+        .args(["-p", "tsconfig.json", "--noEmit"])
+        .current_dir(root)
+        .output()
+        .expect("run tsc");
+    let combined = format!(
+        "{}{}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+    (out.status.success(), combined)
+}
+
+// ── 1. classify → type env selection ───────────────────────────────────────
+
+#[test]
+fn pure_kinds_map_to_pure_env() {
+    for kind in [
+        FileKind::Composition,
+        FileKind::Store,
+        FileKind::Route,
+        FileKind::Component,
+    ] {
+        assert_eq!(
+            type_env_for_kind(kind),
+            TypeEnv::Sail,
+            "{kind:?} must be Pure (ESNext only — document unnameable)"
+        );
+    }
+}
+
+#[test]
+fn action_kind_maps_to_action_env() {
+    assert_eq!(
+        type_env_for_kind(FileKind::Action),
+        TypeEnv::Action,
+        "Action kind must get the observation-only type env"
+    );
+}
+
+#[test]
+fn theme_and_other_do_not_grant_dom() {
+    // Apps never gain free DOM merely by being Theme/Other.
+    assert_eq!(type_env_for_kind(FileKind::Theme), TypeEnv::Sail);
+    assert_eq!(type_env_for_kind(FileKind::Other), TypeEnv::Sail);
+}
+
+#[test]
+fn classify_feeds_composition_path_to_pure() {
+    let path = Path::new("apps/x/src/compositions/use-foo.ts");
+    let src = "export function useFoo() { return 1 }\n";
+    let c = classify(path, Some(src));
+    assert_eq!(c.kind, FileKind::Composition);
+    assert_eq!(
+        type_env_for_path(path, Some(src)),
+        TypeEnv::Sail,
+        "composition path must select Pure via classify"
+    );
+    assert_eq!(type_env_for_kind(c.kind), TypeEnv::Sail);
+}
+
+#[test]
+fn classify_feeds_store_path_to_pure() {
+    let path = Path::new("apps/x/src/stores/tally.ts");
+    let src = "export const tally = defineStore('tally', () => ({}))\n";
+    let c = classify(path, Some(src));
+    assert_eq!(c.kind, FileKind::Store);
+    assert_eq!(type_env_for_path(path, Some(src)), TypeEnv::Sail);
+    assert_eq!(type_env_for_kind(c.kind), TypeEnv::Sail);
+}
+
+#[test]
+fn classify_feeds_action_path_to_action_env() {
+    let path = Path::new("apps/x/src/actions/focus.ts");
+    let src = "export function focus(node) { return {} }\n";
+    let c = classify(path, Some(src));
+    assert_eq!(c.kind, FileKind::Action);
+    assert_eq!(
+        type_env_for_path(path, Some(src)),
+        TypeEnv::Action,
+        "app action path must select Action env"
+    );
+    assert_eq!(type_env_for_kind(c.kind), TypeEnv::Action);
+}
+
+#[test]
+fn controller_region_paths_are_pure() {
+    // Controllers live in route/component regions — Sail, not Action.
+    let route_ctrl = Path::new("apps/x/routes/home/controller.ts");
+    assert_eq!(
+        type_env_for_path(route_ctrl, Some("export default controller(() => ({}))\n")),
+        TypeEnv::Sail,
+        "route controller module must be Pure"
+    );
+    let comp_sail = Path::new("apps/x/src/widget/widget.sail");
+    assert_eq!(
+        type_env_for_path(comp_sail, None),
+        TypeEnv::Sail,
+        "component .sail (controller host) must be Pure"
+    );
+    assert_eq!(type_env_for_kind(FileKind::Component), TypeEnv::Sail);
+    assert_eq!(type_env_for_kind(FileKind::Route), TypeEnv::Sail);
+}
+
+#[test]
+fn l0_author_sail_is_sail_env() {
+    for p in [
+        "packages/sail/l0/src/l0-case/l0-case.sail",
+        "packages/sail/l0/src/paint-bind/paint-bind.sail",
+        "packages/sail/l0/routes/page.sail",
+    ] {
+        assert_eq!(
+            type_env_for_path(Path::new(p), None),
+            TypeEnv::Sail,
+            "author .sail {p} must be Sail (l0 is an app; FileKind only)"
+        );
+    }
+}
+
+#[test]
+fn runtime_package_is_not_in_author_type_gate() {
+    // Runtime / dom / compiler TS that is not a stamp and not a writer
+    // allowlist file is not granted DOM. No third env that gives all of
+    // `packages/sail/**` DOM.
+    let cases = [
+        "packages/sail/runtime/src/index.ts",
+        "packages/sail/dom/src/hydrate/index.ts",
+        "packages/sail/compiler/src/index.ts",
+    ];
+    for p in cases {
+        let env = type_env_for_path(Path::new(p), None);
+        assert!(
+            !has_dom_lib(lib_for_type_env(env)),
+            "runtime/dom/compiler path {p} must not be granted DOM (env={env:?})"
+        );
+    }
+}
+
+#[test]
+fn runtime_actions_path_classifies_as_action_without_dom() {
+    // Path shape is Action; that is FileKind, not a DOM grant.
+    let path = Path::new("packages/sail/runtime/src/actions/in-view.ts");
+    let src = "export const inView = (node) => ({})\n";
+    let c = classify(path, Some(src));
+    assert_eq!(
+        c.kind,
+        FileKind::Action,
+        "sanity: path shape classifies as Action"
+    );
+    assert_eq!(type_env_for_path(path, Some(src)), TypeEnv::Action);
+    assert!(
+        !has_dom_lib(lib_for_type_env(TypeEnv::Action)),
+        "runtime catalog is not in this gate — Action env has no DOM"
+    );
+}
+
+// ── 2. lib entries ─────────────────────────────────────────────────────────
+
+#[test]
+fn pure_lib_is_esnext_only_without_dom() {
+    let lib = lib_for_type_env(TypeEnv::Sail);
+    assert!(
+        has_esnext_lib(lib),
+        "Pure env must include an ES* lib, got {lib:?}"
+    );
+    assert!(
+        !has_dom_lib(lib),
+        "Pure env must not include DOM lib entries (document unnameable), got {lib:?}"
+    );
+}
+
+#[test]
+fn action_lib_is_esnext_only_without_dom() {
+    let lib = lib_for_type_env(TypeEnv::Action);
+    assert!(
+        has_esnext_lib(lib),
+        "Action env must include an ES* lib, got {lib:?}"
+    );
+    assert!(
+        !has_dom_lib(lib),
+        "Action env must not include DOM lib (observation ambient only), got {lib:?}"
+    );
+}
+
+#[test]
+fn author_type_envs_never_include_dom() {
+    for env in [TypeEnv::Sail, TypeEnv::Action] {
+        assert!(
+            !has_dom_lib(lib_for_type_env(env)),
+            "{env:?} must not include DOM (no third env grants it), got {:?}",
+            lib_for_type_env(env)
+        );
+    }
+}
+
+// ── 3. action observation ambient ──────────────────────────────────────────
+
+#[test]
+fn action_observation_ambient_declares_observation_set() {
+    let dts = emit_action_observation_dts();
+    assert!(
+        !dts.trim().is_empty(),
+        "emit_action_observation_dts must emit a non-empty ambient pack"
+    );
+    for name in [
+        "requestAnimationFrame",
+        "cancelAnimationFrame",
+        "IntersectionObserver",
+        "ResizeObserver",
+        "MutationObserver",
+        "getComputedStyle",
+    ] {
+        assert!(
+            dts.contains(name),
+            "action observation ambient must declare {name}:\n{dts}"
+        );
+    }
+}
+
+#[test]
+fn action_observation_ambient_does_not_declare_god_globals() {
+    let dts = emit_action_observation_dts();
+    // Strip line comments so teaching prose may mention the banned names.
+    let code: String = dts
+        .lines()
+        .filter(|l| !l.trim_start().starts_with("//"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    for needle in [
+        "declare var document",
+        "declare const document",
+        "declare let document",
+        "declare var window",
+        "declare const window",
+        "declare let window",
+        "declare var localStorage",
+        "declare const localStorage",
+        "interface Document ",
+        "interface Window ",
+    ] {
+        assert!(
+            !code.contains(needle),
+            "action observation ambient must not declare god global via `{needle}`:\n{dts}"
+        );
+    }
+}
+
+// ── 4. tsc behavioral proofs ───────────────────────────────────────────────
+
+#[test]
+fn pure_composition_snippet_document_fails_typecheck() {
+    let (ok, out) = tsc_snippet(
+        TypeEnv::Sail,
+        r#"
+// composition / store / controller shape — must not see document
+export function useTitle(n: number): void {
+  document.title = `count: ${n}`
+}
+"#,
+    );
+    assert!(
+        !ok,
+        "Pure env must fail typecheck when naming document; was green:\n{out}"
+    );
+    assert!(
+        out.contains("document")
+            || out.contains("Cannot find name")
+            || out.contains("2304")
+            || out.contains("2552"),
+        "tsc output should name document / cannot-find-name:\n{out}"
+    );
+}
+
+#[test]
+fn pure_store_snippet_window_fails_typecheck() {
+    let (ok, out) = tsc_snippet(
+        TypeEnv::Sail,
+        r#"
+export function openBlank(url: string): void {
+  window.open(url, '_blank')
+}
+"#,
+    );
+    assert!(
+        !ok,
+        "Pure env must fail typecheck when naming window; was green:\n{out}"
+    );
+}
+
+#[test]
+fn action_snippet_document_fails_typecheck() {
+    let (ok, out) = tsc_snippet(
+        TypeEnv::Action,
+        r#"
+export function paintRoot(node: Element): void {
+  // banned — actions observe the handed node, never ambient document
+  document.body.appendChild(node)
+}
+"#,
+    );
+    assert!(
+        !ok,
+        "Action env must fail typecheck when naming document; was green:\n{out}"
+    );
+}
+
+#[test]
+fn action_snippet_observation_set_typechecks() {
+    let (ok, out) = tsc_snippet(
+        TypeEnv::Action,
+        r#"
+export function observe(node: Element): { destroy(): void } {
+  const ro = new ResizeObserver(() => {
+    void getComputedStyle(node)
+  })
+  ro.observe(node)
+  const id = requestAnimationFrame(() => {
+    void node
+  })
+  return {
+    destroy() {
+      cancelAnimationFrame(id)
+      ro.disconnect()
+    },
+  }
+}
+"#,
+    );
+    assert!(
+        ok,
+        "Action env must typecheck observation set (rAF / ResizeObserver / getComputedStyle):\n{out}"
+    );
+}
+
+/// Product type-gate layout: `write_project_type_configs` then native tsc `-p`
+/// `.sail/tsconfig.sail.json` (module pack + script CSS sibling).
+fn tsgo_kind_pure(source: &str) -> (bool, String) {
+    let repo = repo_root();
+    let tool = resolve_tsgo(Some(&repo))
+        .unwrap_or_else(|| panic!("{}", sail_compiler::ts_native::missing_sidecar_hint()));
+
+    let work = tempfile::tempdir().expect("tempdir for kind-tsgo");
+    let project = work.path();
+    fs::create_dir_all(project.join("src/compositions")).unwrap();
+    fs::write(
+        project.join("package.json"),
+        r#"{"name":"kind-tsgo-fixture"}"#,
+    )
+    .unwrap();
+    fs::write(project.join("src/compositions/snippet.ts"), source).unwrap();
+    write_project_type_configs(project).expect("write kind configs");
+
+    let mut cmd = Command::new(&tool.program);
+    if let Some(js) = &tool.js_entry {
+        cmd.arg(js);
+    }
+    let out = cmd
+        .args(["-p", ".sail/tsconfig.sail.json", "--noEmit"])
+        .current_dir(project)
+        .output()
+        .expect("run tsgo kind pure");
+    let combined = format!(
+        "{}{}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+    // Product snippet errors only — pack resolution noise is not this fixture.
+    let product_red = combined.lines().any(|l| {
+        let l = l.replace('\\', "/");
+        (l.contains("snippet.ts") || l.contains("compositions/snippet.ts"))
+            && (l.contains("error TS") || l.contains(": error"))
+    });
+    (out.status.success() && !product_red, combined)
+}
+
+#[test]
+fn pure_css_side_effect_import_typechecks() {
+    let src = r#"
+import '@ship/tokens/tokens.css'
+import '@ship/tokens/themes.css'
+import '@ship/tokens/sail-base.css'
+import '@ship/tokens/element-skins.css'
+import '@ship/tokens/products.css'
+export const loaded = true
+"#;
+    let (ok, out) = tsgo_kind_pure(src);
+    assert!(
+        ok,
+        "Pure kind tsgo must accept legal @ship/tokens/*.css side-effect imports:\n{out}"
+    );
+}
+
+#[test]
+fn css_side_effect_import_fails_without_script_sibling() {
+    let repo = repo_root();
+    let tool = resolve_tsgo(Some(&repo))
+        .unwrap_or_else(|| panic!("{}", sail_compiler::ts_native::missing_sidecar_hint()));
+    let work = tempfile::tempdir().expect("tempdir");
+    let project = work.path();
+    fs::create_dir_all(project.join("src/compositions")).unwrap();
+    fs::write(
+        project.join("package.json"),
+        r#"{"name":"kind-tsgo-css-neg"}"#,
+    )
+    .unwrap();
+    fs::write(
+        project.join("src/compositions/snippet.ts"),
+        "import '@ship/tokens/tokens.css'\nexport const loaded = true\n",
+    )
+    .unwrap();
+    write_project_type_configs(project).expect("write kind configs");
+    // Keep the `files` entry on disk so tsgo typechecks; empty the script
+    // so only the module-pack wildcard remains (the tsgo TS2882 hole).
+    fs::write(project.join(PROJECT_CSS_MODULES_REL), "// emptied\n").unwrap();
+
+    let mut cmd = Command::new(&tool.program);
+    if let Some(js) = &tool.js_entry {
+        cmd.arg(js);
+    }
+    let out = cmd
+        .args(["-p", ".sail/tsconfig.sail.json", "--noEmit"])
+        .current_dir(project)
+        .output()
+        .expect("tsgo");
+    let combined = format!(
+        "{}{}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let product_ts2882 = combined.contains("TS2882") && combined.contains("tokens.css");
+    assert!(
+        !out.status.success() && product_ts2882,
+        "pack wildcard alone must not satisfy tsgo TS2882; script sibling is required:\n{combined}"
+    );
+}
+
+#[test]
+fn pure_settimeout_and_cleartimeout_typecheck() {
+    let src = r#"
+export function later(fn: () => void): () => void {
+  const id = setTimeout(fn, 20)
+  return () => clearTimeout(id)
+}
+"#;
+    let (ok, out) = tsgo_kind_pure(src);
+    assert!(
+        ok,
+        "Pure kind tsgo must name setTimeout/clearTimeout via framework ambient:\n{out}"
+    );
+}
+
+#[test]
+fn pure_document_still_fails_with_platform_ambient() {
+    let src = r#"
+export function retitle(n: number): void {
+  document.title = `count: ${n}`
+}
+"#;
+    let (ok, out) = tsgo_kind_pure(src);
+    assert!(
+        !ok,
+        "framework platform ambient must not grant document:\n{out}"
+    );
+}
+
+#[test]
+fn pure_css_value_import_fails() {
+    // Empty `declare module '*.css' {}` has no named exports. A class-map /
+    // CSSStyleSheet default must not appear — named `className` is the edge.
+    let src = r#"
+import { className } from '@ship/tokens/tokens.css'
+export const used = className
+"#;
+    let (ok, out) = tsgo_kind_pure(src);
+    assert!(!ok, "CSS value import must stay untyped under Pure:\n{out}");
+}
+
+#[test]
+fn pure_free_fetch_is_cannot_find_name() {
+    let src = r#"
+export function go(url: string): void {
+  void fetch(url)
+}
+"#;
+    let (ok, out) = tsgo_kind_pure(src);
+    let names_fetch =
+        out.contains("Cannot find name 'fetch'") || out.contains("TS2304") && out.contains("fetch");
+    assert!(
+        !ok && names_fetch,
+        "free `fetch` must stay a cannot-find-name under Pure (not only TS7017):\n{out}"
+    );
+}
+
+#[test]
+fn pure_globalthis_fetch_is_ts7017() {
+    let src = r#"
+export function go(): void {
+  void globalThis.fetch
+}
+"#;
+    let (ok, out) = tsgo_kind_pure(src);
+    assert!(
+        !ok && out.contains("TS7017"),
+        "globalThis.fetch must stay TS7017 under Pure:\n{out}"
+    );
+}
+
+// ── Job 0 — same law everywhere (TypeEnv) ──────────────────────────────────
+
+fn path_has_dom(path: &str, source: Option<&str>) -> bool {
+    let env = type_env_for_path(Path::new(path), source);
+    has_dom_lib(lib_for_type_env(env))
+}
+
+#[test]
+fn stdlib_stamp_path_is_action_env_without_dom() {
+    let path = Path::new("packages/sail/runtime/src/actions/grid-tracks.ts");
+    let src = "export const gridTracks = (node) => ({})\n";
+    let c = classify(path, Some(src));
+    assert_eq!(c.kind, FileKind::Action);
+    assert_eq!(
+        type_env_for_path(path, Some(src)),
+        TypeEnv::Action,
+        "stdlib stamp is in the author type gate as Action"
+    );
+    assert!(
+        !has_dom_lib(lib_for_type_env(TypeEnv::Action)),
+        "Action env has no DOM lib"
+    );
+}
+
+#[test]
+fn action_observation_ambient_does_not_declare_element_style() {
+    let dts = emit_action_observation_dts();
+    let code: String = dts
+        .lines()
+        .filter(|l| !l.trim_start().starts_with("//"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    // Pull the Element interface body so teaching comments elsewhere may
+    // mention `.style`.
+    let elem = code
+        .split("interface Element")
+        .nth(1)
+        .and_then(|rest| rest.split('}').next())
+        .unwrap_or("");
+    assert!(
+        !elem.contains("style"),
+        "Action observation ambient must not declare Element.style:\n{dts}"
+    );
+    for needle in [
+        "declare var document",
+        "declare const document",
+        "declare var window",
+        "declare const window",
+    ] {
+        assert!(
+            !code.contains(needle),
+            "Action observation ambient must not declare `{needle}`:\n{dts}"
+        );
+    }
+}
+
+#[test]
+fn action_snippet_node_style_fails_typecheck() {
+    let (ok, out) = tsc_snippet(
+        TypeEnv::Action,
+        r#"
+export function paint(node: Element): void {
+  node.style.color = "red"
+}
+"#,
+    );
+    assert!(
+        !ok,
+        "Action env must fail typecheck on node.style (Cannot find name / property style); was green:\n{out}"
+    );
+    assert!(
+        out.contains("style")
+            || out.contains("Cannot find name")
+            || out.contains("2339")
+            || out.contains("2551")
+            || out.contains("2304"),
+        "tsc output should name style / cannot-find-property:\n{out}"
+    );
+}
+
+#[test]
+fn writer_allowlist_paths_may_see_dom_cssom() {
+    // Writer allowlist is the only surface that may see DOM CSSOM types.
+    // Implementer: TypeEnv::Writer or path-gated DOM on these paths.
+    let writers = [
+        "packages/sail/runtime/src/theme.ts",
+        "packages/sail/runtime/src/mount.ts",
+        "packages/sail/runtime/src/generated/bind-paint-writer.ts",
+    ];
+    for p in writers {
+        assert!(
+            path_has_dom(p, None),
+            "writer allowlist {p} must see DOM CSSOM types (theme/mount/generated-bind only)"
+        );
+    }
+}
+
+#[test]
+fn writer_allowlist_snippet_can_name_cssom() {
+    let env = type_env_for_path(
+        Path::new("packages/sail/runtime/src/theme.ts"),
+        Some("export const theme = {}\n"),
+    );
+    assert!(
+        has_dom_lib(lib_for_type_env(env)),
+        "theme.ts env must grant DOM so CSSOM types resolve (env={env:?})"
+    );
+    let (ok, out) = tsc_snippet(
+        env,
+        r#"
+export function preview(name: string, value: string): void {
+  document.documentElement.style.setProperty(name, value)
+}
+"#,
+    );
+    assert!(
+        ok,
+        "writer allowlist snippet must typecheck CSSOM writes under its env:\n{out}"
+    );
+}
+
+#[test]
+fn stamp_and_non_writer_runtime_do_not_get_dom() {
+    assert!(
+        !path_has_dom(
+            "packages/sail/runtime/src/actions/spotlight.ts",
+            Some("export const spotlight = (node) => ({})\n"),
+        ),
+        "stamp stays Action — no DOM grant"
+    );
+    assert!(
+        !path_has_dom("packages/sail/runtime/src/signal.ts", None),
+        "signal.ts is not allowlist and not a stamp — no DOM"
+    );
+    assert!(
+        !path_has_dom("packages/sail/runtime/src/bind.ts", None),
+        "bind.ts wholesale is not a generated bind writer — no DOM"
+    );
+    assert!(
+        !path_has_dom(
+            "apps/x/src/widget/widget.sail",
+            Some("<controller>\nexport default controller(() => ({}))\n</controller>\n<div/>\n"),
+        ),
+        "app controller host (.sail) stays Sail — no DOM"
+    );
+}
+
+#[test]
+fn app_controller_and_l0_stay_sail_without_dom() {
+    assert_eq!(
+        type_env_for_path(
+            Path::new("apps/x/src/widget/widget.sail"),
+            Some("export default controller(() => ({}))\n"),
+        ),
+        TypeEnv::Sail
+    );
+    assert_eq!(
+        type_env_for_path(Path::new("packages/sail/l0/src/l0-case/l0-case.sail"), None),
+        TypeEnv::Sail
+    );
+    assert!(!has_dom_lib(lib_for_type_env(TypeEnv::Sail)));
+}

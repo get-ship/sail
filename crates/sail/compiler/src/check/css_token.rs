@@ -1,0 +1,112 @@
+//! CSS-token check — compile-time hard wall.
+//!
+//! Defers the rule definition to `sail-lint::rules::css_token`. The
+//! same walker that drives editor diagnostics drives this build-time
+//! check, so an unknown `var(--xyz)` looks identical in LSP and in
+//! `cargo build` output.
+//!
+//! Mirrors `controller_purity.rs` (this directory) — same plumbing
+//! (`sail_lint` finding → `CompileError`), only the source it lints is
+//! the `.sail` itself rather than a paired `.controller.ts`.
+//!
+//! Skipped when `source` is empty, which only happens via internal
+//! synthetic-fragment paths that bypass `compile()`.
+
+use std::path::Path;
+
+use crate::diagnostics::{CompileError, Span};
+
+const RULE_LINT_GATE: &str = "sail-internal-lint-gate";
+
+pub fn check(
+    source: &str,
+    source_path: Option<&Path>,
+    overrides: &[crate::check::lint_overrides::LintOverride],
+) -> Result<(), CompileError> {
+    if source.is_empty() {
+        return Ok(());
+    }
+    // For synthetic sources without a path we still lint, so typos in
+    // unit-test fixtures are caught; we use a placeholder path that
+    // won't surface elsewhere.
+    let placeholder;
+    let path = match source_path {
+        Some(p) => p,
+        None => {
+            placeholder = Path::new("<synthetic>");
+            placeholder
+        }
+    };
+
+    // Apply the build host's lint overrides before the Error filter.
+    // The rule's natural severity is preserved for everyone who
+    // consumes the lint directly (the LSP, `sail_lint` CLI, the agent
+    // tooling); the override only affects this build-time gate. An
+    // external SAIL app that wants the softer behavior sets
+    // `CompileOpts::lint_overrides` and threads it through here.
+    //
+    // Invoke ONLY the css-token rule — never the whole template stream.
+    // This check runs inside `check::run` (early, so a token typo beats
+    // the floor findings to the error slot); the full stream runs once
+    // afterwards in `gate()` → `collect()`. Running the stream here too
+    // doubled every compile's lint cost.
+    let findings = crate::check::lint_overrides::apply_overrides(
+        sail_lint::rules::css_token::check(path, source),
+        overrides,
+    );
+    // Only Severity::Error findings become compile errors. Warnings
+    // (e.g. `sail-for-key`, `sail-event-name`) surface in LSP but don't
+    // block the build — they catch silent-bug classes that the team
+    // wants to fix but that existing routes are allowed to have during
+    // rewrite.
+    let Some(first) = findings
+        .iter()
+        .find(|f| matches!(f.severity, sail_lint::Severity::Error))
+    else {
+        return Ok(());
+    };
+
+    let offset = line_col_to_offset(source, first.line, first.col);
+    let span = Span::new(offset, offset + 2); // covers the `--` of the bad name
+
+    // `with_category` below carries the rule tag; embedding it here too
+    // made `render()` print it twice.
+    let mut msg = first.message.clone();
+    if let Some(s) = &first.suggest {
+        msg.push_str("\n  suggest: ");
+        msg.push_str(s);
+    }
+
+    let mut err = CompileError::new(msg)
+        .with_span(span)
+        .with_category(RULE_LINT_GATE)
+        .with_category(first.rule.to_string());
+    if let Some(p) = source_path {
+        err = err.with_path(p.to_path_buf());
+    }
+    Err(err)
+}
+
+/// 1-based `(line, col)` → byte offset into `source`. Mirrors the
+/// helper in `controller_purity.rs` (this directory) — kept
+/// duplicated for the same reason: each check owns its position
+/// mapping and the shape may diverge.
+fn line_col_to_offset(source: &str, target_line: usize, target_col: usize) -> usize {
+    let bytes = source.as_bytes();
+    let mut line = 1usize;
+    let mut col = 1usize;
+    let mut i = 0;
+    while i < bytes.len() {
+        if line == target_line && col == target_col {
+            return i;
+        }
+        if bytes[i] == b'\n' {
+            line += 1;
+            col = 1;
+        } else {
+            col += 1;
+        }
+        i += 1;
+    }
+    bytes.len()
+}

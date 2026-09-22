@@ -1,16 +1,16 @@
 //! Boundary invariant I2 — Deck's HOST and BUNDLER crates name no Ship app
 //! concepts.
 //!
-//! deck-core / deck-axum / deck-host serve SUI views + assets for ANY host.
+//! deck-core / deck-axum / deck-host serve SAIL routes + assets for ANY host.
 //! deck-bundler builds those assets. deck-config holds the config schema.
 //! None of them may hardcode a Ship app layout (`apps/shell`, `apps/shipd`,
-//! `apps/site`) or a Ship-specific identifier (`sui-chrome`, `sui-marketing`,
-//! `sui-arcade`, `sui-pdf`, `__SHIP_APP_ID__`) in PRODUCTION source lines.
+//! `apps/site`) or a Ship-specific identifier (`sail-chrome`, `sail-marketing`,
+//! `sail-arcade`, `sail-pdf`, `__SHIP_APP_ID__`) in PRODUCTION source lines.
 //!
-//! The three deck-own singleton bundle names (sui-runtime, sui-dom,
-//! sui-sdk-client) are legitimately hardcoded in deck-bundler and ARE expected.
-//! (`sui-components` is no longer a singleton — the umbrella was retired
-//! (#221/#269); `sui-components/<tag>` is now the per-tag resolver namespace.)
+//! The three deck-own singleton bundle names (sail-runtime, sail-dom,
+//! sail-sdk-client) are legitimately hardcoded in deck-bundler and ARE expected.
+//! (`sail-components` is no longer a singleton — the umbrella was retired
+//! (#221/#269); `sail-components/<tag>` is now the per-tag resolver namespace.)
 //!
 //! P2-11 hardening:
 //!   - `FORBIDDEN` widens to Ship-app-prefixed route patterns (`/shell/`,
@@ -50,12 +50,12 @@ const FORBIDDEN: &[&str] = &[
     "apps/shipd",
     "apps/site",
     // Ship-app-specific bundle names (deck owns the generic framework
-    // singletons — sui-runtime, sui-dom, sui-sdk-client — but the app-side
+    // singletons — sail-runtime, sail-dom, sail-sdk-client — but the app-side
     // bundles below are Ship-app concerns).
-    "sui-chrome",
-    "sui-marketing",
-    "sui-arcade",
-    "sui-pdf",
+    "sail-chrome",
+    "sail-marketing",
+    "sail-arcade",
+    "sail-pdf",
     // The ship-app identifier macro.
     "__SHIP_APP_ID__",
     // Route patterns that only exist inside Ship apps — a deck crate must
@@ -89,7 +89,9 @@ const FORBIDDEN: &[&str] = &[
 /// test file. Test files (`*_tests.rs`, the gate's own `boundary.rs`) legitimately
 /// use realistic path fixtures — the gate is about production source.
 fn collect_rs(dir: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = fs::read_dir(dir) else { return };
+    let Ok(entries) = fs::read_dir(dir) else {
+        return;
+    };
     for entry in entries.flatten() {
         let p = entry.path();
         if p.is_dir() {
@@ -112,7 +114,9 @@ fn collect_rs(dir: &Path, out: &mut Vec<PathBuf>) {
 /// the gate exempted test scripts from the Ship-name scan, which let e2e
 /// bash hardcode `apps/shell`; this scanner closes that gap.)
 fn collect_sh(dir: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = fs::read_dir(dir) else { return };
+    let Ok(entries) = fs::read_dir(dir) else {
+        return;
+    };
     for entry in entries.flatten() {
         let p = entry.path();
         if p.is_dir() {
@@ -127,7 +131,9 @@ fn collect_sh(dir: &Path, out: &mut Vec<PathBuf>) {
 /// Skips lines inside `#[cfg(test)]` attribute + `mod tests { … }` blocks
 /// so test fixtures that pass realistic Ship paths don't trigger.
 fn scan_rs_violations(f: &Path) -> Vec<String> {
-    let Ok(text) = fs::read_to_string(f) else { return vec![] };
+    let Ok(text) = fs::read_to_string(f) else {
+        return vec![];
+    };
     let mut violations = Vec::new();
     let mut brace_depth: i32 = 0;
     // Track whether we've seen a `#[cfg(test)]` or `mod tests` opener at the
@@ -191,7 +197,9 @@ fn scan_rs_violations(f: &Path) -> Vec<String> {
 /// comments (which may cite Ship paths as documentation); bash has no block
 /// structure to track.
 fn scan_sh_violations(f: &Path) -> Vec<String> {
-    let Ok(text) = fs::read_to_string(f) else { return vec![] };
+    let Ok(text) = fs::read_to_string(f) else {
+        return vec![];
+    };
     let mut violations = Vec::new();
     for (n, line) in text.lines().enumerate() {
         let trimmed = line.trim_start();
@@ -231,7 +239,10 @@ mod scanner_self_tests {
              }\n",
         )
         .unwrap();
-        assert!(scan_rs_violations(&f).is_empty(), "test-block comments must not trip the gate");
+        assert!(
+            scan_rs_violations(&f).is_empty(),
+            "test-block comments must not trip the gate"
+        );
     }
 
     #[test]
@@ -240,8 +251,15 @@ mod scanner_self_tests {
         let f = dir.path().join("probe.rs");
         std::fs::write(&f, "fn bad() { let _ = \"apps/shell\"; }\n").unwrap();
         let v = scan_rs_violations(&f);
-        assert_eq!(v.len(), 1, "production-line literal must trip the gate: {v:?}");
-        assert!(v[0].contains("apps/shell"), "the violation names the forbidden literal: {v:?}");
+        assert_eq!(
+            v.len(),
+            1,
+            "production-line literal must trip the gate: {v:?}"
+        );
+        assert!(
+            v[0].contains("apps/shell"),
+            "the violation names the forbidden literal: {v:?}"
+        );
     }
 
     #[test]
@@ -256,8 +274,15 @@ mod scanner_self_tests {
         )
         .unwrap();
         let v = scan_sh_violations(&f);
-        assert_eq!(v.len(), 1, "non-comment line must trip the bash scanner: {v:?}");
-        assert!(v[0].contains("apps/shell"), "the violation names the forbidden literal: {v:?}");
+        assert_eq!(
+            v.len(),
+            1,
+            "non-comment line must trip the bash scanner: {v:?}"
+        );
+        assert!(
+            v[0].contains("apps/shell"),
+            "the violation names the forbidden literal: {v:?}"
+        );
     }
 }
 
@@ -276,7 +301,13 @@ fn deck_crates_name_no_ship_app() {
     let mut rs_files = Vec::new();
     let mut sh_files = Vec::new();
     for crate_name in [
-        "deck", "deck-cli", "deck-core", "deck-axum", "deck-host", "deck-bundler", "deck-config",
+        "deck",
+        "deck-cli",
+        "deck-core",
+        "deck-axum",
+        "deck-host",
+        "deck-bundler",
+        "deck-config",
     ] {
         let crate_root = deck_dir.join(crate_name);
         let src = crate_root.join("src");
@@ -313,19 +344,19 @@ fn deck_crates_name_no_ship_app() {
     );
 }
 
-/// Positive zero-config test: `DeckConfig::defaults()` + a temp `views/foo/page.sui`
-/// yields exactly one views/foo target and zero consumer targets.
+/// Positive zero-config test: `DeckConfig::defaults()` + a temp `routes/foo/page.sail`
+/// yields exactly one routes/foo target and zero consumer targets.
 #[test]
-fn zero_config_discovers_views_only() {
+fn zero_config_discovers_routes_only() {
     use deck_bundler::targets::{BundleLayout, BundleTarget};
 
     let tmp = tempfile::tempdir().unwrap();
     let root = tmp.path().to_path_buf();
 
-    // Write a single view.
-    let page_sui = root.join("views/foo/page.sui");
-    std::fs::create_dir_all(page_sui.parent().unwrap()).unwrap();
-    std::fs::write(&page_sui, "<div>foo</div>\n").unwrap();
+    // Write a single route.
+    let page_sail = root.join("routes/foo/page.sail");
+    std::fs::create_dir_all(page_sail.parent().unwrap()).unwrap();
+    std::fs::write(&page_sail, "<div>foo</div>\n").unwrap();
 
     // Zero-config host: DeckConfig::defaults() (no deck.jsonc).
     let cfg = deck_config::DeckConfig::defaults();
@@ -336,26 +367,32 @@ fn zero_config_discovers_views_only() {
 
     // Framework singletons are present ONLY when the framework package is
     // resolvable by NODE RESOLUTION from the project (node_modules / workspace
-    // install). In the framework repo without a `bun install`, @ship/sui-runtime
+    // install). In the framework repo without a `bun install`, @ship/sail-runtime
     // does not resolve from a synthetic tempdir, so the singleton-presence checks
     // are install-gated — skip them with a note (not an apps/ coupling). The
-    // test's subject — view discovery + zero consumer targets — runs regardless.
-    // sui-components is NOT a singleton — the umbrella was retired (#221/#269);
-    // the `sui-components/<tag>` prefix is now the per-tag resolver namespace.
-    if deck_bundler::node_resolve::resolve_entry(&root, "@ship/sui-runtime").is_some() {
-        assert!(names.contains(&"sui-runtime"), "sui-runtime present");
-        assert!(names.contains(&"sui-dom"), "sui-dom present");
-        assert!(names.contains(&"sui-sdk-client"), "sui-sdk-client present");
+    // test's subject — route discovery + zero consumer targets — runs regardless.
+    // sail-components is NOT a singleton — the umbrella was retired (#221/#269);
+    // the `sail-components/<tag>` prefix is now the per-tag resolver namespace.
+    if deck_bundler::node_resolve::resolve_entry(&root, "@ship/sail-runtime").is_some() {
+        assert!(names.contains(&"sail-runtime"), "sail-runtime present");
+        assert!(names.contains(&"sail-dom"), "sail-dom present");
+        assert!(
+            names.contains(&"sail-sdk-client"),
+            "sail-sdk-client present"
+        );
     } else {
         eprintln!(
-            "SKIP zero_config_discovers_views_only singleton checks: @ship/sui-runtime \
+            "SKIP zero_config_discovers_routes_only singleton checks: @ship/sail-runtime \
              not resolvable from the project (no node_modules / workspace install) — \
              install-gated, not an apps/ coupling"
         );
     }
 
-    // Discovered view.
-    assert!(names.contains(&"views/foo/view"), "views/foo/view discovered");
+    // Discovered route.
+    assert!(
+        names.contains(&"routes/foo/route"),
+        "routes/foo/route discovered"
+    );
 
     // Zero consumer targets from defaults (no deck.jsonc declares any).
     assert!(
@@ -393,7 +430,7 @@ fn deck_core_and_deck_config_have_no_ship_substrate_dep() {
 }
 
 /// Belt-and-suspenders: also assert the production source itself has no
-/// references to the deleted resolver helpers, the legacy project-root
+/// references to the deleted resolver helpers, the retired project-root
 /// env vars, or the `deck_substrate::*` paths. The Cargo.toml check above
 /// catches the dep, this catches a residual dead-code reference that the
 /// compiler might not warn about. Scans `deck-core` only (deck-config
@@ -425,7 +462,7 @@ fn deck_core_source_has_no_deleted_resolver_helpers_or_project_dir_env() {
     }
     assert!(
         violations.is_empty(),
-        "deck-core production source must not name the legacy project-root \
+        "deck-core production source must not name the retired project-root \
          envs or the deleted resolver helpers:\n{}",
         violations.join("\n"),
     );
@@ -447,7 +484,13 @@ fn deck_crates_have_no_ship_prefixed_env_var_reads() {
 
     let mut files = Vec::new();
     for crate_name in [
-        "deck", "deck-cli", "deck-core", "deck-axum", "deck-host", "deck-bundler", "deck-config",
+        "deck",
+        "deck-cli",
+        "deck-core",
+        "deck-axum",
+        "deck-host",
+        "deck-bundler",
+        "deck-config",
     ] {
         let src = deck_dir.join(crate_name).join("src");
         collect_rs(&src, &mut files);
@@ -456,7 +499,10 @@ fn deck_crates_have_no_ship_prefixed_env_var_reads() {
             files.push(build_rs);
         }
     }
-    assert!(!files.is_empty(), "found no deck crate source to scan ({deck_dir:?})");
+    assert!(
+        !files.is_empty(),
+        "found no deck crate source to scan ({deck_dir:?})"
+    );
 
     let mut violations = Vec::new();
     // We need a real shell boundary check: any line whose payload contains
@@ -465,7 +511,9 @@ fn deck_crates_have_no_ship_prefixed_env_var_reads() {
     // `mod tests` blocks, doc comments, and `*_tests.rs` files are
     // excluded.
     for f in &files {
-        let Ok(text) = fs::read_to_string(f) else { continue };
+        let Ok(text) = fs::read_to_string(f) else {
+            continue;
+        };
         let mut brace_depth: i32 = 0;
         let mut test_block_depth: Option<i32> = None;
         for (n, line) in text.lines().enumerate() {

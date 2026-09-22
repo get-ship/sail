@@ -1,0 +1,426 @@
+//! Style IR — compile-time value language (setters chain, guards wrap).
+
+use std::collections::{BTreeMap, HashMap};
+
+/// Argument to a paint setter.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PaintArg {
+    /// SSOT token / keyword (`primary`, `md`, `semibold`).
+    Token(String),
+    /// Reactive CSS var binding: `bind(rowY)` → `var(--row-y)`.
+    Bind(String),
+    /// Token-group member path: `tone`, `tone.foreground`, `primary.foreground`.
+    ///
+    /// Static roots resolve to a public token id before CSS lower. Bound roots
+    /// (`tone`) expand over the group family at emit with attr-gated classes.
+    MemberPath { root: String, path: Vec<String> },
+    /// Concern slot object: `border({ color: muted, width: hairline })`.
+    Slots(BTreeMap<String, PaintArg>),
+}
+
+impl PaintArg {
+    /// Author-facing display (`tone.foreground`, `primary`, `bind(x)`).
+    pub fn display(&self) -> String {
+        match self {
+            PaintArg::Token(t) => t.clone(),
+            PaintArg::Bind(n) => format!("bind({n})"),
+            PaintArg::MemberPath { root, path } => {
+                if path.is_empty() {
+                    root.clone()
+                } else {
+                    format!("{root}.{}", path.join("."))
+                }
+            }
+            PaintArg::Slots(slots) => {
+                let inner = slots
+                    .iter()
+                    .map(|(k, v)| format!("{k}: {}", v.display()))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!("{{ {inner} }}")
+            }
+        }
+    }
+
+    /// Count `raw(…)` wrappers in this arg (marker, not a privilege).
+    pub fn count_raw_uses(&self) -> usize {
+        match self {
+            PaintArg::Token(t) => usize::from(raw_inner(t).is_some()),
+            PaintArg::Slots(slots) => slots.values().map(PaintArg::count_raw_uses).sum(),
+            PaintArg::Bind(_) | PaintArg::MemberPath { .. } => 0,
+        }
+    }
+}
+
+/// One chained paint setter (never a guard).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PaintOp {
+    /// Setter name (`bg`, `fg`, `padX`, `radius`, …).
+    pub setter: String,
+    /// Positional args. Almost always one (`style.bg(primary)`); composite
+    /// setters take two (`style.border(1, border)` = width + color in one
+    /// call). Empty-arg markers (`style.group()`) carry a single empty
+    /// `Token("")`.
+    pub args: Vec<PaintArg>,
+    pub source: String,
+}
+
+impl PaintOp {
+    /// First positional arg (`Token("")` when the call was `setter()`).
+    pub fn first_arg(&self) -> &PaintArg {
+        static EMPTY: PaintArg = PaintArg::Token(String::new());
+        self.args.first().unwrap_or(&EMPTY)
+    }
+}
+
+/// Style value.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Style {
+    Empty,
+    Set(PaintOp),
+    Chain(Vec<Style>),
+    /// Prop branch — arms exclusive by scrutinee value.
+    Match {
+        scrutinee: String,
+        arms: Vec<(String, Style)>,
+    },
+    /// Multi-prop intersection.
+    Compound {
+        when: BTreeMap<String, String>,
+        body: Box<Style>,
+    },
+    /// Browser-applied context map (hover/focus/… → Style).
+    When {
+        entries: Vec<(String, Style)>,
+    },
+    /// Lifecycle / ambient motion attach — lowers to `AttrInstr::Motion`.
+    ///
+    /// Internal node derived from `style({ animate: { enter: play(…), … } })`.
+    /// Not an author form: `.enter({…})` tails and `animate: enter({…})` chains
+    /// are refused. The `config` is the play-lowered object body (including
+    /// braces). Paint emit ignores lifecycle nodes; `transition: play(…)` is
+    /// CSS. Preprocess injects `_sail_m_<trigger>` for AttrInstr::Motion.
+    MotionAttach {
+        /// enter | exit | loop | reveal | scroll | hover | press | focus | …
+        trigger: String,
+        /// Play-derived `{ opacity: { from, to }, … }` (or `{ preset, duration }`
+        /// for CSS `transition`) including braces.
+        config: String,
+    },
+    /// Scope Style const reference.
+    Ref(String),
+    /// `style={[ a, b, c ]}` composition.
+    List(Vec<Style>),
+}
+
+/// Named-style environment for resolving `Style::Ref`. Domain type — not CSS.
+pub type StyleEnv = HashMap<String, Style>;
+
+impl Style {
+    pub fn empty() -> Self {
+        Style::Empty
+    }
+
+    pub fn chain(items: Vec<Style>) -> Self {
+        let mut flat = Vec::new();
+        for i in items {
+            match i {
+                Style::Empty => {}
+                Style::Chain(mut inner) => flat.append(&mut inner),
+                Style::List(inner) => {
+                    for x in inner {
+                        match x {
+                            Style::Empty => {}
+                            Style::Chain(mut c) => flat.append(&mut c),
+                            other => flat.push(other),
+                        }
+                    }
+                }
+                other => flat.push(other),
+            }
+        }
+        match flat.len() {
+            0 => Style::Empty,
+            1 => flat.swap_remove(0),
+            _ => Style::Chain(flat),
+        }
+    }
+
+    /// Count `raw(…)` wrappers in this Style tree. The corpus tally is the
+    /// signal; there is no per-use warning.
+    pub fn count_raw_uses(&self) -> usize {
+        match self {
+            Style::Empty | Style::MotionAttach { .. } | Style::Ref(_) => 0,
+            Style::Set(op) => op.args.iter().map(PaintArg::count_raw_uses).sum(),
+            Style::Chain(items) | Style::List(items) => {
+                items.iter().map(Style::count_raw_uses).sum()
+            }
+            Style::Match { arms, .. } => arms.iter().map(|(_, s)| s.count_raw_uses()).sum(),
+            Style::Compound { body, .. } => body.count_raw_uses(),
+            Style::When { entries } => entries.iter().map(|(_, s)| s.count_raw_uses()).sum(),
+        }
+    }
+}
+
+/// Inner value of a `raw(V)` wrapper token. Anyone may spend it; it is a
+/// marker, not a privilege. Source stays greppable (`raw(`).
+pub fn raw_inner(tok: &str) -> Option<&str> {
+    let t = tok.trim();
+    let inner = t.strip_prefix("raw(")?.strip_suffix(')')?;
+    Some(inner)
+}
+
+/// Wrap a scale token as `raw(V)`.
+pub fn wrap_raw(inner: &str) -> String {
+    format!("raw({inner})")
+}
+
+/// `raw(` occurrences in source — same greppable signal the corpus tally uses.
+pub fn count_raw_uses_in_source(source: &str) -> usize {
+    source.matches("raw(").count()
+}
+
+/// Color utility: `inverse(surface)` is the other mode's `surface`.
+/// Not a theme identity. Source stays greppable (`inverse(`).
+pub fn inverse_inner(tok: &str) -> Option<&str> {
+    let t = tok.trim();
+    let inner = t.strip_prefix("inverse(")?.strip_suffix(')')?;
+    if inner.is_empty() {
+        return None;
+    }
+    Some(inner)
+}
+
+/// Wrap a color name as `inverse(V)`.
+pub fn wrap_inverse(inner: &str) -> String {
+    format!("inverse({inner})")
+}
+
+/// Diagnostic from parse / resolve / clash.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum StyleDiagnostic {
+    ParseError {
+        message: String,
+        source: String,
+    },
+    UnknownSetter {
+        setter: String,
+        source: String,
+        /// Unique closest valid setter when confluent (typo correction).
+        suggestion: Option<String>,
+    },
+    BadToken {
+        setter: String,
+        value: String,
+        source: String,
+    },
+    /// L1 component token named in app Style — theme-owned (THEMES-1-ENFORCE).
+    ThemeOwnedToken {
+        name: String,
+        source: String,
+    },
+    /// Setter called with more positional args than it takes. Border composites
+    /// plus two-arg paint composites (`colorDeepen` / `colorMix`) accept two.
+    BadArity {
+        setter: String,
+        got: usize,
+        source: String,
+    },
+    UnknownWhenKey {
+        key: String,
+        source: String,
+    },
+    UnknownRef {
+        name: String,
+        source: String,
+    },
+    ResidualProduct {
+        message: String,
+        source: String,
+    },
+    Clash {
+        slot: String,
+        first: String,
+        second: String,
+    },
+    BadScrutinee {
+        message: String,
+        source: String,
+    },
+    /// Slot name is not on this concern (`border({ radius: md })`).
+    UnknownConcernSlot {
+        setter: String,
+        slot: String,
+        source: String,
+    },
+    /// Same slot written twice inside one concern object.
+    DuplicateSlot {
+        setter: String,
+        slot: String,
+        source: String,
+    },
+    /// Covered property setter / color-only `border(x)` — concern form only.
+    RetiredSetter {
+        setter: String,
+        replacement: String,
+        source: String,
+    },
+    /// Name is a concern / axis / plain setter — not a style reference.
+    NotAStyleRef {
+        name: String,
+        source: String,
+    },
+    /// File-local style under `styling: themed`. One-offs belong in the theme.
+    ThemedLocalStyle {
+        name: String,
+        source: String,
+    },
+    /// Unknown after vocabulary + theme named styles + (open) locals.
+    UnknownVocabulary {
+        name: String,
+        source: String,
+    },
+}
+
+impl StyleDiagnostic {
+    pub fn message(&self) -> String {
+        match self {
+            StyleDiagnostic::ParseError { message, .. } => message.clone(),
+            StyleDiagnostic::UnknownSetter {
+                setter, suggestion, ..
+            } => {
+                if let Some(teach) = crate::foreign_idioms::teaching_line(setter) {
+                    format!("style unknown setter `{setter}` — {teach}")
+                } else {
+                    match suggestion {
+                        Some(s) => format!(
+                            "style unknown setter `{setter}` — did you mean `{s}`? [sail:fix:setter={s}]"
+                        ),
+                        None => format!("style unknown setter `{setter}`"),
+                    }
+                }
+            }
+            StyleDiagnostic::BadToken { setter, value, .. } => {
+                if value == "full" && setter.starts_with("size:") {
+                    return "size.full retired — use size(grow)|size(max) or free 100%".into();
+                }
+                if setter.starts_with("pad") || setter.starts_with("margin") {
+                    if let Some(neighbors) = crate::scales::space_neighbors(value) {
+                        return format!(
+                            "{value} is not a space step: did you mean {neighbors} — or is this an exception: raw({value})?"
+                        );
+                    }
+                }
+                if setter.ends_with(":gradient") || setter == "ink:gradient" {
+                    return format!(
+                        "{value} is not a gradient molecule: {}",
+                        crate::concerns::GRADIENT_MOLECULES.join(" | ")
+                    );
+                }
+                if setter == "structured:ref" {
+                    return format!(
+                        "structured value: dangling ref `{{{value}}}` — target identity does not exist"
+                    );
+                }
+                if setter == "structured:op" {
+                    return format!(
+                        "structured value: unknown op `{value}` — expected {{op: mix}}"
+                    );
+                }
+                if setter == "structured:mix" {
+                    return format!("structured value: mix op requires `{value}`");
+                }
+                format!("style `{setter}({value})` — value is not a token on this setter's scale")
+            }
+            StyleDiagnostic::ThemeOwnedToken { name, .. } => {
+                format!(
+                    "component token `{name}` is theme-owned; override via theme= or the theme document"
+                )
+            }
+            StyleDiagnostic::BadArity { setter, got, .. } => {
+                format!("style `{setter}` does not accept {got} positional arguments")
+            }
+            StyleDiagnostic::UnknownWhenKey { key, .. } => {
+                let table = crate::tokens::breakpoint_names_display();
+                format!(
+                    "style when key `{key}` is not in the theme breakpoint table ({table}) or a language state"
+                )
+            }
+            StyleDiagnostic::UnknownRef { name, .. } => {
+                format!("style const `{name}` is not defined in scope")
+            }
+            StyleDiagnostic::ResidualProduct { message, .. } => message.clone(),
+            StyleDiagnostic::Clash {
+                slot,
+                first,
+                second,
+            } => {
+                format!(
+                    "style paint clash on `{slot}`: `{first}` and `{second}` (fail closed; no silent merge)"
+                )
+            }
+            StyleDiagnostic::BadScrutinee { message, .. } => message.clone(),
+            StyleDiagnostic::UnknownConcernSlot { setter, slot, .. } => match setter.as_str() {
+                "border" if slot == "radius" => {
+                    "style `border` does not take `radius` — corner geometry uses `radius(…)`"
+                        .into()
+                }
+                "size" if slot.starts_with("pad") || slot == "text" => {
+                    format!(
+                        "style `size` does not take `{slot}` — padding uses `pad(…)`; type size uses `type(…)`"
+                    )
+                }
+                _ => format!(
+                    "style `{setter}({{ {slot}: … }})` — `{slot}` is not a slot on this concern"
+                ),
+            },
+            StyleDiagnostic::DuplicateSlot { setter, slot, .. } => format!(
+                "style `{setter}` assigns `{slot}` twice in one slot object (fail closed; no last-wins)"
+            ),
+            StyleDiagnostic::RetiredSetter {
+                setter,
+                replacement,
+                ..
+            } => format!("style `{setter}` is retired — use `{replacement}`"),
+            StyleDiagnostic::NotAStyleRef { name, .. } => {
+                format!("`{name}` is vocabulary, not a style ref")
+            }
+            StyleDiagnostic::ThemedLocalStyle { name, .. } => {
+                format!(
+                    "local style `{name}` is not legal in themed mode — one-offs belong in the theme; create `{name}` in studio"
+                )
+            }
+            StyleDiagnostic::UnknownVocabulary { name, .. } => {
+                if name == "size.full" {
+                    return "`size(full)` is a DTCG CSS trap. Use `size(grow)` or `size(max)`."
+                        .into();
+                }
+                match crate::foreign_idioms::teaching_line(name) {
+                    Some(teach) => format!("unknown vocabulary `{name}` — {teach}"),
+                    None => format!("unknown vocabulary `{name}`"),
+                }
+            }
+        }
+    }
+
+    pub fn source(&self) -> &str {
+        match self {
+            StyleDiagnostic::ParseError { source, .. }
+            | StyleDiagnostic::UnknownSetter { source, .. }
+            | StyleDiagnostic::BadToken { source, .. }
+            | StyleDiagnostic::ThemeOwnedToken { source, .. }
+            | StyleDiagnostic::BadArity { source, .. }
+            | StyleDiagnostic::UnknownWhenKey { source, .. }
+            | StyleDiagnostic::UnknownRef { source, .. }
+            | StyleDiagnostic::ResidualProduct { source, .. }
+            | StyleDiagnostic::BadScrutinee { source, .. }
+            | StyleDiagnostic::UnknownConcernSlot { source, .. }
+            | StyleDiagnostic::DuplicateSlot { source, .. }
+            | StyleDiagnostic::RetiredSetter { source, .. }
+            | StyleDiagnostic::NotAStyleRef { source, .. }
+            | StyleDiagnostic::ThemedLocalStyle { source, .. }
+            | StyleDiagnostic::UnknownVocabulary { source, .. } => source,
+            StyleDiagnostic::Clash { first, .. } => first,
+        }
+    }
+}

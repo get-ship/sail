@@ -1,0 +1,30 @@
+{
+  "name": "tree-sitter-sail",
+  "version": "0.2.0",
+  "type": "module",
+  "description": "Tree-sitter grammar for the SAIL .sail template language",
+  "main": "bindings/node",
+  "scripts": {
+    "build": "tree-sitter generate",
+    "test": "tree-sitter test && cargo test -p tree-sitter-sail --test injections --test block_vocabulary --test highlight --test grammar_generated",
+    "generate": "(cd ../.. && cargo run -q -p sail-compiler -- vocabulary --out /tmp/sail-grammar-vocab.json) && bun run scripts/generate-grammar.ts --vocab /tmp/sail-grammar-vocab.json --out-dir .",
+    "generate-check": "bun run scripts/generate-check.ts"
+  },
+  "tree-sitter": [
+    {
+      "scope": "source.sail",
+      "file-types": ["sail"],
+      "highlights": "queries/highlights.scm",
+      "injections": "queries/injections.scm"
+    }
+  ],
+  "license": "MIT",
+  "private": true,
+  "gypfile": false,
+  "dependencies": {
+    "node-addon-api": "^8.0.0"
+  },
+  "devDependencies": {
+    "tree-sitter-cli": "^0.26.0"
+  }
+}

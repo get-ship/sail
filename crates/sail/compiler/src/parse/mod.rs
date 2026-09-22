@@ -1,0 +1,198 @@
+//! Parse pipeline. Walks `.sail` source and produces an IR.
+//!
+//! Stages, in order:
+//!  1. Preprocess — same two transforms the interpreter does
+//!     (quote unquoted brace attrs, expand non-void self-closers).
+//!  2. HTML parse — produces a span-bearing DOM-ish tree.
+//!  3. Directive lift — pluck `<scope>` (props/variants/types) and
+//!     top-level `<style>` out of the top-level child list into the
+//!     IR.
+//!  4. Template grammar scan — text-node `{...}` markers become
+//!     template instructions; element children recurse.
+//!  5. Expression validate — every brace expression goes through the
+//!     same forbidden-syntax checks the interpreter applies.
+
+use crate::diagnostics::{CompileError, Span};
+use crate::ir::*;
+
+pub mod expr;
+pub mod html;
+pub mod partials;
+pub mod preprocess;
+pub(crate) mod scope_block;
+pub mod template;
+
+pub use html::{Attr, Node};
+
+/// Parse a `.sail` source string into an IR program.
+pub fn parse(source: &str) -> Result<Program, CompileError> {
+    Ok(parse_full(source)?.program)
+}
+
+/// IR plus the lowered HTML and Style hosts `parse` already produced.
+/// Layout and compose consume this so they do not re-enter preprocess
+/// on the same bytes.
+pub struct Parsed {
+    pub program: Program,
+    pub preprocessed: String,
+    pub style_hosts: spinnaker::layout::StyleHosts,
+}
+
+/// Like [`parse`], retaining the preprocessed HTML.
+pub fn parse_full(source: &str) -> Result<Parsed, CompileError> {
+    parse_inner_full(source, true)
+}
+
+/// Author-facing template IR for tooling: no stdlib splice, no sx/layout
+/// rewrite. Tags stay as authored (`column`, `ticker`, `my-widget`); spans
+/// land in a lightly normalized string — callers remap to author bytes via
+/// tag ordinal when needed (SailInspect).
+pub fn parse_author(source: &str) -> Result<Program, CompileError> {
+    let prepared = preprocess::preprocess_author(source)?;
+    parse_prepared(source, &prepared)
+}
+
+/// Parse an ELEMENT source (element mode / the stdlib registry): identical
+/// pipeline minus the stdlib-element expansion pass — an element source may
+/// not use stdlib elements (no recursion, no element-in-element).
+/// Parse an ELEMENT source (stdlib / element mode): no stdlib-element expansion.
+pub fn parse_element_source(source: &str) -> Result<Program, CompileError> {
+    parse_inner(source, false)
+}
+
+fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileError> {
+    Ok(parse_inner_full(source, expand_elements)?.program)
+}
+
+fn parse_inner_full(source: &str, expand_elements: bool) -> Result<Parsed, CompileError> {
+    let (prepared, style_hosts) = profile_span("preprocess", || {
+        preprocess::preprocess_impl_full(source, expand_elements)
+    })?;
+    let program = profile_span("parse", || parse_prepared(source, &prepared))?;
+    Ok(Parsed {
+        program,
+        preprocessed: prepared,
+        style_hosts,
+    })
+}
+
+fn profile_span<R>(phase: &'static str, f: impl FnOnce() -> R) -> R {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        crate::profile::span(phase, f)
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        let _ = phase;
+        f()
+    }
+}
+
+fn parse_prepared(source: &str, prepared: &str) -> Result<Program, CompileError> {
+    let nodes = html::parse_fragment(prepared)?;
+
+    let mut props: Vec<PropDecl> = Vec::new();
+    let mut style_parts: Vec<String> = Vec::new();
+    let mut scope_types = String::new();
+    let mut template_nodes: Vec<Node> = Vec::with_capacity(nodes.len());
+
+    for node in nodes {
+        match &node {
+            Node::Comment(_c) => {
+                template_nodes.push(node);
+                continue;
+            }
+            Node::Text(t) if t.data.trim().is_empty() => {
+                template_nodes.push(node);
+                continue;
+            }
+            Node::Element(el) => match el.tag.as_str() {
+                "scope" => {
+                    // The component's static surface: `type` aliases +
+                    // `props:` (union props only) + optional `compound:`,
+                    // in TypeScript field syntax with literal values only
+                    // (see parse::scope_block). Paint lives in host `sx=`
+                    // via the Style product (`match`, `when`, `compound`).
+                    let body: String = el
+                        .children
+                        .iter()
+                        .filter_map(|c| match c {
+                            Node::Text(t) => Some(t.data.clone()),
+                            _ => None,
+                        })
+                        .collect();
+                    let block = scope_block::parse_scope_block(&body, el.span)?;
+                    if let Some(err) = block.style_errors.into_iter().next() {
+                        return Err(remap_style_row_error(err, source));
+                    }
+                    props.extend(block.props);
+                    scope_types.push_str(&block.types);
+                    continue;
+                }
+                "style" => {
+                    for child in &el.children {
+                        if let Node::Text(t) = child {
+                            style_parts.push(t.data.clone());
+                        }
+                    }
+                    continue;
+                }
+                // Inline `<controller>` is stripped by `extract_controller_block`
+                // before parse in `compile` / `compile_element`. If one still
+                // lands here, drop it — it is not template content.
+                "controller" => continue,
+                _ => {}
+            },
+            _ => {}
+        }
+        template_nodes.push(node);
+    }
+
+    let styles = style_parts.join("\n");
+    let template = template::compile_children(&template_nodes)?;
+
+    Ok(Program {
+        props,
+        styles,
+        scope_types,
+        template,
+        source_len: source.len(),
+        span: Span::new(0, source.len()),
+    })
+}
+
+/// Point a Style-table row error at the declaration in author source.
+/// Preprocess injects CSS before `<scope>`, so the parse span is the wrong
+/// buffer — search the author text for `style name` / `const name`.
+pub(crate) fn remap_style_row_error(err: CompileError, author: &str) -> CompileError {
+    let Some(name) = err
+        .message
+        .strip_prefix("Style `")
+        .and_then(|rest| rest.split('`').next())
+        .filter(|n| !n.is_empty())
+        .map(str::to_string)
+    else {
+        return err;
+    };
+    if let Some(at) = find_named_style_binding(author, &name) {
+        return err.with_span(Span::new(at, at + 6 + name.len()));
+    }
+    err
+}
+
+fn find_named_style_binding(source: &str, name: &str) -> Option<usize> {
+    for kw in ["style ", "const "] {
+        let needle = format!("{kw}{name}");
+        let mut start = 0usize;
+        while let Some(rel) = source[start..].find(&needle) {
+            let i = start + rel;
+            let after = i + needle.len();
+            let rest = source.get(after..).unwrap_or("").trim_start();
+            if rest.starts_with('=') {
+                return Some(i);
+            }
+            start = after;
+        }
+    }
+    None
+}

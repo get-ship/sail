@@ -3,11 +3,16 @@ name = "deck-bundler"
 version = "0.1.0"
 edition = "2024"
 publish = false
-description = "Deck's in-process Rolldown bundler (#163/#167) — compiles + bundles SUI views/components/framework via a native Rust plugin that spawns sui-compiler in its load hook. The bundling half of the deck framework; serving is deck-core/deck-axum."
+description = "Deck's in-process Rolldown bundler (#163/#167) — compiles + bundles SAIL views/components/framework via a native Rust plugin that spawns sail-compiler in its load hook. The bundling half of the deck framework; serving is deck-core/deck-axum."
 
 [lib]
 name = "deck_bundler"
 path = "src/lib.rs"
+# Work around the Cargo cdylib/rlib filename collision described in
+# crates/deck/deck/Cargo.toml. deck-bundler has no Rust doctests, so disabling
+# the doctest harness avoids the E0463/E0460 collision without losing coverage.
+# See claim c-2026-07-19T18-12-45-685Z-f499ce4b.
+doctest = false
 
 [dependencies]
 deck-config = { path = "../deck-config" }
@@ -22,6 +27,11 @@ tempfile = { workspace = true }
 tokio = { workspace = true, features = ["rt", "rt-multi-thread", "time", "sync", "macros"] }
 rolldown = "1.0.3"
 rolldown_common = "1.0.3"
+# `BundleOutput.warnings` carries `rolldown_error::BuildDiagnostic`; the
+# unresolved-import guard (`rolldown_bundle::assert_no_unresolved_imports`)
+# matches its `UNRESOLVED_IMPORT` diagnostic code. Already in the lockfile
+# (transitive via `rolldown`); pinned direct so the bundler can name the type.
+rolldown_error = "1.0.3"
 # `module_types` on `BundlerOptions` takes `FxHashMap<String, ModuleType>`.
 # Already in the lockfile (transitive via `rolldown_common`); pinned direct
 # so the bundler can build the `{ ".css" -> Asset }` map without a wrapper.
@@ -34,21 +44,24 @@ rustc-hash = "2"
 libc = { workspace = true }
 
 [features]
-# G3 bundle-parity regression gate (.artifacts/sui-arc/integrity/report.md §4).
+# G3 bundle-parity regression gate (.artifacts/sail-arc/integrity/report.md §4).
 # OFF by default so it never runs in `cargo test -p deck-bundler` / `just build`.
 # The gate (`tests/bundle_parity.rs`) (1) builds every `all_targets()` target
 # through the deck Rolldown path SEQUENTIALLY with a real exit check (Err
 # propagates — unlike `build_all`, which swallows per-target errors), and
-# (2) asserts the native `sui_compiler::compile` and the wasm `compile` export
+# (2) asserts the native `sail_compiler::compile` and the wasm `compile` export
 # emit byte-identical `.js` over the compiler fixture corpus (the #160
 # native-vs-wasm divergence class). Invoke explicitly:
 #   cargo test -p deck-bundler --features g3 --test bundle_parity -- --nocapture
-# (sui-compiler is now a non-optional dep — the bundler compiles in-process, #255 —
+# (sail-compiler is now a non-optional dep — the bundler compiles in-process, #255 —
 # so g3 only gates the wasm-parity test code, not the dependency.)
 g3 = []
 
-[dependencies.sui-compiler]
-path = "../../sui/compiler"
+[dependencies.sail-compiler]
+path = "../../sail/compiler"
+
+[dependencies.sail-lint]
+path = "../../sail/lint"
 
 [dependencies.deck-core]
 path = "../deck-core"

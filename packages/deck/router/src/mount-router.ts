@@ -6,23 +6,31 @@
 // means the framework must provide the router so no app re-hand-rolls it.
 //
 // Invariants this file holds to:
-//   - deck ⊥ ship: there is no `ship` here — clients are a generic name→client
-//     map; the client name belongs to the app, not the framework.
+//   - deck ⊥ product SDK: named providers are a generic name→value map the app
+//     owns; the framework injects only route/navigate.
 //   - no hardcoding: the root element, route table, and layouts are injected
 //     by the bundler-emitted entry (from config); nothing is baked in.
-//   - deck → sui only: this imports the runtime's `mount()`; the runtime never
+//   - deck → sail only: this imports the runtime's `mount()`; the runtime never
 //     imports this.
 
-import { mount, type MountHandle, type ViewPayload } from '@ship/sui-runtime'
+import { mount, setHostRoute, type MountHandle, type RoutePayload } from '@ship/sail-runtime/internal'
+import {
+  installScrollRestoration,
+  onNavigate,
+  onPopState,
+  applyScroll,
+} from './scroll-restoration'
 import {
   matchRoute,
   navigate,
   route as createRoute,
   setRouterPort,
+  setRouteSignals,
   type RouteShape,
 } from './index'
 import { resolveLayoutChain, type LayoutShape } from './layouts'
 import { installRouteBoundary, type RouteBoundaryHandle } from './route-boundary'
+import { applyDocumentHead, applySailHead } from './document-head'
 
 export interface MountRouterOptions {
   /** Mount target — a selector or element. Injected by the emitted entry; the
@@ -32,16 +40,17 @@ export interface MountRouterOptions {
   routes: RouteShape[]
   /** The generated layout table (`LAYOUTS`); empty = no chrome wrappers. */
   layouts?: LayoutShape[]
-  /** Pattern → statically-imported view module. The emitted entry imports each
-   *  route's `page.sui` and builds this map. */
+  /** Pattern → statically-imported route module. The emitted entry imports each
+   *  route's `page.sail` and builds this map. */
   modules: Record<string, unknown>
-  /** Host-injected named clients, spread into view scope. Generic — the client
-   *  name is the app's (e.g. `ship`), not a framework constant. */
-  clients?: Record<string, unknown>
+  /** Host-injected named providers, flattened into route scope as bare names.
+   *  Generic — the name is the app's (e.g. `api`, `demo`), not a framework
+   *  constant. Prefer this bag on the router; mount also accepts top-level keys. */
+  providers?: Record<string, unknown>
   /** Optional host loader (by-name/by-path payload fetch). Per-app bundles
-   *  co-bundle their views, so this is usually unset. */
+   *  co-bundle their routes, so this is usually unset. */
   loader?: unknown
-  /** pathPrefix → statically-imported layout view module. When an entry exists
+  /** pathPrefix → statically-imported layout route module. When an entry exists
    *  for a prefix, the layout is rendered via mount() so its full authored
    *  markup (chrome element + any composed slotted children) appears in the
    *  DOM. When absent for a prefix, falls back to bare createElement(tag) —
@@ -49,9 +58,9 @@ export interface MountRouterOptions {
    *  never regress. Emitted by the bundler alongside `modules`. */
   layoutModules?: Record<string, unknown>
   /** Install the DEFAULT route-level error boundary (the framework wraps every
-   *  route outlet so a throwing view degrades to an error card, not a dead
+   *  route outlet so a throwing route degrades to an error card, not a dead
    *  subtree). On by default. Set `false` to opt the whole app out — a layout
-   *  can opt out a subtree on its own by supplying its own `<sui-error-boundary>`
+   *  can opt out a subtree on its own by supplying its own `<sail-error-boundary>`
    *  (which this detects and defers to). */
   errorBoundary?: boolean
 }
@@ -59,6 +68,29 @@ export interface MountRouterOptions {
 /** A running router. `dispose()` detaches its global listeners (HMR/tests). */
 export interface RouterHandle {
   dispose(): void
+}
+
+/** Multi-app base from `<meta name="deck-app-route" content="/_studio">`. */
+function appRouteBase(): string {
+  if (typeof document === 'undefined') return ''
+  const raw = document
+    .querySelector('meta[name="deck-app-route"]')
+    ?.getAttribute('content')
+    ?.trim()
+  if (!raw || raw === '/') return ''
+  return raw.replace(/\/$/, '')
+}
+
+/** Pathname relative to multi-app mount (e.g. `/_studio` → `/`). */
+function pathForMatch(pathname: string): string {
+  const base = appRouteBase()
+  if (!base) return pathname
+  if (pathname === base) return '/'
+  if (pathname.startsWith(base + '/')) {
+    const rest = pathname.slice(base.length)
+    return rest.startsWith('/') ? rest : `/${rest}`
+  }
+  return pathname
 }
 
 export function mountRouter(opts: MountRouterOptions): RouterHandle {
@@ -69,8 +101,12 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
   }
 
   // Registers the patterns (route() calls defineRoutes internally) and returns
-  // the reactive URL handle injected into every mounted view.
+  // the reactive URL handle injected into every mounted route. Also publish
+  // it for layout custom elements — they upgrade on connect and never see
+  // `mount({ route })`.
   const routeSignals = createRoute({ routes: opts.routes })
+  setHostRoute({ route: routeSignals, navigate })
+  setRouteSignals(routeSignals)
   const layouts = opts.layouts ?? []
   const layoutModules = opts.layoutModules ?? {}
   const errorBoundaryEnabled = opts.errorBoundary !== false
@@ -80,6 +116,13 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
   // Layout MountHandles for the current navigation. Disposed when the next
   // navigation replaces the chrome chain or the router itself disposes.
   let prevLayoutHandles: MountHandle[] = []
+  // Joined pathPrefix key for the chrome chain currently mounted. When the next
+  // navigation resolves to the SAME key we REUSE the chrome (header, rails,
+  // theme-picker) and only swap the leaf route — rebuilding the full chain on
+  // every click remounted the theme-picker and froze the site-site tab.
+  let prevChainKey = ''
+  // Innermost route outlet for the reused chrome tree (still in the document).
+  let prevRouteTarget: HTMLElement | null = null
   // The default route boundary installed on the current outlet. For chrome
   // navigations the outlet is a fresh slot discarded with the old chrome tree;
   // for the rootless case it persists and is reused (the double-wrap check in
@@ -87,34 +130,62 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
   // router dispose.
   let routeBoundary: RouteBoundaryHandle | null = null
 
+  const chainKeyOf = (chain: LayoutShape[]): string =>
+    chain.map((l) => l.pathPrefix).join('\0')
+
   // `restore`: snapshot of the previous mount's signal VALUES (HMR / reload).
   // Passed to `mount()` as `restoreScope` so the fresh module's matching signals
   // seed from the old values — state survives a re-mount. Undefined for a normal
   // navigation (fresh scope).
   async function mountCurrent(restore?: Record<string, unknown>): Promise<void> {
-    const pathname = location.pathname
+    // Multi-app hosts (Studio at `/_studio`) inject `deck-app-route`; strip it
+    // so generated patterns (`/`) still match.
+    const pathname = pathForMatch(location.pathname)
     const myToken = ++token
+    if (typeof document !== 'undefined') {
+      document.dispatchEvent(new CustomEvent('sail:error-clear'))
+    }
+    const chain = resolveLayoutChain(pathname, layouts)
+    const chainKey = chainKeyOf(chain)
+    const reuseChrome =
+      chainKey === prevChainKey &&
+      prevRouteTarget != null &&
+      prevRouteTarget.isConnected
+
     const matched = matchRoute(pathname)
+    if (matched?.head) applySailHead(matched.head)
     const raw = matched ? opts.modules[matched.pattern] : undefined
     if (!raw) {
-      // No bundled view for this path — build the layout chain (so the nav +
+      // No bundled route for this path — build the layout chain (so the nav +
       // studio rail stay visible) and mount a graceful fallback in the route slot.
       // A missing route must never produce a blank screen.
-      const chain = resolveLayoutChain(pathname, layouts)
-      const { target, layoutHandles } = await buildMountTarget(rootEl!, chain, layoutModules)
-      if (myToken !== token) {
-        for (const h of layoutHandles) h.dispose()
-        return
+      let target: HTMLElement
+      let layoutHandles: MountHandle[]
+      if (reuseChrome) {
+        target = prevRouteTarget!
+        layoutHandles = prevLayoutHandles
+      } else {
+        const built = await buildMountTarget(rootEl!, chain, layoutModules, routeSignals)
+        if (myToken !== token) {
+          for (const h of built.layoutHandles) h.dispose()
+          return
+        }
+        target = built.target
+        layoutHandles = built.layoutHandles
       }
-      target.replaceChildren(buildNotFound(pathname))
       current?.dispose()
-      for (const h of prevLayoutHandles) h.dispose()
       current = null
+      target.replaceChildren(buildNotFound(pathname))
+      if (!reuseChrome) {
+        for (const h of prevLayoutHandles) h.dispose()
+      }
       prevLayoutHandles = layoutHandles
+      prevChainKey = chainKey
+      prevRouteTarget = target
       return
     }
     // Module resolution. Eager (co-bundled, static `import * as`) modules ARE
-    // the view namespace already. Code-split modules are a `() => import(...)`
+    // the route namespace already. Code-split modules are a `() => import(...)`
     // thunk that resolves to the namespace — await it here so a route's chunk
     // loads on demand (the module-granular bundling path). Backward-compatible:
     // a non-function `raw` (the eager norm) passes straight through.
@@ -124,19 +195,34 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
         : raw
     // A navigation during the dynamic import supersedes this one.
     if (myToken !== token) return
-    const { target, layoutHandles } = await buildMountTarget(
-      rootEl!,
-      resolveLayoutChain(pathname, layouts),
-      layoutModules,
-    )
-    // Race guard after buildMountTarget (it is async when layout modules are
-    // present): a later navigation already superseded this one.
-    if (myToken !== token) {
-      for (const h of layoutHandles) h.dispose()
-      return
+    if (!matched?.head) applyDocumentHead(mod)
+
+    let target: HTMLElement
+    let layoutHandles: MountHandle[]
+    if (reuseChrome) {
+      target = prevRouteTarget!
+      layoutHandles = prevLayoutHandles
+      // Drop the previous leaf route BEFORE mounting into the same outlet so
+      // we never stack two routes in one slot (and so dispose doesn't race the
+      // new mount). Layout chrome stays mounted.
+      current?.dispose()
+      current = null
+      routeBoundary?.dispose()
+      routeBoundary = null
+      target.replaceChildren()
+    } else {
+      const built = await buildMountTarget(rootEl!, chain, layoutModules, routeSignals)
+      // Race guard after buildMountTarget (it is async when layout modules are
+      // present): a later navigation already superseded this one.
+      if (myToken !== token) {
+        for (const h of built.layoutHandles) h.dispose()
+        return
+      }
+      target = built.target
+      layoutHandles = built.layoutHandles
     }
-    // Install the DEFAULT route boundary on the outlet BEFORE mounting the view,
-    // so a throw during the view's render / controller mount / effect is caught
+    // Install the DEFAULT route boundary on the outlet BEFORE mounting the route,
+    // so a throw during the route's render / controller mount / effect is caught
     // and degrades to an error card. No-op when a layout already supplied a
     // boundary (installRouteBoundary returns null) or when opted out.
     if (errorBoundaryEnabled) {
@@ -147,10 +233,11 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
     }
     const previous = current
     const prevHandles = prevLayoutHandles
-    // Co-bundled views are the norm: `opts.modules` is statically imported, so
+    const chromeChanged = !reuseChrome
+    // Co-bundled routes are the norm: `opts.modules` is statically imported, so
     // there is no SSR payload to fetch and no loader. Pass an empty payload so
     // `mount()` skips by-name resolution (which requires a loader) and, finding
-    // the target empty, runs the view's `__mount(target)` to build the DOM
+    // the target empty, runs the route's `__mount(target)` to build the DOM
     // (CSR) then `hydrate`. A host that DOES inject a loader keeps by-name SSR
     // fetching (pass the pathname so `mount()` resolves the payload).
     const handle = await mount(
@@ -158,9 +245,9 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
       opts.loader ? pathname : coBundledPayload(pathname),
       {
         module: mod as never,
-        // `clients` is an exactOptionalPropertyType — present-but-undefined is
-        // rejected, so omit the key entirely when the host passed no clients.
-        ...(opts.clients ? { clients: opts.clients } : {}),
+        // `providers` is an exactOptionalPropertyType — present-but-undefined is
+        // rejected, so omit the key entirely when the host passed none.
+        ...(opts.providers ? { providers: opts.providers } : {}),
         // Same exactOptional discipline for the HMR/reload scope snapshot.
         ...(restore ? { restoreScope: restore } : {}),
         loader: opts.loader as never,
@@ -172,20 +259,43 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
     // Race guard: a later navigation already superseded this mount.
     if (myToken !== token) {
       handle.dispose()
-      for (const h of layoutHandles) h.dispose()
+      if (chromeChanged) {
+        for (const h of layoutHandles) h.dispose()
+      }
       return
     }
     current = handle
     prevLayoutHandles = layoutHandles
-    previous?.dispose()
-    for (const h of prevHandles) h.dispose()
+    prevChainKey = chainKey
+    prevRouteTarget = target
+    // Only dispose the previous leaf when we built a NEW chrome tree (previous
+    // still points at the old route). When reusing chrome we already disposed
+    // the previous route before mount.
+    if (chromeChanged) {
+      previous?.dispose()
+      for (const h of prevHandles) h.dispose()
+    }
   }
 
   function go(to: string, navOpts?: { replace?: boolean }): void {
-    if (navOpts?.replace) history.replaceState({}, '', to)
-    else history.pushState({}, '', to)
+    // Scroll is part of navigating. This router had its own history calls and
+    // never told scroll-restoration about them, so a push kept the previous
+    // page's offset — you landed halfway down a doc you had never seen.
+    // `onNavigate` saves the outgoing offset and marks the entry; `applyScroll`
+    // must run AFTER the route renders, or it scrolls the OLD tree.
+    //
+    // Pathname SSOT: history is updated and `__shipSetRouteUpdate` runs
+    // *synchronously* before the async mount — so `route().pathname` consumers
+    // (layout chrome) observe the new path without monkeypatching history.
+    const state = onNavigate(navOpts?.replace ?? false)
+    if (navOpts?.replace) history.replaceState(state, '', to)
+    else history.pushState(state, '', to)
     globalThis.__shipSetRouteUpdate?.()
     void mountCurrent()
+      .then(() => applyScroll())
+      .catch((err) => {
+        console.error('[deck/route] navigation mount failed:', err)
+      })
   }
 
   function onClick(e: MouseEvent): void {
@@ -209,13 +319,26 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
     go(url.pathname + url.search + url.hash)
   }
 
-  const onPop = (): void => { void mountCurrent() }
+  const onPop = (): void => {
+    onPopState()
+    // popstate already changed the URL; refresh route signals sync so chrome
+    // that reads `route().pathname` matches history before mount settles.
+    globalThis.__shipSetRouteUpdate?.()
+    void mountCurrent()
+      .then(() => applyScroll())
+      .catch((err) => {
+        console.error('[deck/route] popstate mount failed:', err)
+      })
+  }
 
+  installScrollRestoration()
   setRouterPort({ navigate: (to, navOpts) => go(to, navOpts), back: () => history.back() })
   document.addEventListener('click', onClick)
   window.addEventListener('popstate', onPop)
 
-  void mountCurrent()
+  void mountCurrent().catch((err) => {
+    console.error('[deck/route] initial mount failed:', err)
+  })
 
   // ── HMR seam ─────────────────────────────────────────────────────────────
   // Snapshot the current mount's WRITABLE signals (value, not the signal) so a
@@ -243,9 +366,11 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
     await mountCurrent(captureScope(current))
   }
 
-  // HMR: point a route at a fresh chunk URL, then re-mount it preserving state
-  // IF it's the route on screen (else the next navigation loads it fresh). The
-  // deck dev live-reload client calls this with the rebuilt chunk on edit.
+  // Per-route HMR seam: point a route at a fresh chunk URL, then remount it
+  // preserving state IF it's the route on screen (else the next navigation
+  // loads it fresh). Tests may call this; the deck dev live-reload client
+  // does not — it re-imports the entry, which calls `swapModules` (app-granular
+  // remount). This is not the default transport.
   async function swapModule(pattern: string, freshUrl: string): Promise<void> {
     ;(opts.modules as Record<string, unknown>)[pattern] = () =>
       import(/* @vite-ignore */ freshUrl)
@@ -280,19 +405,23 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
       routeBoundary = null
       for (const h of prevLayoutHandles) h.dispose()
       prevLayoutHandles = []
+      prevChainKey = ''
+      prevRouteTarget = null
+      setHostRoute(null)
+      setRouteSignals(undefined)
     },
   }
 }
 
 /**
- * Empty CSR payload for the co-bundled case. The view module is statically
+ * Empty CSR payload for the co-bundled case. The route module is statically
  * imported (`opts.modules`), so there is no daemon-produced SSR payload and no
  * loader to fetch one. Empty `html`/`css`/`scope` leave the mount target empty,
- * so `mount()` runs the view's `__mount(target)` (the per-app CSR builder) then
+ * so `mount()` runs the route's `__mount(target)` (the per-app CSR builder) then
  * `hydrate`. `params` is empty — `route.params` is seeded from the URL by the
  * `route()` instance (`routeSignals`), not from a payload.
  */
-function coBundledPayload(name: string): ViewPayload {
+function coBundledPayload(name: string): RoutePayload {
   return { name, html: '', css: '', scope: {}, moduleUrl: '', params: {}, clients: [] }
 }
 
@@ -301,8 +430,8 @@ function coBundledPayload(name: string): ViewPayload {
   * this point (see `mountCurrent`'s no-match branch), so this element lives
   * INSIDE the chrome's route slot — the rail and nav stay visible. The
   * surface is the shared `<ship-error-state>` primitive from
-  * `@ship/primitives`; the chrome's compiled view emits a
-  * `@sui-tag/ship-error-state` import for us, so by the time this runs
+  * `@ship/primitives`; the chrome's compiled route emits a
+  * `@sail-tag/ship-error-state` import for us, so by the time this runs
   * the custom element is registered.
   *
   * `textContent` (not innerHTML) on the body keeps user-controlled URL
@@ -313,7 +442,7 @@ function coBundledPayload(name: string): ViewPayload {
    // Guard against an unbuilt workspace — falling back to a bare text node
    // (the previous behaviour) is better than throwing. The framework
    // never imports `@ship/primitives` directly; registration is a bundler
-   // concern, and the chrome view does the heavy lifting.
+   // concern, and the chrome route does the heavy lifting.
    if (!customElements.get('ship-error-state')) {
      const fallback = document.createElement('div')
      fallback.className = 'deck-not-found'
@@ -336,26 +465,35 @@ function coBundledPayload(name: string): ViewPayload {
  * the innermost `<div slot="route">` to mount the route content into, plus any
  * layout MountHandles for later disposal. Empty chain → the root element itself.
  *
- * When a layout has an entry in `layoutModules`, its view module is mounted via
+ * When a layout has an entry in `layoutModules`, its route module is mounted via
  * the runtime's `mount()` so its full authored markup (the chrome element plus
- * any composed slotted children, e.g. `<sui-command-bar slot="command-bar">`)
+ * any composed slotted children, e.g. `<sail-command-bar slot="command-bar">`)
  * renders into the DOM. The rendered chrome element is located by `layout.tag`
  * after mounting; `parent` (the inner content accumulated so far) is appended
  * to it. When no module entry exists for a prefix, falls back to the original
  * `document.createElement(tag)` path — no regression for tag-only layouts.
  *
- * The chain is rebuilt per navigation; reusing chrome across same-prefix
- * navigations is a later optimization.
+ * Same-prefix navigations reuse the chrome via mountCurrent (see prevChainKey);
+ * this helper only runs when the chain identity changes.
  */
 async function buildMountTarget(
   root: Element,
   chain: LayoutShape[],
   layoutModules: Record<string, unknown>,
+  routeSignals?: unknown,
 ): Promise<{ target: HTMLElement; layoutHandles: MountHandle[] }> {
   if (chain.length === 0) return { target: root as HTMLElement, layoutHandles: [] }
 
   const routeSlot = document.createElement('div')
   routeSlot.setAttribute('slot', 'route')
+  // Fill the layout's route column. A bare block auto-height host collapses
+  // flex children (studio/workbench panes only paint the top chrome strip).
+  // overflow:auto (not hidden): docs/landing content taller than the budget
+  // must scroll here — overflow:hidden silently clipped long pages (main's
+  // scrollHeight stayed equal to the 100%-height host). Workbench fill still
+  // works: height:100% + flex 1 1 0% + min-height:0.
+  routeSlot.style.cssText =
+    'display:flex;flex-direction:column;flex:1 1 0%;min-height:0;min-width:0;height:100%;overflow:auto'
   let parent: HTMLElement = routeSlot
   const layoutHandles: MountHandle[] = []
 
@@ -365,14 +503,20 @@ async function buildMountTarget(
   for (const layout of chain) {
     const mod = layoutModules[layout.pathPrefix]
     if (mod) {
-      // Layout has a view module — mount it to render authored markup.
+      // Layout has a route module — mount it to render authored markup.
       // Mount into a temporary container so the rendered chrome can be
       // extracted and moved into the chain (DOM move, no clone needed).
+      // Pass route signals so layout controllers (header/rails) can read a live
+      // pathname when chrome is reused across leaf navigations.
       const container = document.createElement('div')
       const handle = await mount(
         container,
         coBundledPayload(`layout:${layout.pathPrefix}`),
-        { module: mod as never, cssScope: 'adjacent' },
+        {
+          module: mod as never,
+          cssScope: 'adjacent',
+          ...(routeSignals ? { route: routeSignals as never, navigate } : {}),
+        },
       )
       layoutHandles.push(handle)
       // Find the rendered chrome by the known tag; fall back to firstElementChild
@@ -396,6 +540,12 @@ async function buildMountTarget(
       chrome.appendChild(parent)
       parent = chrome
     }
+    // `parent` becomes a light-DOM child of the next (outer) chrome in the
+    // chain — it must carry slot="route" to land in that chrome's named
+    // slot, same as the innermost `routeSlot`. Single-layout chains were the
+    // only case exercised before nested (root + segment) layouts existed, so
+    // this propagation was never needed until now.
+    parent.setAttribute('slot', 'route')
   }
 
   root.replaceChildren(parent)

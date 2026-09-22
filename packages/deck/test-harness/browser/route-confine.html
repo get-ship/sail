@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>SES route-confine</title>
+  </head>
+  <body>
+    <div id="out">running…</div>
+    <script type="module" src="/route-confine.js"></script>
+    <script type="module">
+      requestAnimationFrame(() => {
+        document.getElementById('out').textContent = JSON.stringify(window.__routeConfine ?? { pending: true })
+      })
+    </script>
+  </body>
+</html>

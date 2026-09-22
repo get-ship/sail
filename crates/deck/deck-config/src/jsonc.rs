@@ -15,7 +15,7 @@
 /// helper stays so a host that DOES want JSONC parsing for its own
 /// config (e.g. `apps.jsonc`) can build a `DeckConfig` via
 /// `serde_json::from_str(&strip_jsonc_comments(&raw))` and pass it in. The
-/// per-app `deck.jsonc` parser (`AppServeConfig::parse_deck_jsonc`) calls it
+/// per-app serve parser (`AppServeConfig::parse_deck_jsonc`) calls it
 /// internally — one stripper, no second copy.
 ///
 /// NOTE: this is a deliberate second copy of the JSONC stripper inlined
@@ -31,14 +31,42 @@ pub fn strip_jsonc_comments(input: &str) -> String {
     while let Some(c) = chars.next() {
         if in_string {
             stage.push(c);
-            if escape { escape = false; } else if c == '\\' { escape = true; } else if c == '"' { in_string = false; }
+            if escape {
+                escape = false;
+            } else if c == '\\' {
+                escape = true;
+            } else if c == '"' {
+                in_string = false;
+            }
             continue;
         }
-        if c == '"' { in_string = true; stage.push(c); continue; }
+        if c == '"' {
+            in_string = true;
+            stage.push(c);
+            continue;
+        }
         if c == '/' {
             match chars.peek() {
-                Some('/') => { while let Some(&nc) = chars.peek() { chars.next(); if nc == '\n' { stage.push('\n'); break; } } continue; }
-                Some('*') => { chars.next(); while let Some(nc) = chars.next() { if nc == '*' && chars.peek() == Some(&'/') { chars.next(); break; } } continue; }
+                Some('/') => {
+                    while let Some(&nc) = chars.peek() {
+                        chars.next();
+                        if nc == '\n' {
+                            stage.push('\n');
+                            break;
+                        }
+                    }
+                    continue;
+                }
+                Some('*') => {
+                    chars.next();
+                    while let Some(nc) = chars.next() {
+                        if nc == '*' && chars.peek() == Some(&'/') {
+                            chars.next();
+                            break;
+                        }
+                    }
+                    continue;
+                }
                 _ => {}
             }
         }
@@ -68,10 +96,17 @@ pub fn strip_jsonc_comments(input: &str) -> String {
             i += 1;
             continue;
         }
-        if b == b'"' { in_string2 = true; cleaned.push(b); i += 1; continue; }
+        if b == b'"' {
+            in_string2 = true;
+            cleaned.push(b);
+            i += 1;
+            continue;
+        }
         if b == b',' {
             let mut j = i + 1;
-            while j < src.len() && (src[j] == b' ' || src[j] == b'\t' || src[j] == b'\r' || src[j] == b'\n') {
+            while j < src.len()
+                && (src[j] == b' ' || src[j] == b'\t' || src[j] == b'\r' || src[j] == b'\n')
+            {
                 j += 1;
             }
             if j < src.len() && (src[j] == b']' || src[j] == b'}') {
@@ -84,5 +119,6 @@ pub fn strip_jsonc_comments(input: &str) -> String {
     }
     // Safe: we only dropped ASCII commas at valid char boundaries; every
     // other byte was copied verbatim from the original UTF-8 String.
-    String::from_utf8(cleaned).unwrap_or_else(|e| String::from_utf8_lossy(e.as_bytes()).into_owned())
+    String::from_utf8(cleaned)
+        .unwrap_or_else(|e| String::from_utf8_lossy(e.as_bytes()).into_owned())
 }

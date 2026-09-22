@@ -1,12 +1,12 @@
 //! Node-style package resolution for the framework singletons.
 //!
-//! deck's framework singletons (`@ship/sui-runtime`, `@ship/sui-dom`,
+//! deck's framework singletons (`@ship/sail-runtime`, `@ship/sail-dom`,
 //! `@ship/deck-router`, `@ship/sdk-client`) are no longer pinned to a hardcoded
-//! monorepo path (`packages/sui/runtime/src/index.ts`). They are resolved like
+//! monorepo path (`packages/sail/runtime/src/index.ts`). They are resolved like
 //! any npm dependency: from the project being built, find the package's
 //! `package.json` and read its `exports`/`main` to locate the entry module.
 //!
-//! This is what lets a build run OUTSIDE the sui monorepo — a consumer repo
+//! This is what lets a build run OUTSIDE the sail monorepo — a consumer repo
 //! (ship-apps, ship-site) installs the framework from the registry, and the
 //! bundler resolves it from wherever npm/bun put it, with no
 //! `DECK_FRAMEWORK_ASSETS_DIR` crutch and no `|| true` workaround.
@@ -33,8 +33,8 @@ use crate::catalog::discover_workspace_packages;
 /// Resolve a bare package specifier to an absolute entry module, starting from
 /// `start` (the project / repo root being built).
 ///
-/// `spec` may carry a subpath: `@ship/sui-runtime` resolves the package's `.`
-/// export; `@ship/sui-runtime/route` resolves its `./route` export. Returns
+/// `spec` may carry a subpath: `@ship/sail-runtime` resolves the package's `.`
+/// export; `@ship/sail-runtime/route` resolves its `./route` export. Returns
 /// `None` when the package is not installed/discoverable from `start`, or when
 /// no entry file actually exists on disk — callers treat that as "this
 /// singleton isn't present in this repo" and skip it rather than fail the whole
@@ -51,16 +51,84 @@ pub fn resolve_entry(start: &Path, spec: &str) -> Option<PathBuf> {
 
     let mut candidates: Vec<PathBuf> = Vec::new();
     if let Some(rel) = entry_rel_from_manifest(&root, &subpath) {
+        candidates.push(root.join(&rel));
+        // Public `default` is often unbuilt `dist/*.js`. Deck bakes from
+        // source: if that file is missing, the matching `src/*.ts` is the
+        // entry — including subpaths (`./framework` → dist/framework-bundle.js
+        // vs src/framework-bundle.ts). Without this, `sail-runtime` vanished
+        // from build-assets after exports.default moved to dist.
+        if let Some(src) = dist_js_to_src_ts(&rel) {
+            candidates.push(root.join(src));
+        }
+    }
+    for rel in export_condition_rels(&root, &subpath, &["development", "bun"]) {
         candidates.push(root.join(rel));
     }
     // Source fallbacks for the package root only — a missing subpath export has
-    // no generic stand-in.
+    // no generic stand-in beyond the dist→src rewrite above.
     if subpath == "." {
-        for rel in ["src/index.ts", "src/index.tsx", "src/index.js", "index.ts", "index.js"] {
+        for rel in [
+            "src/index.ts",
+            "src/index.tsx",
+            "src/index.js",
+            "index.ts",
+            "index.js",
+        ] {
             candidates.push(root.join(rel));
         }
     }
     candidates.into_iter().find(|p| p.is_file())
+}
+
+/// `dist/foo.js` → `src/foo.ts` (and `.mjs`). None if `rel` is not a dist JS.
+fn dist_js_to_src_ts(rel: &Path) -> Option<PathBuf> {
+    let s = rel.to_string_lossy();
+    let s = s.trim_start_matches("./");
+    let rest = s.strip_prefix("dist/")?;
+    let stem = rest
+        .strip_suffix(".js")
+        .or_else(|| rest.strip_suffix(".mjs"))?;
+    Some(PathBuf::from(format!("src/{stem}.ts")))
+}
+
+/// Rel paths named by the given `exports` conditions for `subpath`.
+fn export_condition_rels(root: &Path, subpath: &str, conds: &[&str]) -> Vec<PathBuf> {
+    let Ok(raw) = std::fs::read_to_string(root.join("package.json")) else {
+        return Vec::new();
+    };
+    let Ok(pkg) = serde_json::from_str::<Value>(&raw) else {
+        return Vec::new();
+    };
+    let Some(exports) = pkg.get("exports") else {
+        return Vec::new();
+    };
+    let Some(target) = export_target_value(exports, subpath) else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    if let Value::Object(map) = target {
+        for cond in conds {
+            if let Some(Value::String(s)) = map.get(*cond) {
+                out.push(PathBuf::from(s.trim_start_matches("./")));
+            }
+        }
+    }
+    out
+}
+
+fn export_target_value<'a>(exports: &'a Value, subpath: &str) -> Option<&'a Value> {
+    match exports {
+        Value::String(_) => (subpath == ".").then_some(exports),
+        Value::Object(map) => {
+            let is_subpath_map = map.keys().all(|k| k.starts_with('.'));
+            if is_subpath_map {
+                map.get(subpath)
+            } else {
+                Some(exports)
+            }
+        }
+        _ => None,
+    }
 }
 
 /// Split `@scope/pkg/sub/path` into (`@scope/pkg`, `./sub/path`); a bare
@@ -79,7 +147,7 @@ fn split_spec(spec: &str) -> (String, String) {
 }
 
 /// Find a package's root directory by name, starting from `start`.
-fn resolve_package_root(start: &Path, name: &str) -> Option<PathBuf> {
+pub fn resolve_package_root(start: &Path, name: &str) -> Option<PathBuf> {
     // 1. node_modules ancestor walk.
     let mut cur = Some(start);
     while let Some(dir) = cur {
@@ -89,13 +157,35 @@ fn resolve_package_root(start: &Path, name: &str) -> Option<PathBuf> {
         }
         cur = dir.parent();
     }
-    // 2. workspace member of `start` (the monorepo bake path).
-    if let Ok(pkgs) = discover_workspace_packages(start) {
-        if let Some(pkg) = pkgs.into_iter().find(|p| p.name == name) {
-            return Some(pkg.root);
+    // 2. Monorepo bake fallback ONLY when `start` declares `workspaces`.
+    // External consumers / tarball installs resolve exclusively via node_modules
+    // (SPEC-L2-PACKAGE-1: no monorepo path assumptions for npm-shaped apps).
+    if package_declares_workspaces(start) {
+        if let Ok(pkgs) = discover_workspace_packages(start) {
+            if let Some(pkg) = pkgs.into_iter().find(|p| p.name == name) {
+                return Some(pkg.root);
+            }
         }
     }
     None
+}
+
+fn package_declares_workspaces(start: &Path) -> bool {
+    let mut cur = Some(start);
+    while let Some(dir) = cur {
+        let pkg = dir.join("package.json");
+        if pkg.is_file() {
+            if let Ok(raw) = std::fs::read_to_string(&pkg) {
+                if let Ok(v) = serde_json::from_str::<serde_json::Value>(&raw) {
+                    if v.get("workspaces").is_some() {
+                        return true;
+                    }
+                }
+            }
+        }
+        cur = dir.parent();
+    }
+    false
 }
 
 /// Read `<root>/package.json` and resolve the entry path (relative to `root`)
@@ -177,10 +267,13 @@ mod tests {
 
     #[test]
     fn split_spec_scoped_and_subpath() {
-        assert_eq!(split_spec("@ship/sui-runtime"), ("@ship/sui-runtime".into(), ".".into()));
         assert_eq!(
-            split_spec("@ship/sui-runtime/route"),
-            ("@ship/sui-runtime".into(), "./route".into())
+            split_spec("@ship/sail-runtime"),
+            ("@ship/sail-runtime".into(), ".".into())
+        );
+        assert_eq!(
+            split_spec("@ship/sail-runtime/route"),
+            ("@ship/sail-runtime".into(), "./route".into())
         );
         assert_eq!(split_spec("lodash"), ("lodash".into(), ".".into()));
         assert_eq!(split_spec("lodash/fp"), ("lodash".into(), "./fp".into()));
@@ -195,13 +288,20 @@ mod tests {
         let project = root.join("apps/hub");
         fs::create_dir_all(&project).unwrap();
         write(
-            &root.join("node_modules/@ship/sui-runtime/package.json"),
-            r#"{ "name": "@ship/sui-runtime", "exports": { ".": "./src/index.ts" } }"#,
+            &root.join("node_modules/@ship/sail-runtime/package.json"),
+            r#"{ "name": "@ship/sail-runtime", "exports": { ".": "./src/index.ts" } }"#,
         );
-        write(&root.join("node_modules/@ship/sui-runtime/src/index.ts"), "export const x=1;\n");
+        write(
+            &root.join("node_modules/@ship/sail-runtime/src/index.ts"),
+            "export const x=1;\n",
+        );
 
-        let entry = resolve_entry(&project, "@ship/sui-runtime").expect("resolved via ancestor walk");
-        assert_eq!(entry, root.join("node_modules/@ship/sui-runtime/src/index.ts"));
+        let entry =
+            resolve_entry(&project, "@ship/sail-runtime").expect("resolved via ancestor walk");
+        assert_eq!(
+            entry,
+            root.join("node_modules/@ship/sail-runtime/src/index.ts")
+        );
     }
 
     #[test]
@@ -209,13 +309,19 @@ mod tests {
         let tmp = tempdir().unwrap();
         let root = tmp.path();
         write(
-            &root.join("node_modules/@ship/sui-runtime/package.json"),
-            r#"{ "name": "@ship/sui-runtime",
+            &root.join("node_modules/@ship/sail-runtime/package.json"),
+            r#"{ "name": "@ship/sail-runtime",
                 "exports": { ".": "./src/index.ts", "./route": "./src/route/index.ts" } }"#,
         );
-        write(&root.join("node_modules/@ship/sui-runtime/src/route/index.ts"), "export const r=1;\n");
-        let entry = resolve_entry(root, "@ship/sui-runtime/route").unwrap();
-        assert_eq!(entry, root.join("node_modules/@ship/sui-runtime/src/route/index.ts"));
+        write(
+            &root.join("node_modules/@ship/sail-runtime/src/route/index.ts"),
+            "export const r=1;\n",
+        );
+        let entry = resolve_entry(root, "@ship/sail-runtime/route").unwrap();
+        assert_eq!(
+            entry,
+            root.join("node_modules/@ship/sail-runtime/src/route/index.ts")
+        );
     }
 
     #[test]
@@ -230,9 +336,39 @@ mod tests {
                 "main": "dist/index.js",
                 "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } } }"#,
         );
-        write(&root.join("node_modules/@ship/deck-router/dist/index.js"), "export const x=1;\n");
+        write(
+            &root.join("node_modules/@ship/deck-router/dist/index.js"),
+            "export const x=1;\n",
+        );
         let entry = resolve_entry(root, "@ship/deck-router").unwrap();
-        assert_eq!(entry, root.join("node_modules/@ship/deck-router/dist/index.js"));
+        assert_eq!(
+            entry,
+            root.join("node_modules/@ship/deck-router/dist/index.js")
+        );
+    }
+
+    #[test]
+    fn framework_subpath_falls_back_to_src_when_dist_missing() {
+        let tmp = tempdir().unwrap();
+        let root = tmp.path();
+        write(
+            &root.join("node_modules/@ship/sail-runtime/package.json"),
+            r#"{ "name": "@ship/sail-runtime",
+                "exports": { "./framework": {
+                    "types": "./dist/framework-bundle.d.ts",
+                    "development": "./src/framework-bundle.ts",
+                    "default": "./dist/framework-bundle.js"
+                } } }"#,
+        );
+        write(
+            &root.join("node_modules/@ship/sail-runtime/src/framework-bundle.ts"),
+            "export const fw=1;\n",
+        );
+        let entry = resolve_entry(root, "@ship/sail-runtime/framework").unwrap();
+        assert_eq!(
+            entry,
+            root.join("node_modules/@ship/sail-runtime/src/framework-bundle.ts")
+        );
     }
 
     #[test]
@@ -249,9 +385,15 @@ mod tests {
                 "exports": { ".": { "import": "./dist/index.js" } } }"#,
         );
         // No dist/ shipped — only src/.
-        write(&root.join("node_modules/@ship/deck-router/src/index.ts"), "export const x=1;\n");
+        write(
+            &root.join("node_modules/@ship/deck-router/src/index.ts"),
+            "export const x=1;\n",
+        );
         let entry = resolve_entry(root, "@ship/deck-router").unwrap();
-        assert_eq!(entry, root.join("node_modules/@ship/deck-router/src/index.ts"));
+        assert_eq!(
+            entry,
+            root.join("node_modules/@ship/deck-router/src/index.ts")
+        );
     }
 
     #[test]
@@ -262,9 +404,15 @@ mod tests {
             &root.join("node_modules/@ship/sdk-client/package.json"),
             r#"{ "name": "@ship/sdk-client", "main": "src/index.ts" }"#,
         );
-        write(&root.join("node_modules/@ship/sdk-client/src/index.ts"), "export const c=1;\n");
+        write(
+            &root.join("node_modules/@ship/sdk-client/src/index.ts"),
+            "export const c=1;\n",
+        );
         let entry = resolve_entry(root, "@ship/sdk-client").unwrap();
-        assert_eq!(entry, root.join("node_modules/@ship/sdk-client/src/index.ts"));
+        assert_eq!(
+            entry,
+            root.join("node_modules/@ship/sdk-client/src/index.ts")
+        );
     }
 
     #[test]
@@ -273,15 +421,22 @@ mod tests {
         // into the root node_modules), discovered via `workspaces` globs.
         let tmp = tempdir().unwrap();
         let root = tmp.path();
-        write(&root.join("package.json"), r#"{ "workspaces": ["packages/sui/*"] }"#);
         write(
-            &root.join("packages/sui/runtime/package.json"),
-            r#"{ "name": "@ship/sui-runtime", "exports": { ".": "./src/index.ts" } }"#,
+            &root.join("package.json"),
+            r#"{ "workspaces": ["packages/sail/*"] }"#,
         );
-        write(&root.join("packages/sui/runtime/src/index.ts"), "export const x=1;\n");
+        write(
+            &root.join("packages/sail/runtime/package.json"),
+            r#"{ "name": "@ship/sail-runtime", "exports": { ".": "./src/index.ts" } }"#,
+        );
+        write(
+            &root.join("packages/sail/runtime/src/index.ts"),
+            "export const x=1;\n",
+        );
 
-        let entry = resolve_entry(root, "@ship/sui-runtime").expect("resolved via workspace member");
-        assert_eq!(entry, root.join("packages/sui/runtime/src/index.ts"));
+        let entry =
+            resolve_entry(root, "@ship/sail-runtime").expect("resolved via workspace member");
+        assert_eq!(entry, root.join("packages/sail/runtime/src/index.ts"));
     }
 
     #[test]

@@ -1,7 +1,7 @@
 // Constructor wrappers + counter helpers for the resource-symmetry
 // integration test.
 //
-// Wraps the runtime constructors that real views allocate during
+// Wraps the runtime constructors that real routes allocate during
 // mount: EventSource, MutationObserver, ResizeObserver,
 // IntersectionObserver, and setInterval/clearInterval. Each
 // allocation increments a `created` counter; each release/close

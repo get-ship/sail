@@ -1,0 +1,338 @@
+<!--
+  <sail-cmdk> — command palette: native <dialog> + filterable listbox.
+  Items via `items` identity (CmdkItem[]) or JSON attr SSR fallback.
+  Events: sail-cmdk-select / -input / -open / -close. Host: open/close/toggle.
+-->
+
+<scope>
+  props: {
+    open = false
+    placeholder = 'Type a command or search…'
+    label = 'Command palette'
+    'empty-label' = 'No results found.'
+    size: 'md' | 'sm' | 'lg' = 'md'
+  }
+</scope>
+<controller>
+// Dialog shell via action; filter + keyboard nav + emits here.
+
+import type { Action, ControllerScope } from '@ship/sail-runtime'
+import type { Scope } from './sail-cmdk.sail'
+import { type CmdkItem, str, parseJsonItems } from './decode'
+
+export type { CmdkItem } from './decode'
+
+interface VisibleItem {
+  id: string
+  optId: string
+  value: string
+  label: string
+  icon: string
+  hint: string
+  group: string
+  disabled: boolean
+}
+
+/** Flat row — heading rows zero item fields (no union narrowing in template). */
+interface RenderRow {
+  key: string
+  isHeading: boolean
+  heading: string
+  id: string
+  optId: string
+  value: string
+  label: string
+  icon: string
+  hint: string
+  disabled: boolean
+}
+
+let _seq = 0
+
+export default controller((_ctx: ControllerScope<Scope>) => {
+    const seq = ++_seq
+    const itemsSig = signal<CmdkItem[]>([])
+    const query = signal('')
+    const highlight = signal(0)
+    const listId = signal(`sail-cmdk-list-${seq}`)
+
+    // listEl read from input keydown handlers (scrollActiveIntoView).
+    const inputEl = signal<HostBag | null>(null)
+    const listEl = signal<HostBag | null>(null)
+    const captureInput: Action<void> = (node) => {
+      inputEl.set(node)
+      return { destroy: () => inputEl.set(null) }
+    }
+    const captureList: Action<void> = (node) => {
+      listEl.set(node)
+      return { destroy: () => listEl.set(null) }
+    }
+
+    let hostEl: (HostBag & { open: boolean }) | null = null
+
+    // open prop ⇄ dialog showModal/close.
+    const dialogBridge: Action<void> = (node) => {
+      const el = node as HostBag
+      const stop = effect(() => {
+        const want = _ctx.open() === true
+        if (want && !el.open) el.showModal()
+        else if (!want && el.open) el.close()
+      })
+      const onNativeClose = (): void => {
+        if (_ctx.open() && hostEl) hostEl.open = false
+      }
+      el.addEventListener('close', onNativeClose)
+      return {
+        destroy: () => {
+          stop()
+          el.removeEventListener('close', onNativeClose)
+        },
+      }
+    }
+
+
+    const visible = derived<VisibleItem[]>(() => {
+      const q = query().trim().toLowerCase()
+      const out: VisibleItem[] = []
+      for (const it of itemsSig()) {
+        const hay = q ? `${it.label} ${it.keywords ?? ''}`.toLowerCase() : ''
+        if (q && !hay.includes(q)) continue
+        out.push({
+          id: it.id,
+          optId: `sail-cmdk-opt-${seq}-${it.id}`,
+          value: it.value != null ? it.value : it.id,
+          label: it.label,
+          icon: str(it.icon),
+          hint: str(it.hint),
+          group: str(it.group),
+          disabled: it.disabled === true,
+        })
+      }
+      return out
+    })
+
+
+    const navigable = derived<VisibleItem[]>(() => visible().filter((v) => !v.disabled))
+
+
+    const safeHighlight = derived<number>(() => {
+      const n = navigable().length
+      if (n === 0) return 0
+      const h = highlight()
+      return h < 0 ? 0 : h >= n ? n - 1 : h
+    })
+
+    const highlightId = derived<string>(() => navigable()[safeHighlight()]?.id ?? '')
+    const activeId = derived<string>(() => navigable()[safeHighlight()]?.optId ?? '')
+
+
+    const rows = derived<RenderRow[]>(() => {
+      const out: RenderRow[] = []
+      let lastGroup: string | null = null
+      for (const v of visible()) {
+        if (v.group !== '' && v.group !== lastGroup) {
+          out.push({
+            key: `g:${v.group}`,
+            isHeading: true,
+            heading: v.group,
+            id: '',
+            optId: '',
+            value: '',
+            label: '',
+            icon: '',
+            hint: '',
+            disabled: false,
+          })
+        }
+        lastGroup = v.group
+        out.push({
+          key: `i:${v.id}`,
+          isHeading: false,
+          heading: '',
+          id: v.id,
+          optId: v.optId,
+          value: v.value,
+          label: v.label,
+          icon: v.icon,
+          hint: v.hint,
+          disabled: v.disabled,
+        })
+      }
+      return out
+    })
+
+    mount((host) => {
+      hostEl = host as HostBag & { open: boolean }
+      const h = hostEl
+      // items identity (live CmdkItem[]) — not a declared prop.
+      defineHostProperty(asSailHost(host) as HostBag, 'items', {
+        get: () => itemsSig(),
+        set: (v: CmdkItem[] | null) => {
+          itemsSig.set(Array.isArray(v) ? v : [])
+          highlight.set(0)
+        },
+      })
+      if (itemsSig().length === 0) {
+        const raw = hostGetAttr(host, 'items') ?? ''
+        const parsed = parseJsonItems(raw)
+        if (parsed.length > 0) itemsSig.set(parsed)
+      }
+
+      const scrollActiveIntoView = () => {
+        const list = listEl() as HostBag | null
+        const id = activeId() as string
+        if (!list || !id) return
+        // Scan by id (CSS.escape missing under jsdom).
+        let target: HostBag | null = null
+        for (const li of Array.from(list.querySelectorAll('li.item'))) {
+          if ((li).id === id) {
+            target = li as HostBag
+            break
+          }
+        }
+        target?.scrollIntoView?.({ block: 'nearest' })
+      }
+
+
+      let wasOpen = false
+      const stopOpenSync = effect(() => {
+        const isOpen = _ctx.open() === true
+        if (isOpen === wasOpen) return
+        wasOpen = isOpen
+        if (isOpen) {
+          query.set('')
+          highlight.set(0)
+          host.emit?.('sail-cmdk-open', {})
+          // Focus is grabbed by the dialog's own focus trap (the input is its
+          // first focusable); nudge the highlight into view once rows paint.
+          queueMicrotask(scrollActiveIntoView)
+        } else {
+          host.emit?.('sail-cmdk-close', {})
+        }
+      })
+
+      // `open` prop ⇄ the native modal. The platform owns top layer, focus
+      // trap, ESC and focus-return; the component owns this element, so it
+      // calls showModal()/close() directly and mirrors a native close (ESC,
+      // backdrop, form method=dialog) back into `open`.
+      const input = inputEl() as HostBag | null
+
+      const selectByItem = (item: VisibleItem | undefined) => {
+        if (!item || item.disabled) return
+        const payload = { id: item.id, value: item.value }
+        const fn = (h as { onSelect?: (d: { id: string; value: string }) => void }).onSelect
+        if (typeof fn === 'function') fn(payload)
+        host.emit?.('sail-cmdk-select', payload)
+        h.open = false
+      }
+
+      const onInput = () => {
+        highlight.set(0)
+        host.emit?.('sail-cmdk-input', { query: (query() as string) ?? '' })
+      }
+
+      const moveHighlight = (delta: number) => {
+        const list = navigable() as VisibleItem[]
+        const n = list.length
+        if (n === 0) return
+        const base = safeHighlight() as number
+        highlight.set((base + delta + n) % n)
+        queueMicrotask(scrollActiveIntoView)
+      }
+
+      const onKeydown = (e: DomEv) => {
+        const list = navigable() as VisibleItem[]
+        if (e.key === 'ArrowDown') {
+          e.preventDefault()
+          moveHighlight(1)
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault()
+          moveHighlight(-1)
+        } else if (e.key === 'Home') {
+          e.preventDefault()
+          highlight.set(0)
+          queueMicrotask(scrollActiveIntoView)
+        } else if (e.key === 'End') {
+          e.preventDefault()
+          highlight.set(Math.max(0, list.length - 1))
+          queueMicrotask(scrollActiveIntoView)
+        } else if (e.key === 'Enter') {
+          e.preventDefault()
+          selectByItem(list[safeHighlight() as number])
+        }
+        // Escape is intentionally untouched — the dialog's native `cancel`
+        // handler closes the modal and fires `sail-close`.
+      }
+
+      input?.addEventListener('input', onInput)
+      input?.addEventListener('keydown', onKeydown)
+
+      // Pointer commit. mousedown (before any blur/focus shuffle) selects the row.
+      const list = listEl() as HostBag | null
+      const onListMousedown = (e: DomEv) => {
+        const li = (e.target as HostBag | null)?.closest?.('li[data-id]') as HostBag | null
+        if (!li || hostGetAttr(li as HostBag, 'aria-disabled') === 'true') return
+        e.preventDefault()
+        const id = li.dataset.id ?? ''
+        const match = (visible() as VisibleItem[]).find((v) => v.id === id)
+        selectByItem(match)
+      }
+      list?.addEventListener('mousedown', onListMousedown)
+
+      // `show()` (not `open()`) — `open` is a declared <prop>, so its accessor
+      // owns that name; consumers open imperatively via `el.show()` or set
+      // `el.open = true` directly.
+      host.expose?.({
+        show: () => {
+          h.open = true
+        },
+        close: () => {
+          h.open = false
+        },
+        toggle: () => {
+          h.open = !_ctx.open()
+        },
+      })
+
+      return () => {
+        stopOpenSync()
+        input?.removeEventListener('input', onInput)
+        input?.removeEventListener('keydown', onKeydown)
+        list?.removeEventListener('mousedown', onListMousedown)
+      }
+    })
+
+    return {
+      itemsSig, query, highlight, listId,
+      dialogBridge, captureInput, captureList,
+      visible, navigable, safeHighlight, highlightId, activeId, rows,
+    }
+  })
+
+</controller>
+<dialog use:dialogBridge size={size()} backdrop="blur">
+  <column gap="0" style({ size({ min-h: 0 }).fg(foreground) })>    <span style({ display(contents).type({ family: body }) })>      <row align="center" gap="2" style({ grow(0).pad({ all: 3, x: 4 }).border(subtle-b) })>
+      <icon name="search" size="sm" style({ grow(0) })></icon>
+      <input type="text" flush autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls={listId()} aria-activedescendant={activeId()} aria-label={label()} placeholder={placeholder()} bind:value={query} use:captureInput style({ grow(1).size({ min-w: 0 }).type({ family: body, size: base, leading: normal }) })>
+    </row>
+    <ul role="listbox" id={listId()} aria-label={label()} use:captureList style({ grow(1).size({ min-h: 0, max-h: panel-max-h-sm }).pad(1).overflow({ y: auto }) })>
+      <for {rows() as row} key={row.key}>
+        <if {row.isHeading}>
+          <li role="presentation" style({ pad({ y: 2, b: 1 }).fg(muted-foreground).select(none).type(label) })>{row.heading}</li>
+        {else => <li role="option" id={row.optId} data-id={row.id} data-value={row.value} aria-selected={!row.disabled && row.id === highlightId() ? 'true' : 'false'} aria-disabled={row.disabled ? 'true' : 'false'} style({ pad(2).group().radius(sm).fg(foreground).cursor(pointer).select(none).type({ size: sm }), when: { selected: bg(selected-bg), disabled: fg(muted-foreground).cursor(default).filter({ opacity: 50 }) } })>
+            <if {row.icon !== ''}>
+              <icon name={row.icon} size="sm" style({ grow(0).fg(muted-foreground), when: { groupSelected: fg(foreground) } })></icon>
+            </if>
+            <span style({ grow(1).size({ min-w: 0 }).type({ wrap: truncate }) })>{row.label}</span>
+            <if {row.hint !== ''}>
+              <span style({ grow(0).margin({ l: auto }).fg(muted-foreground).type({ family: mono, size: xs }) })>{row.hint}</span>
+            </if>
+          </li>}</if>
+      </for>
+      <if {rows().length === 0}>
+        <li role="status" style({ pad({ all: 6, x: 4 }).fg(muted-foreground).type({ size: sm, align: center }) })>{emptyLabel()}</li>
+      </if>
+    </ul>
+    </span>
+</column>
+</dialog>

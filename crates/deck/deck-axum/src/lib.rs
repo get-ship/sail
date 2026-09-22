@@ -11,25 +11,23 @@ mod handlers;
 pub mod multiplex;
 pub mod pages;
 pub mod render_helpers;
-pub mod sui_source;
+pub mod sail_source;
 pub use handlers::{
-    serve_bundle_hmr,
-    serve_deck_route,
-    serve_meta,
-    serve_sui_dom, serve_sui_icon,
-    serve_sui_live_reload,
-    serve_sui_runtime,
-    serve_sui_sdk_client,
+    serve_bundle_hmr, serve_deck_route, serve_framework_font, serve_meta, serve_policy,
+    serve_sail_actions, serve_sail_compiler_wasm, serve_sail_dom, serve_sail_error_overlay,
+    serve_sail_icon, serve_sail_live_reload, serve_sail_lsp_completions,
+    serve_sail_lsp_diagnostics, serve_sail_motion, serve_sail_query, serve_sail_runtime,
+    serve_sail_sdk_client, serve_sail_studio_bridge, serve_sail_virtual,
 };
-// The named-view handlers (serve_sui_view_setup / serve_view_host /
-// serve_view_payload[_subpath]) moved to the `ship-views` crate. deck-axum's
+// The named-route handlers (serve_sail_route_setup / serve_route_host /
+// serve_route_payload[_subpath]) moved to the `ship-views` crate. deck-axum's
 // router serves ONLY deck's own framework + routes/ SPA surface.
 
 // Re-export the contract types so `deck`'s facade (and shipd through it)
 // can name them without depending on deck-core directly.
 pub use deck_core::{
-    CachePolicy, DaemonBuildInfo, DaemonMode, DeckResponse, ViewSetupQuery,
-    inject_mode_meta, mode_str,
+    CachePolicy, DaemonBuildInfo, DaemonMode, DeckResponse, RouteSetupQuery, inject_mode_meta,
+    mode_str,
 };
 
 use axum::{
@@ -76,15 +74,14 @@ pub fn into_axum(resp: DeckResponse) -> Response {
 /// the HMR firehose, and `/_deck/meta`. Paths mirror shipd's canonical `Route`
 /// enum so a host can mount this in lieu of wiring each handler.
 ///
-/// The named-view surface (`/_deck/view(s)/*`) is NO LONGER registered here —
+/// The named-route surface (`/_deck/view(s)/*`) is NO LONGER registered here —
 /// it moved to `ship_views::router()` (deck ⊥ ship-views). A host that serves
-/// views merges that router alongside this one.
+/// routes merges that router alongside this one.
 ///
-/// HMR and the state-aware SUI endpoints (sse/data/mutation/patch) are NOT
+/// HMR and the state-aware SAIL endpoints (sse/data/mutation/patch) are NOT
 /// registered here — they need host-supplied extensions or router state.
 /// `/_deck/meta` is registered here; hosts that need to inject a
 /// `DaemonBuildInfo` extension (shipd) simply layer it before mounting.
-
 // Route paths for the framework's CSS / theme / catalog surface. axum's
 // `Router::route` requires a `&'static str`, so we can't pass the
 // `deck_core::routes::DECK_API_ASSETS` const directly; instead, mirror the
@@ -92,6 +89,7 @@ pub fn into_axum(resp: DeckResponse) -> Response {
 // The corresponding `// /api/...` literal still appears nowhere else in the
 // production tree (verified by the boundary gate plus this const).
 const ROUTE_VIEW_TOKENS_CSS: &str = "/api/assets/view-tokens.css";
+const ROUTE_SAIL_CSS: &str = "/api/assets/sail.css";
 const ROUTE_THEME_CSS: &str = "/api/assets/theme.css";
 const ROUTE_THEMES_LIST: &str = "/api/v1/themes";
 
@@ -104,8 +102,15 @@ mod route_ssot {
     /// coded `/api/...` that drifts, this fails fast.
     #[test]
     fn routes_match_ssot() {
-        assert_eq!(super::ROUTE_VIEW_TOKENS_CSS, format!("{DECK_API_ASSETS}/view-tokens.css"));
-        assert_eq!(super::ROUTE_THEME_CSS, format!("{DECK_API_ASSETS}/theme.css"));
+        assert_eq!(
+            super::ROUTE_VIEW_TOKENS_CSS,
+            format!("{DECK_API_ASSETS}/view-tokens.css")
+        );
+        assert_eq!(super::ROUTE_SAIL_CSS, format!("{DECK_API_ASSETS}/sail.css"));
+        assert_eq!(
+            super::ROUTE_THEME_CSS,
+            format!("{DECK_API_ASSETS}/theme.css")
+        );
         assert_eq!(super::ROUTE_THEMES_LIST, "/api/v1/themes");
         // The `/_deck/*` half of the surface still uses literal strings
         // in axum route registration; spot-check a sample to prove no
@@ -115,7 +120,7 @@ mod route_ssot {
 }
 
 pub fn router() -> Router {
-    use pages::{serve_theme_css, serve_themes_list, serve_view_tokens};
+    use pages::{serve_route_tokens, serve_sail_css, serve_theme_css, serve_themes_list};
     // The root `/` and the `/{file}` SPA/public catch-all are HOST
     // concerns. The host mounts `serve_index` at `/` and the per-app
     // `serve_apps` for the app's routes + per-app `/{file}` catch-all.
@@ -126,45 +131,48 @@ pub fn router() -> Router {
     Router::new()
         // Shared CSS / theme assets (unauthenticated) — paths are the
         // canonical `Route` enum values (routes.rs is ground truth).
-        .route(ROUTE_VIEW_TOKENS_CSS, get(serve_view_tokens))
+        .route(ROUTE_VIEW_TOKENS_CSS, get(serve_route_tokens))
+        .route(ROUTE_SAIL_CSS, get(serve_sail_css))
         .route(ROUTE_THEME_CSS, get(serve_theme_css))
         .route(ROUTE_THEMES_LIST, get(serve_themes_list))
         // Per-tag component source viewer (dev studio deep-link).
-        .route("/_deck/source/{tag}", get(sui_source::serve_sui_source))
+        .route("/_deck/source/{tag}", get(sail_source::serve_sail_source))
         // HMR firehose — always mounted; the handler self-gates (empty SSE
         // when no bundler is wired), so no `if Development` guard is needed.
         .route("/_deck/dev/hmr", get(serve_bundle_hmr))
-        .route("/_deck/runtime.js", get(serve_sui_runtime))
-        .route("/_deck/dom.js", get(serve_sui_dom))
-        .route("/_deck/sdk-client.js", get(serve_sui_sdk_client))
+        .route("/_deck/runtime.js", get(serve_sail_runtime))
+        .route("/_deck/actions.js", get(serve_sail_actions))
+        .route("/_deck/motion.js", get(serve_sail_motion))
+        .route("/_deck/query.js", get(serve_sail_query))
+        .route("/_deck/virtual.js", get(serve_sail_virtual))
+        .route("/_deck/dom.js", get(serve_sail_dom))
+        .route("/_deck/sdk-client.js", get(serve_sail_sdk_client))
+        .route("/_deck/compiler-wasm.js", get(serve_sail_compiler_wasm))
+        .route("/_deck/lsp-completions.js", get(serve_sail_lsp_completions))
+        .route("/_deck/lsp-diagnostics.js", get(serve_sail_lsp_diagnostics))
         .route("/_deck/route.js", get(serve_deck_route))
-        .route("/_deck/icons/{file}", get(serve_sui_icon))
-        .route("/_deck/live-reload.js", get(serve_sui_live_reload))
-        // (formerly `/\_deck/{file}` → `serve_sui_chunk`) — purged:
-        // shared chunks from the multi-entry view build were served
-        // from `<root>/.deck/<chunk>.js`; the framework no longer reads
-        // a monorepo-root `.deck/` (deck-purge-root). View bundles that
-        // imported `../../<chunk>.js` no longer find their chunks at
-        // runtime — view chunk serving is a follow-up.
-        // (formerly `/\_deck/catalog/workspace` → `serve_catalog_workspace`)
-        // — purged with `packs::serve_catalog_workspace` and the
-        // `.deck/catalogs/workspace.json` write.
-        .route("/_deck/meta", get(serve_meta))
-        // The named-view routes (`/_deck/views/{name}/view.js`,
-        // `/_deck/views/{name}[/{*sub}]`, `/_deck/view/{name}[/{*sub}]`) moved to
-        // `ship_views::router()`. A host that serves views merges that router
-        // alongside this one; deck itself no longer carries the feature
-        // (deck ⊥ ship-views).
-        // `POST /_deck/mutation/{name}` — 410 tombstone. The progressive-
-        // enhancement form endpoint is gone; JS-attached mutations call the SDK
-        // directly. deck still composes this URL as the `<form mutation>`
-        // `action` (`deck_core::routes::mutation_action`) for the no-JS fallback,
-        // so the route answers 410 Gone rather than 404. A `/_deck/*` serving
-        // concern — lives here, not in the host's RPC surface.
+        .route("/_deck/icons/{file}", get(serve_sail_icon))
+        .route("/_deck/fonts/{file}", get(serve_framework_font))
+        .route("/_deck/live-reload.js", get(serve_sail_live_reload))
+        .route("/_deck/error-overlay.js", get(serve_sail_error_overlay))
         .route(
-            "/_deck/mutation/{name}",
-            axum::routing::post(|| async { StatusCode::GONE }),
+            "/_deck/sail-studio-bridge.js",
+            get(serve_sail_studio_bridge),
         )
+        // (formerly `/\_deck/{file}` → `serve_sail_chunk`) — purged:
+        // shared chunks from the multi-entry route build were served
+        // from `<root>/.deck/<chunk>.js`; the framework no longer reads
+        // a monorepo-root `.deck/` (deck-purge-root). Route bundles that
+        // imported `../../<chunk>.js` no longer find their chunks at
+        // runtime — route chunk serving is a follow-up.
+        .route("/_deck/meta", get(serve_meta))
+        // Compiler policy registry (SPEC-POLICY-1) — same JSON as CLI/MCP.
+        .route("/_deck/policy", get(serve_policy))
+    // The named-route endpoints (`/_deck/views/{name}/view.js`,
+    // `/_deck/views/{name}[/{*sub}]`, `/_deck/view/{name}[/{*sub}]`) moved to
+    // `ship_views::router()`. A host that serves routes merges that router
+    // alongside this one; deck itself no longer carries the feature
+    // (deck ⊥ ship-views).
     // The SPA / public-asset dispatch (`/{file}`) is host-driven; the
     // per-app `serve_apps` mounts it for the primary app. The host's
     // other routes (the connect fallback, `/api/*`, the per-app routes)
@@ -185,7 +193,9 @@ mod tests {
     use deck_core::DaemonMode;
 
     async fn body_string(resp: Response) -> String {
-        let bytes = axum::body::to_bytes(resp.into_body(), usize::MAX).await.unwrap();
+        let bytes = axum::body::to_bytes(resp.into_body(), usize::MAX)
+            .await
+            .unwrap();
         String::from_utf8(bytes.to_vec()).unwrap()
     }
 
@@ -194,9 +204,19 @@ mod tests {
         let dr = DeckResponse::js_asset("console.log(1)", DaemonMode::Development);
         let resp = into_axum(dr);
         assert_eq!(resp.status(), StatusCode::OK);
-        let ct = resp.headers().get(header::CONTENT_TYPE).unwrap().to_str().unwrap();
+        let ct = resp
+            .headers()
+            .get(header::CONTENT_TYPE)
+            .unwrap()
+            .to_str()
+            .unwrap();
         assert!(ct.contains("application/javascript"));
-        let cc = resp.headers().get(header::CACHE_CONTROL).unwrap().to_str().unwrap();
+        let cc = resp
+            .headers()
+            .get(header::CACHE_CONTROL)
+            .unwrap()
+            .to_str()
+            .unwrap();
         assert_eq!(cc, "no-cache");
         assert!(!resp.headers().contains_key(header::ETAG));
         assert_eq!(body_string(resp).await, "console.log(1)");
@@ -206,16 +226,19 @@ mod tests {
     async fn into_axum_prod_emits_etag() {
         let dr = DeckResponse::js_asset("x", DaemonMode::Production);
         let resp = into_axum(dr);
-        assert!(resp.headers().contains_key(header::ETAG), "prod must carry ETag");
+        assert!(
+            resp.headers().contains_key(header::ETAG),
+            "prod must carry ETag"
+        );
     }
 
     #[tokio::test(flavor = "multi_thread")]
     async fn into_axum_preserves_extra_headers() {
-        let dr = DeckResponse::js_view("v", DaemonMode::Development)
-            .with_header("X-Sui-View", "counter");
+        let dr = DeckResponse::js_route("v", DaemonMode::Development)
+            .with_header("X-Deck-Test", "counter");
         let resp = into_axum(dr);
         assert_eq!(
-            resp.headers().get("X-Sui-View").unwrap().to_str().unwrap(),
+            resp.headers().get("X-Deck-Test").unwrap().to_str().unwrap(),
             "counter"
         );
     }
@@ -242,8 +265,16 @@ mod tests {
 
         let resp = serve_bundle_hmr(None, None).await;
         assert_eq!(resp.status(), StatusCode::OK);
-        let ct = resp.headers().get(header::CONTENT_TYPE).unwrap().to_str().unwrap();
-        assert!(ct.contains("text/event-stream"), "must be SSE content-type; got {ct}");
+        let ct = resp
+            .headers()
+            .get(header::CONTENT_TYPE)
+            .unwrap()
+            .to_str()
+            .unwrap();
+        assert!(
+            ct.contains("text/event-stream"),
+            "must be SSE content-type; got {ct}"
+        );
     }
 
     /// serve_bundle_hmr with a CancellationToken that fires immediately must
@@ -251,8 +282,8 @@ mod tests {
     /// block the axum graceful-shutdown drain until every client disconnected.
     #[tokio::test(flavor = "multi_thread")]
     async fn serve_bundle_hmr_terminates_on_cancel_token() {
-        use axum::body::to_bytes;
         use crate::handlers::serve_bundle_hmr;
+        use axum::body::to_bytes;
         use tokio_util::sync::CancellationToken;
 
         let token = CancellationToken::new();
@@ -262,11 +293,7 @@ mod tests {
         // serve_bundle_hmr without a bundler (empty stream) — the test gates
         // that the handler accepts and honours the cancel extension without
         // panicking.
-        let resp = serve_bundle_hmr(
-            None,
-            Some(Extension(token)),
-        )
-        .await;
+        let resp = serve_bundle_hmr(None, Some(Extension(token))).await;
         assert_eq!(resp.status(), StatusCode::OK);
 
         // Consuming the body must complete (not block forever).

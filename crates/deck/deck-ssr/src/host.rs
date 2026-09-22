@@ -7,18 +7,18 @@
 //!
 //!   * `route.current` → the URL state the deck router already matched for
 //!     this request (the host KNOWS the params — it matched the route to pick
-//!     the view; server-side they are data, not a `window.location` re-parse).
+//!     the route module; server-side they are data, not a `window.location` re-parse).
 //!   * any other op → the real op surface via [`deck_core::DataPort`]. The
 //!     conformance data vocabulary is `<root>.demo.<method>`; the op string is
 //!     split on its first `.` into `(domain, op)` for `DataPort::resolve`.
 //!
-//! This is the seam the full view-host plugs the live op surface into.
+//! This is the seam the full route-host plugs the live op surface into.
 
 use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
 use deck_core::DataPort;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use ship_js::{Dispatch, DispatchError};
 
 /// A request-shaped host: the matched route + (optionally) the live data port.
@@ -30,7 +30,7 @@ pub struct SsrDispatch {
 
 impl SsrDispatch {
     /// Build for a matched request. `params`/`query` are the values the deck
-    /// router captured when it picked the view for this pathname.
+    /// router captured when it picked the route for this pathname.
     pub fn for_request(pathname: &str, params: Value, query: Value) -> Self {
         Self {
             route: json!({ "pathname": pathname, "params": params, "query": query }),
@@ -39,7 +39,7 @@ impl SsrDispatch {
         }
     }
 
-    /// Attach the live op surface so `<data>`/`<client>` ops resolve.
+    /// Attach the live op surface so controller query()/client ops resolve.
     pub fn with_data(mut self, data: Arc<dyn DataPort>) -> Self {
         self.data = Some(data);
         self
@@ -48,7 +48,12 @@ impl SsrDispatch {
     /// The recorded op names, in call order — the proof values came through
     /// the wire.
     pub fn call_path(&self) -> Vec<String> {
-        self.calls.lock().unwrap().iter().map(|(op, _)| op.clone()).collect()
+        self.calls
+            .lock()
+            .unwrap()
+            .iter()
+            .map(|(op, _)| op.clone())
+            .collect()
     }
 
     /// The params the host will answer `route.current` with.
@@ -60,7 +65,10 @@ impl SsrDispatch {
 #[async_trait]
 impl Dispatch for SsrDispatch {
     async fn call(&self, op: &str, args: Value) -> Result<Value, DispatchError> {
-        self.calls.lock().unwrap().push((op.to_string(), args.clone()));
+        self.calls
+            .lock()
+            .unwrap()
+            .push((op.to_string(), args.clone()));
         if op == "route.current" {
             return Ok(self.route.clone());
         }
@@ -70,6 +78,8 @@ impl Dispatch for SsrDispatch {
         {
             return Ok(v);
         }
-        Err(DispatchError::Terminal(format!("deck-ssr: no host op `{op}`")))
+        Err(DispatchError::Terminal(format!(
+            "deck-ssr: no host op `{op}`"
+        )))
     }
 }

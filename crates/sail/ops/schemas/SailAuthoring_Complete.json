@@ -1,0 +1,61 @@
+{
+  "service": "SailAuthoring",
+  "method": "Complete",
+  "mcp_tool": "sail_complete",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "column": {
+        "type": "integer",
+        "format": "uint32",
+        "minimum": 0.0
+      },
+      "line": {
+        "type": "integer",
+        "format": "uint32",
+        "minimum": 0.0
+      },
+      "path": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "source": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "column",
+      "line"
+    ]
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "CompleteRet",
+    "type": "object",
+    "required": [
+      "items"
+    ],
+    "properties": {
+      "items": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Json"
+        }
+      },
+      "typescriptStatus": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "definitions": {
+      "Json": {}
+    }
+  }
+}

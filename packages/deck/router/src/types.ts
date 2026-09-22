@@ -4,10 +4,11 @@
 // type-only consumer import from here; `index.ts` re-exports them so the
 // public `@ship/deck-router` surface is unchanged.
 
-import type { Signal } from '@ship/sui-runtime'
+import type { Signal } from '@ship/sail-runtime'
+import type { SailHead } from './document-head'
 
 /**
- * The reactive URL handle exposed to view scope as `route`.
+ * The reactive URL handle exposed to route scope as `route`.
  *
  * Each `params.<name>` and `query.<name>` is a `Signal<string | undefined>`
  * — call it to read the current value (and subscribe the surrounding
@@ -34,4 +35,6 @@ export interface RouteShape {
   pattern: string
   /** Optional name for debugging. */
   name?: string
+  /** Optional static apply slot when a route table carries one. Not authored as `<scope> head:`. */
+  head?: SailHead
 }

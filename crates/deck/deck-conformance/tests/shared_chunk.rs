@@ -1,15 +1,15 @@
-//! GAP 4 — Per-view tree-shake resolver + cross-view shared-chunk dedup.
+//! GAP 4 — Per-route tree-shake resolver + cross-route shared-chunk dedup.
 //!
 //! The deck-conformance app ships a `<demo-chip>` component in its own workspace
-//! package (`app/components/demo-chip`). Both `views/widgets` and
-//! `views/gallery` use the tag. The multi-entry build (`bundle_views`) must
+//! package (`app/components/demo-chip`). Both `routes/widgets` and
+//! `routes/gallery` use the tag. The multi-entry build (`bundle_routes`) must
 //! hoist `demo-chip`'s code into EXACTLY ONE shared chunk — not inline it into
-//! each view bundle.
+//! each route bundle.
 //!
 //! This test drives a real Rolldown build of the demo app and asserts:
 //!   1. `demo-chip`'s marker class (`demo-chip-marker`) appears in only ONE
-//!      `.js` file under `.deck/` — the shared chunk.
-//!   2. Both `views/widgets/view.js` AND `views/gallery/view.js` contain an
+//!      `.js` file under `.sail/` — the shared chunk.
+//!   2. Both `routes/widgets/route.js` AND `routes/gallery/route.js` contain an
 //!      `import` referencing that shared chunk filename.
 //!
 //! No browser. No daemon. Ship-free.
@@ -18,8 +18,8 @@
 
 use std::path::{Path, PathBuf};
 
+use deck::bundler::routes_bundle::bundle_routes;
 use deck::bundler::targets::{BundleLayout, BundleTarget, TargetEntry};
-use deck::bundler::views_bundle::bundle_views;
 use deck::config::DeckConfig;
 /// Repo root — two levels up from crates/deck/deck-conformance.
 fn repo_root() -> PathBuf {
@@ -30,7 +30,7 @@ fn repo_root() -> PathBuf {
         .to_path_buf()
 }
 
-/// The demo app dir (contains package.json with workspaces + views/).
+/// The demo app dir (contains package.json with workspaces + routes/).
 fn app_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("app")
 }
@@ -38,7 +38,9 @@ fn app_dir() -> PathBuf {
 /// Collect every `.js` file under `dir`, recursively.
 fn js_files(dir: &Path) -> Vec<PathBuf> {
     let mut out = Vec::new();
-    let Ok(entries) = std::fs::read_dir(dir) else { return out };
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return out;
+    };
     for e in entries.flatten() {
         let p = e.path();
         if p.is_dir() {
@@ -50,7 +52,7 @@ fn js_files(dir: &Path) -> Vec<PathBuf> {
     out
 }
 
-/// Build both demo-app views (`widgets` and `gallery`) in one multi-entry
+/// Build both demo-app routes (`widgets` and `gallery`) in one multi-entry
 /// Rolldown pass and assert the shared dedup invariant.
 #[tokio::test(flavor = "multi_thread")]
 async fn demo_chip_lands_in_one_shared_chunk_and_both_views_import_it() {
@@ -62,48 +64,49 @@ async fn demo_chip_lands_in_one_shared_chunk_and_both_views_import_it() {
     // workspaces. repo_root is set to `app` so the bundler treats the demo app
     // as the workspace root (same as how DECK_PROJECT_DIR == app_dir in the
     // live server). The output is redirected to a tempdir so the test never
-    // clobbers the committed .deck/ artifacts.
-    let layout = BundleLayout::with_config(app.clone(), None, DeckConfig::defaults()).with_out_root(out.path().to_path_buf());
+    // clobbers the committed generate-tree artifacts.
+    let layout = BundleLayout::with_config(app.clone(), None, DeckConfig::defaults())
+        .with_out_root(out.path().to_path_buf());
     let staging = out.path().join("_staging");
     std::fs::create_dir_all(&staging).unwrap();
 
     let widgets = BundleTarget {
-        name: "views/widgets/view".into(),
-        entry: TargetEntry::Real(app.join("views/widgets/page.sui")),
+        name: "routes/widgets/route".into(),
+        entry: TargetEntry::Real(app.join("routes/widgets/page.sail")),
         externals: vec![
-            "@ship/sui-runtime".into(),
-            "@ship/sui-dom".into(),
+            "@ship/sail-runtime".into(),
+            "@ship/sail-dom".into(),
             "@ship/sdk-client".into(),
         ],
-        out_file: "views/widgets/view.js".into(),
+        out_file: "routes/widgets/route.js".into(),
         lazy: false,
     };
     let gallery = BundleTarget {
-        name: "views/gallery/view".into(),
-        entry: TargetEntry::Real(app.join("views/gallery/page.sui")),
+        name: "routes/gallery/route".into(),
+        entry: TargetEntry::Real(app.join("routes/gallery/page.sail")),
         externals: vec![
-            "@ship/sui-runtime".into(),
-            "@ship/sui-dom".into(),
+            "@ship/sail-runtime".into(),
+            "@ship/sail-dom".into(),
             "@ship/sdk-client".into(),
         ],
-        out_file: "views/gallery/view.js".into(),
+        out_file: "routes/gallery/route.js".into(),
         lazy: false,
     };
 
     // The bundler uses `layout.repo_root` for the component_index lookup (the
     // CEM walk). Since `layout.repo_root == app`, it reads `app/package.json`
     // workspaces → `components/*` → discovers `@demo/demo-chip` → indexes
-    // `demo-chip` → resolves `@sui-tag/demo-chip` to the source .sui.
-    bundle_views(&layout, &[widgets, gallery], &staging, false)
+    // `demo-chip` → resolves `@sail-tag/demo-chip` to the source .sail.
+    bundle_routes(&layout, &[widgets, gallery], &staging, false)
         .await
-        .expect("multi-entry views bundle must succeed");
+        .expect("multi-entry routes bundle must succeed");
 
     // ── assertion 1: demo-chip code in exactly ONE chunk ──────────────────────
-    let deck_dir = out.path().join(".deck");
+    let deck_dir = out.path().join(".sail");
     let all_js = js_files(&deck_dir);
     assert!(
         !all_js.is_empty(),
-        ".deck/ must contain at least one JS file after the build"
+        ".sail/ must contain at least one JS file after the bake"
     );
 
     let chunks_with_marker: Vec<PathBuf> = all_js
@@ -132,21 +135,21 @@ async fn demo_chip_lands_in_one_shared_chunk_and_both_views_import_it() {
         .to_string_lossy()
         .to_string();
 
-    // ── assertion 2: both view bundles import the shared chunk ────────────────
-    let widgets_js = std::fs::read_to_string(out.path().join(".deck/views/widgets/view.js"))
-        .expect("views/widgets/view.js must exist after build");
-    let gallery_js = std::fs::read_to_string(out.path().join(".deck/views/gallery/view.js"))
-        .expect("views/gallery/view.js must exist after build");
+    // ── assertion 2: both route bundles import the shared chunk ───────────────
+    let widgets_js = std::fs::read_to_string(out.path().join(".sail/routes/widgets/route.js"))
+        .expect("routes/widgets/route.js must exist after bake");
+    let gallery_js = std::fs::read_to_string(out.path().join(".sail/routes/gallery/route.js"))
+        .expect("routes/gallery/route.js must exist after bake");
 
     assert!(
         widgets_js.contains(&shared_chunk_name),
-        "views/widgets/view.js must import the shared chunk `{shared_chunk_name}`; \
+        "routes/widgets/route.js must import the shared chunk `{shared_chunk_name}`; \
          got head:\n{}",
         &widgets_js[..widgets_js.len().min(400)]
     );
     assert!(
         gallery_js.contains(&shared_chunk_name),
-        "views/gallery/view.js must import the shared chunk `{shared_chunk_name}`; \
+        "routes/gallery/route.js must import the shared chunk `{shared_chunk_name}`; \
          got head:\n{}",
         &gallery_js[..gallery_js.len().min(400)]
     );
@@ -154,19 +157,19 @@ async fn demo_chip_lands_in_one_shared_chunk_and_both_views_import_it() {
     // Evidence print for CI logs.
     println!("shared chunk: {}", shared_chunk.display());
     println!(
-        "views/widgets/view.js imports: {}",
+        "routes/widgets/route.js imports: {}",
         extract_imports(&widgets_js).join(", ")
     );
     println!(
-        "views/gallery/view.js imports: {}",
+        "routes/gallery/route.js imports: {}",
         extract_imports(&gallery_js).join(", ")
     );
 
     // ── assertion 3: repo-root isolation ─────────────────────────────────────
     // The repo_root of the main monorepo must NOT be polluted — all output went
-    // to the tempdir, not to crates/deck/deck-conformance/app/.deck.
+    // to the tempdir, not to crates/deck/deck-conformance/app/.sail.
     let _ = &repo; // silence unused warning — repo_root is used only for isolation proof
-    let real_deck = app.join(".deck/views/widgets/view.js");
+    let real_deck = app.join(".sail/routes/widgets/route.js");
     assert!(
         !real_deck.exists() || {
             // If it exists from a prior run, verify our tempdir output differs.
@@ -174,7 +177,7 @@ async fn demo_chip_lands_in_one_shared_chunk_and_both_views_import_it() {
                 .map(|s| !s.contains("deck_test_isolation_sentinel"))
                 .unwrap_or(true)
         },
-        "build output must not be written to the real .deck/ dir during tests"
+        "bake output must not be written to the real app generate dir during tests"
     );
 }
 

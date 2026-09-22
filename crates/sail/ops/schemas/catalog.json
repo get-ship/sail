@@ -1,0 +1,2780 @@
+{
+  "package": "sail.ops.v1",
+  "methods": [
+    {
+      "service": "SailAuthoring",
+      "method": "Surface",
+      "mcp_tool": "sail_surface",
+      "description": "Progressive disclosure of the Sail authoring surface from compiler SSOT. Pass topic: core | layout | style | tokens | l1 | control-flow.",
+      "path": "/sail.ops.v1.SailAuthoring/Surface",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "topic": {
+            "description": "core | layout | style | tokens | l1 | control-flow",
+            "type": "string"
+          }
+        },
+        "required": [
+          "topic"
+        ]
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "SurfaceRet",
+        "type": "object",
+        "required": [
+          "markdown",
+          "topic"
+        ],
+        "properties": {
+          "markdown": {
+            "type": "string"
+          },
+          "topic": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "service": "SailAuthoring",
+      "method": "Check",
+      "mcp_tool": "sail_check",
+      "description": "Run Sail lint/compile diagnostics for a file path or inline source. Returns structured JSON diagnostics (severity, rule, message, line/col, optional rewrite FixPlan). Optional `fix`: off|suggest|apply for confluent allow-listed rewrites (sail-compose-rhythm, sail-compose-contrast, sail-compose-spacing, sail-no-raw-container, spinnaker typo, participation-style, display-on-layout, prefer-primitive). Prefer `source` for snippets; `path` is workspace-relative only (path escape refused — WI4).",
+      "path": "/sail.ops.v1.SailAuthoring/Check",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "description": "Attribution when fix=apply (e.g. `agent`, `human:name`).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fix": {
+            "description": "Auto-fix: `off` | `suggest` | `apply`. Default `off` (unattended). `suggest` attaches machine fix payloads without writing; `apply` rewrites the file when `path` is set (or returns fixed `source` when inline).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "includeTs": {
+            "description": "When true (default), merge mapped TypeScript diagnostics into structure/check results. Returns `typescriptStatus: missing` and omits TS diagnostics when the sidecar is absent.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "path": {
+            "description": "Workspace-relative path (WI4: path escape refused). Prefer with no `source` to read disk; absolute / `..` paths are PermissionDenied.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "description": "Inline source — unrestricted (source mode; WI4 leaves this unchanged).",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "CheckRet",
+        "type": "object",
+        "required": [
+          "count",
+          "diagnostics",
+          "ok"
+        ],
+        "properties": {
+          "autoFixed": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/definitions/Json"
+            }
+          },
+          "count": {
+            "type": "integer",
+            "format": "uint",
+            "minimum": 0.0
+          },
+          "diagnostics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Json"
+            }
+          },
+          "fixes": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/definitions/Json"
+            }
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "typescriptStatus": {
+            "description": "`\"live\"` or `\"missing\"`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      }
+    },
+    {
+      "service": "SailAuthoring",
+      "method": "Hover",
+      "mcp_tool": "sail_hover",
+      "description": "Typed hover at a 1-based .sail position. Uses sail-lsp virtual_ts + the TypeScript sidecar for controller/scope/template TS regions; structure symbols otherwise. Returns typescriptStatus: missing and omits TS diagnostics when the sidecar is absent.",
+      "path": "/sail.ops.v1.SailAuthoring/Hover",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "column": {
+            "description": "1-based column.",
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0.0
+          },
+          "line": {
+            "description": "1-based line (matches Check diagnostics / compiler hover).",
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0.0
+          },
+          "path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "column",
+          "line"
+        ]
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "HoverRet",
+        "type": "object",
+        "properties": {
+          "contents": {
+            "description": "Markdown hover contents. Empty/absent when nothing to show.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "range": {
+            "description": "Optional range in 1-based line/col.",
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Json"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "typescriptStatus": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      }
+    },
+    {
+      "service": "SailAuthoring",
+      "method": "Complete",
+      "mcp_tool": "sail_complete",
+      "description": "Completions at a 1-based .sail position. Proxies the TypeScript sidecar inside TS regions; falls back to structure scope symbols. Returns typescriptStatus: missing and omits TS diagnostics when the sidecar is absent.",
+      "path": "/sail.ops.v1.SailAuthoring/Complete",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "column": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0.0
+          },
+          "line": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0.0
+          },
+          "path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "column",
+          "line"
+        ]
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "CompleteRet",
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Json"
+            }
+          },
+          "typescriptStatus": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      }
+    },
+    {
+      "service": "SailAuthoring",
+      "method": "Edit",
+      "mcp_tool": "sail_edit",
+      "description": "Structured grammar-aware Sail edits (insert/replace/wrap/setAttr/removeAttr/setSx/move) or full-content check-guarded write (writeSource + empty ops + source body). Atomic; validates before write so the file never holds an uncompilable intermediate (applied:false leaves bytes unchanged). Supersedes retired sail_apply. Optional WI7 `identity` scopes the edit to a component (path from identity.file; nodeIds rewritten on drift). Response: applied, modelRevision, diagnostics, autoFixed[].",
+      "path": "/sail.ops.v1.SailAuthoring/Edit",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "description": "Attribution for applied auto-fixes.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "autofix": {
+            "description": "Auto-fix mode: `off` | `suggest` | `apply` (default `off`).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "dryRun": {
+            "description": "When true, validate and return result without writing disk.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "identity": {
+            "description": "WI7 element identity target. Scopes the edit to the resolved component (path from `identity.file`; ops nodeIds rewritten when the element moved).",
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Json"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ops": {
+            "description": "Atomic batch of structured ops (`insert`/`replace`/`wrap`/`setAttr`/ `removeAttr`/`setSx`/`move`). For full-content write pass `[]` with `writeSource: true` and the complete body in `source` (WI3 check-guard).",
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Json"
+            }
+          },
+          "path": {
+            "description": "Workspace-relative `.sail` path. Optional when `identity.file` is set (WI7 identity-scoped target).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "description": "Optional inline source (else file is read). With `writeSource: true` and empty `ops`, this is the full file body to check-guard and commit. Combined with dryRun for validate-only.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "writeSource": {
+            "description": "Full-content check-guarded write (WI3). When true with empty `ops` and a string `source`, run check on the body; on error diagnostics leave the file byte-identical and return `applied: false`; on success write and return diagnostics for the new state. Prefer over any patch DSL.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "ops"
+        ],
+        "definitions": {
+          "Json": {}
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "EditRet",
+        "type": "object",
+        "required": [
+          "applied",
+          "autoFixed",
+          "diagnostics",
+          "modelRevision"
+        ],
+        "properties": {
+          "applied": {
+            "type": "boolean"
+          },
+          "autoFixed": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Json"
+            }
+          },
+          "diagnostics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Json"
+            }
+          },
+          "identity": {
+            "description": "Resolved live identity when an identity-scoped edit was requested.",
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Json"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "modelRevision": {
+            "type": "string"
+          },
+          "path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      }
+    },
+    {
+      "service": "SailAuthoring",
+      "method": "LayoutCheck",
+      "mcp_tool": "sail_layout_check",
+      "description": "Taffy layout feedback for agents: multi-viewport diagnostics + computed box tree (x/y/w/h, collapsed flags). Run after layout edits. Prefer `source` for snippets.",
+      "path": "/sail.ops.v1.SailAuthoring/LayoutCheck",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "LayoutCheckRet",
+        "type": "object"
+      }
+    },
+    {
+      "service": "SailAuthoring",
+      "method": "ListFiles",
+      "mcp_tool": "sail_list_files",
+      "description": "List workspace-relative .sail paths under a project (routes/src/packs). Studio explorer seed.",
+      "path": "/sail.ops.v1.SailAuthoring/ListFiles",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project": {
+            "description": "Workspace-relative project root (e.g. `.` for an external app, or `apps/<name>` in a monorepo). Default: ops project.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ListFilesRet",
+        "type": "object",
+        "required": [
+          "files",
+          "ok",
+          "project"
+        ],
+        "properties": {
+          "files": {
+            "description": "Workspace-relative paths (`routes/page.sail`, `package.json`, …).",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "project": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "service": "SailAuthoring",
+      "method": "Policy",
+      "mcp_tool": "sail_policy",
+      "description": "Compiler policy registry (SPEC-POLICY-1). mode=list returns types/defaults/descriptions; mode=get returns the same rows plus resolved values. Same payload as `sail-compiler policy --json` and GET /_deck/policy.",
+      "path": "/sail.ops.v1.SailAuthoring/Policy",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "description": "`list` (registry rows) or `get` (registry + resolved values).",
+            "type": "string"
+          },
+          "project": {
+            "description": "Optional project directory for `get` (workspace-relative or absolute).",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "PolicyRet",
+        "type": "object"
+      }
+    },
+    {
+      "service": "SailInspect",
+      "method": "Inspect",
+      "mcp_tool": "sail_inspect",
+      "description": "IR query interface (TOOLING-1 WI5). Pass topic: tree | geometry | cascade | states | a11y | invalidations | uses | cost | themes. Read-only projections; tree nodes carry WI7 identity. Optional path, viewport (geometry), token (cascade), themeId, nodeId.",
+      "path": "/sail.ops.v1.SailInspect/Inspect",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "nodeId": {
+            "description": "Optional filter to one tree node id.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "description": "Workspace-relative `.sail` path (required for file topics).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "themeId": {
+            "description": "Cascade / themes: theme id filter.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "token": {
+            "description": "Cascade: design token path or cssName tail.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "topic": {
+            "description": "tree | geometry | cascade | states | a11y | invalidations | uses | cost | themes",
+            "type": "string"
+          },
+          "viewport": {
+            "description": "Geometry viewport `{ width, height }`.",
+            "anyOf": [
+              {
+                "$ref": "#/definitions/InspectViewport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "topic"
+        ],
+        "definitions": {
+          "InspectViewport": {
+            "type": "object",
+            "required": [
+              "height",
+              "width"
+            ],
+            "properties": {
+              "height": {
+                "type": "number",
+                "format": "double"
+              },
+              "width": {
+                "type": "number",
+                "format": "double"
+              }
+            }
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "InspectRet",
+        "type": "object",
+        "required": [
+          "modelVersion",
+          "topic"
+        ],
+        "properties": {
+          "modelVersion": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0.0
+          },
+          "topic": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "service": "SailInspect",
+      "method": "Model",
+      "mcp_tool": "sail_inspect_model",
+      "description": "Canonical per-file Sail model (tree, layout, state, diagnostics, data, theme). Source-derived; modelVersion 1.",
+      "path": "/sail.ops.v1.SailInspect/Model",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "viewport": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/InspectViewport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "definitions": {
+          "InspectViewport": {
+            "type": "object",
+            "required": [
+              "height",
+              "width"
+            ],
+            "properties": {
+              "height": {
+                "type": "number",
+                "format": "double"
+              },
+              "width": {
+                "type": "number",
+                "format": "double"
+              }
+            }
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "InspectModelRet",
+        "type": "object",
+        "required": [
+          "data",
+          "diagnostics",
+          "file",
+          "layout",
+          "modelVersion",
+          "state",
+          "theme",
+          "tree"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/definitions/Json"
+          },
+          "diagnostics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Json"
+            }
+          },
+          "file": {
+            "type": "string"
+          },
+          "layout": {
+            "$ref": "#/definitions/Json"
+          },
+          "modelVersion": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0.0
+          },
+          "source": {
+            "description": "Author `.sail` source (same bytes Model inspected). Studio Source view.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "state": {
+            "$ref": "#/definitions/Json"
+          },
+          "theme": {
+            "$ref": "#/definitions/Json"
+          },
+          "tree": {
+            "$ref": "#/definitions/Json"
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      }
+    },
+    {
+      "service": "SailInspect",
+      "method": "Tree",
+      "mcp_tool": "sail_inspect_tree",
+      "description": "IR element tree with span-keyed node ids for a .sail file.",
+      "path": "/sail.ops.v1.SailInspect/Tree",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "InspectTreeRet",
+        "type": "object",
+        "required": [
+          "file",
+          "modelVersion",
+          "nodes",
+          "roots"
+        ],
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "modelVersion": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0.0
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Json"
+            }
+          },
+          "roots": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      }
+    },
+    {
+      "service": "SailInspect",
+      "method": "State",
+      "mcp_tool": "sail_inspect_state",
+      "description": "Scope bindings with template readers/writers and SSR tier badges (S/I/C).",
+      "path": "/sail.ops.v1.SailInspect/State",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "InspectStateRet",
+        "type": "object",
+        "required": [
+          "bindings",
+          "file",
+          "modelVersion"
+        ],
+        "properties": {
+          "bindings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Json"
+            }
+          },
+          "file": {
+            "type": "string"
+          },
+          "modelVersion": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0.0
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      }
+    },
+    {
+      "service": "SailInspect",
+      "method": "TokenUsage",
+      "mcp_tool": "sail_inspect_token_usage",
+      "description": "Blast radius for a design token: component count + source sites (file + span).",
+      "path": "/sail.ops.v1.SailInspect/TokenUsage",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "InspectTokenUsageRet",
+        "type": "object",
+        "required": [
+          "components",
+          "sites",
+          "token"
+        ],
+        "properties": {
+          "componentIds": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "components": {
+            "type": "integer",
+            "format": "uint",
+            "minimum": 0.0
+          },
+          "sites": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Json"
+            }
+          },
+          "token": {
+            "type": "string"
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      }
+    },
+    {
+      "service": "SailTheme",
+      "method": "Graph",
+      "mcp_tool": "sail_theme_graph",
+      "description": "DTCG theme graph: tiers, {alias} edges, values from theme JSON only (never CSS).",
+      "path": "/sail.ops.v1.SailTheme/Graph",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "themeId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ThemeGraphRet",
+        "type": "object"
+      }
+    },
+    {
+      "service": "SailTheme",
+      "method": "List",
+      "mcp_tool": "sail_theme_list",
+      "description": "List theme JSON files under a directory. Path must be themes/** or packages/sail/tokens/model/themes.",
+      "path": "/sail.ops.v1.SailTheme/List",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ThemeListRet",
+        "type": "object",
+        "required": [
+          "files",
+          "ok",
+          "path"
+        ],
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "path": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "service": "SailTheme",
+      "method": "Read",
+      "mcp_tool": "sail_theme_read",
+      "description": "Read a project or catalog theme JSON file (workspace-relative path).",
+      "path": "/sail.ops.v1.SailTheme/Read",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ThemeReadRet",
+        "type": "object",
+        "required": [
+          "content",
+          "ok",
+          "path"
+        ],
+        "properties": {
+          "content": {
+            "type": "string"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "path": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "service": "SailTheme",
+      "method": "Write",
+      "mcp_tool": "sail_theme_write",
+      "description": "Write a project theme JSON. Allowlist: themes/**/*.json.",
+      "path": "/sail.ops.v1.SailTheme/Write",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "content",
+          "path"
+        ]
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ThemeWriteRet",
+        "type": "object",
+        "required": [
+          "bytes",
+          "ok",
+          "path"
+        ],
+        "properties": {
+          "bytes": {
+            "type": "integer",
+            "format": "uint",
+            "minimum": 0.0
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "path": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "service": "SailTheme",
+      "method": "Delete",
+      "mcp_tool": "sail_theme_delete",
+      "description": "Delete a project theme JSON. Allowlist: themes/**/*.json (catalog refused).",
+      "path": "/sail.ops.v1.SailTheme/Delete",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ThemeDeleteRet",
+        "type": "object",
+        "required": [
+          "ok",
+          "path"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "path": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "service": "SailTheme",
+      "method": "Fork",
+      "mcp_tool": "sail_theme_fork",
+      "description": "Fork a catalog or project theme into themes/. Optional new_id rewrites $extensions.ship.themeId.",
+      "path": "/sail.ops.v1.SailTheme/Fork",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "dest_path": {
+            "type": "string"
+          },
+          "new_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source_path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "dest_path",
+          "source_path"
+        ]
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ThemeForkRet",
+        "type": "object",
+        "properties": {
+          "dest_path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ok": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "service": "SailTheme",
+      "method": "Generate",
+      "mcp_tool": "sail_tokens_generate",
+      "description": "Run DTCG model → tokens CSS/registry generate. mode=package (full catalog) or mode=app (T0 effective set → project/.sail/themes/themes.css only).",
+      "path": "/sail.ops.v1.SailTheme/Generate",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "out": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "project": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "workspace": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ThemeGenerateRet",
+        "type": "object"
+      }
+    },
+    {
+      "service": "SailTheme",
+      "method": "EffectiveIds",
+      "mcp_tool": "sail_theme_effective_ids",
+      "description": "List effective theme ids for a project: project stems + catalog allowlist (T0 enabled ∩ catalog files).",
+      "path": "/sail.ops.v1.SailTheme/EffectiveIds",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "workspace": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ThemeEffectiveIdsRet",
+        "type": "object"
+      }
+    },
+    {
+      "service": "SailTheme",
+      "method": "DeriveScale",
+      "mcp_tool": "sail_theme_derive_scale",
+      "description": "Derive chromatic scale steps from anchors (engine). No file writes. anchors in, solid/hover/subtle/border/text out.",
+      "path": "/sail.ops.v1.SailTheme/DeriveScale",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "anchors": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Json"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "bg": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Json"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fg": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Json"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "overrides": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Json"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "theme": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Json"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ThemeDeriveScaleRet",
+        "type": "object",
+        "required": [
+          "mode",
+          "ok",
+          "scales"
+        ],
+        "properties": {
+          "derived": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mode": {
+            "type": "string"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "scales": {
+            "$ref": "#/definitions/Json"
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      }
+    },
+    {
+      "service": "SailTheme",
+      "method": "CheckTheme",
+      "mcp_tool": "sail_theme_check",
+      "description": "Contrast/contract gate on an in-memory theme (engine). Floor pairs fail. No file writes.",
+      "path": "/sail.ops.v1.SailTheme/CheckTheme",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "derive": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "theme": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Json"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ThemeCheckRet",
+        "type": "object",
+        "required": [
+          "contrastPairs",
+          "ok"
+        ],
+        "properties": {
+          "contrastPairs": {
+            "$ref": "#/definitions/Json"
+          },
+          "derived": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "errors": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      }
+    },
+    {
+      "service": "SailTheme",
+      "method": "Registry",
+      "mcp_tool": "sail_theme_registry",
+      "description": "Read registry v2 (schema, catalog ids, contrastPairs, metadata, optional full registry). No file writes.",
+      "path": "/sail.ops.v1.SailTheme/Registry",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "section": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "workspace": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ThemeRegistryRet",
+        "type": "object",
+        "required": [
+          "catalog",
+          "contrastPairs",
+          "metadata",
+          "ok",
+          "schema"
+        ],
+        "properties": {
+          "catalog": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "contrastPairs": {
+            "$ref": "#/definitions/Json"
+          },
+          "metadata": {
+            "$ref": "#/definitions/Json"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "registry": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Json"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "schema": {
+            "type": "string"
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      }
+    },
+    {
+      "service": "SailTheme",
+      "method": "FontSearch",
+      "mcp_tool": "sail_theme_font_search",
+      "description": "Search Google Fonts catalog (bundled) by family query + optional category/limit. Empty query returns popular families. Offline after catalog bake.",
+      "path": "/sail.ops.v1.SailTheme/FontSearch",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "description": "Optional category filter (e.g. `serif`, `sans-serif`, `display`, `mono`). `all` / empty is ignored. Backend normalizes case.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "limit": {
+            "description": "Max hits to return (clamped 1..=80 server-side; default 40).",
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "uint32",
+            "minimum": 0.0
+          },
+          "query": {
+            "description": "Family substring filter (case-insensitive). Empty → popularity order.",
+            "default": "",
+            "type": "string"
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ThemeFontSearchRet",
+        "type": "object",
+        "required": [
+          "ok"
+        ],
+        "properties": {
+          "catalogSize": {
+            "description": "Full catalog size before limit/filter (discoverer honesty).",
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "uint",
+            "minimum": 0.0
+          },
+          "category": {
+            "description": "Echo of applied category filter when present.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "uint",
+            "minimum": 0.0
+          },
+          "families": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "hits": {
+            "description": "Structured hits (family + category + popularity + mono). Preferred over families-only.",
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/ThemeFontSearchHit"
+            }
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "query": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "description": "Provenance label e.g. `bundled-google-fonts`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "definitions": {
+          "ThemeFontSearchHit": {
+            "type": "object",
+            "required": [
+              "family"
+            ],
+            "properties": {
+              "category": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "family": {
+                "type": "string"
+              },
+              "mono": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "popularity": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "uint32",
+                "minimum": 0.0
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "service": "SailTheme",
+      "method": "FontAdd",
+      "mcp_tool": "sail_theme_font_add",
+      "description": "Vendor a font family: download subsetted woff2 → project/fonts + @font-face + license manifest + typography tokens. Offline after selection; no runtime CDN.",
+      "path": "/sail.ops.v1.SailTheme/FontAdd",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "axes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "family": {
+            "type": "string"
+          },
+          "project": {
+            "description": "App root (project-relative; external app or monorepo `apps/<name>`). Defaults to ctx project / first apps/* with routes.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "family"
+        ]
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ThemeFontAddRet",
+        "type": "object"
+      }
+    },
+    {
+      "service": "SailDevServer",
+      "method": "Start",
+      "mcp_tool": "sail_dev_server_start",
+      "description": "Start (or ensure) a local sail dev server for a project so HMR/studio HTTP exists. Theme ops do not require a server.",
+      "path": "/sail.ops.v1.SailDevServer/Start",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "addr": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "project": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "project"
+        ]
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "DevServerStartRet",
+        "type": "object",
+        "properties": {
+          "addr": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ok": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "pid": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "uint32",
+            "minimum": 0.0
+          },
+          "project": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "service": "SailDevServer",
+      "method": "Status",
+      "mcp_tool": "sail_dev_server_status",
+      "description": "Status of the MCP-tracked dev server (running, url).",
+      "path": "/sail.ops.v1.SailDevServer/Status",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "DevServerStatusRet",
+        "type": "object",
+        "properties": {
+          "addr": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ok": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "pid": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "uint32",
+            "minimum": 0.0
+          },
+          "project": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "running": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "service": "SailDevServer",
+      "method": "Stop",
+      "mcp_tool": "sail_dev_server_stop",
+      "description": "Stop the MCP-started dev server only (does not kill unrelated sail dev processes).",
+      "path": "/sail.ops.v1.SailDevServer/Stop",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "DevServerStopRet",
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "pid": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "uint32",
+            "minimum": 0.0
+          },
+          "running": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "stopped": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "service": "SailTask",
+      "method": "List",
+      "mcp_tool": "sail_task_list",
+      "description": "List ephemeral project tasks under <project>/.sail/tasks (gitignored). Filters: status/label/actor/drift/open. Includes anchor drift.",
+      "path": "/sail.ops.v1.SailTask/List",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "description": "Filter by last comment actor: `human` | `agent` | `all`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "drift": {
+            "description": "Filter by drift: `ok` | `moved` | `lost` | `all`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "open": {
+            "description": "When true, only open statuses (backlog|todo|in_progress|review).",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "project": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "TaskListRet",
+        "type": "object",
+        "required": [
+          "ok",
+          "tasks"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "tasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Json"
+            }
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      }
+    },
+    {
+      "service": "SailTask",
+      "method": "Get",
+      "mcp_tool": "sail_task_get",
+      "description": "Get full task JSON (title, status, anchor, events, artifacts, drift).",
+      "path": "/sail.ops.v1.SailTask/Get",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "project": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "TaskGetRet",
+        "type": "object",
+        "required": [
+          "ok",
+          "task"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "task": {
+            "$ref": "#/definitions/Json"
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      }
+    },
+    {
+      "service": "SailTask",
+      "method": "Create",
+      "mcp_tool": "sail_task_create",
+      "description": "Create a task (ULID id) under <project>/.sail/tasks. Optional anchor + body. Ephemeral — not team SSOT.",
+      "path": "/sail.ops.v1.SailTask/Create",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/TaskActor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "anchor": {
+            "description": "WI7 identity / A-anchor `{ nodeId, elementPath?, contentHash?, file?, span?, locator? }`.",
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Json"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "body": {
+            "description": "Optional initial comment body.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "labels": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "project": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "route": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "definitions": {
+          "Json": {},
+          "TaskActor": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "TaskCreateRet",
+        "type": "object"
+      }
+    },
+    {
+      "service": "SailTask",
+      "method": "Update",
+      "mcp_tool": "sail_task_update",
+      "description": "Update task fields. Status changes append a status event (any→any in v1).",
+      "path": "/sail.ops.v1.SailTask/Update",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/TaskActor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "assignee": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/TaskActor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "labels": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "project": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "route": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "definitions": {
+          "TaskActor": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "TaskUpdateRet",
+        "type": "object"
+      }
+    },
+    {
+      "service": "SailTask",
+      "method": "Comment",
+      "mcp_tool": "sail_task_comment",
+      "description": "Append a comment to the task thread.",
+      "path": "/sail.ops.v1.SailTask/Comment",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/TaskActor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "body": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "project": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "body",
+          "id"
+        ],
+        "definitions": {
+          "TaskActor": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "TaskCommentRet",
+        "type": "object"
+      }
+    },
+    {
+      "service": "SailTask",
+      "method": "AddArtifact",
+      "mcp_tool": "sail_task_add_artifact",
+      "description": "Attach an artifact (≤5MB). kind file|render; render carries region metadata. content_base64+filename or path.",
+      "path": "/sail.ops.v1.SailTask/AddArtifact",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/TaskActor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "content_base64": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "filename": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "description": "`file` (default) | `render` (region/viewport crop).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "mime": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "project": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "region": {
+            "description": "Region metadata for `kind: \"render\"` (nodeId, rect, …).",
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Json"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "definitions": {
+          "Json": {},
+          "TaskActor": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "TaskAddArtifactRet",
+        "type": "object"
+      }
+    },
+    {
+      "service": "SailTask",
+      "method": "AgentNote",
+      "mcp_tool": "sail_task_agent_note",
+      "description": "Append an agent progress/summary note (actor kind=agent).",
+      "path": "/sail.ops.v1.SailTask/AgentNote",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/TaskActor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "body": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "project": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "body",
+          "id"
+        ],
+        "definitions": {
+          "TaskActor": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "TaskAgentNoteRet",
+        "type": "object"
+      }
+    },
+    {
+      "service": "SailTask",
+      "method": "ThreadCreate",
+      "mcp_tool": "sail_task_thread_create",
+      "description": "Create an A-anchored thread (required WI7 identity anchor { nodeId, elementPath?, contentHash?, locator? }). Same store as Create.",
+      "path": "/sail.ops.v1.SailTask/ThreadCreate",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/TaskActor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "anchor": {
+            "description": "Required WI7 identity / A-anchor `{ nodeId, elementPath?, contentHash?, file?, span?, locator? }`.",
+            "allOf": [
+              {
+                "$ref": "#/definitions/Json"
+              }
+            ]
+          },
+          "body": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "labels": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "project": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "route": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "anchor",
+          "title"
+        ],
+        "definitions": {
+          "Json": {},
+          "TaskActor": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "TaskThreadCreateRet",
+        "type": "object"
+      }
+    },
+    {
+      "service": "SailTask",
+      "method": "ThreadReply",
+      "mcp_tool": "sail_task_thread_reply",
+      "description": "Reply on a thread (comment with actor attribution).",
+      "path": "/sail.ops.v1.SailTask/ThreadReply",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/TaskActor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "body": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "project": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "body",
+          "id"
+        ],
+        "definitions": {
+          "TaskActor": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "TaskThreadReplyRet",
+        "type": "object"
+      }
+    },
+    {
+      "service": "SailTask",
+      "method": "ThreadList",
+      "mcp_tool": "sail_task_thread_list",
+      "description": "List threads with anchor drift (ok|moved|lost). Filters: open/actor/drift/status.",
+      "path": "/sail.ops.v1.SailTask/ThreadList",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "drift": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "open": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "project": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "TaskThreadListRet",
+        "type": "object",
+        "required": [
+          "ok",
+          "tasks"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "tasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Json"
+            }
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      }
+    },
+    {
+      "service": "SailTask",
+      "method": "Reanchor",
+      "mcp_tool": "sail_task_reanchor",
+      "description": "Explicitly re-anchor a thread to a new node (lost never rebinds silently).",
+      "path": "/sail.ops.v1.SailTask/Reanchor",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/TaskActor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "anchor": {
+            "$ref": "#/definitions/Json"
+          },
+          "id": {
+            "type": "string"
+          },
+          "project": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "anchor",
+          "id"
+        ],
+        "definitions": {
+          "Json": {},
+          "TaskActor": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "TaskReanchorRet",
+        "type": "object"
+      }
+    },
+    {
+      "service": "SailTask",
+      "method": "CommitIntent",
+      "mcp_tool": "sail_task_commit_intent",
+      "description": "Export thread as a decision record under <project>/decisions/ (committable). .sail/tasks stays gitignored.",
+      "path": "/sail.ops.v1.SailTask/CommitIntent",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/TaskActor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "project": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "definitions": {
+          "TaskActor": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "TaskCommitIntentRet",
+        "type": "object"
+      }
+    },
+    {
+      "service": "SailRender",
+      "method": "Screenshot",
+      "mcp_tool": "sail_render",
+      "description": "Static themed screenshot from a .sail file or inline source (no browser). Returns PNG base64 + regions (node ids) + dynamics list.",
+      "path": "/sail.ops.v1.SailRender/Screenshot",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "description": "`light` | `dark` (data-mode).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "theme": {
+            "description": "Theme id (e.g. `ship`). Mode may be folded as `ship-dark`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "viewport": {
+            "description": "`WxH` string or `{width,height}` object."
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "RenderScreenshotRet",
+        "type": "object",
+        "required": [
+          "dynamics",
+          "imagePng",
+          "ms",
+          "regions",
+          "theme",
+          "viewport"
+        ],
+        "properties": {
+          "dynamics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Json"
+            }
+          },
+          "file": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "imagePng": {
+            "type": "string"
+          },
+          "ms": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0.0
+          },
+          "regions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Json"
+            }
+          },
+          "theme": {
+            "type": "string"
+          },
+          "viewport": {
+            "$ref": "#/definitions/Json"
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      }
+    }
+  ]
+}

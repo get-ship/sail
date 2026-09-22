@@ -1,10 +1,10 @@
 //! Slice-1 reliability sweep: run a representative, feature-diverse set of
-//! REAL views + components through the synthetic emit → Rolldown bundle →
+//! REAL routes + components through the synthetic emit → Rolldown bundle →
 //! ship-js (deno_core/V8) SSR, and catalog which render correctly + reliably.
 //!
 //! This is the ship-js (SSR) half of the slice's reliability proof. The CSR /
 //! hydration half (the client `__mount` + `hydrate` contract, jsdom) lives in
-//! `crates/sui/compiler/tests/synthetic_client_jsdom.rs`; the tsgo-green half
+//! `crates/sail/compiler/tests/synthetic_client_jsdom.rs`; the tsgo-green half
 //! in `synthetic_client_tsc.rs`. Together they answer the load-bearing
 //! question: do real-world surfaces render reliably through the JS engine?
 //!
@@ -15,28 +15,29 @@
 //! Heavy (V8 + a Rolldown bundle per target). Opt-in via the normal test gate;
 //! run with `cargo test -p deck-ssr --test reliability -- --nocapture`.
 
-use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Instant;
 
-use deck_ssr::build::{repo_root, synthesize_and_bundle_with, ClientAlias};
+use deck_core::DataPort;
+use deck_ssr::build::{ClientAlias, repo_root, synthesize_and_bundle_with};
 use deck_ssr::host::SsrDispatch;
 use deck_ssr::run::render;
-use deck_core::DataPort;
-use serde_json::{json, Value};
-use sui_compiler::emit::synthetic::{emit_synthetic, AppManifest};
-use sui_compiler::parse::parse;
-use sui_compiler::CompileMode;
+use sail_compiler::CompileMode;
+use sail_compiler::emit::synthetic::{AppManifest, emit_synthetic};
+use sail_compiler::parse::parse;
+use serde_json::{Value, json};
 
 const CONF: &str = "crates/deck/deck-conformance/app";
-// `job/cut-app-manifest` deleted the per-app `app.manifest.jsonc` files for
-// the `hub /` and `views/showcase` targets — `route` / `navigate` now resolve
-// by convention (`sui_compiler::emit::synthetic::convention_client`) so
-// product apps no longer need one. The conformance manifest is the one
-// remaining checked-in manifest; it covers the `hub /` and `views/showcase`
-// cases (its `ship` / `api` declarations are tree-shaken when unused, and
-// the convention covers the `route` reads the two views carry).
+// Product apps no longer carry per-app `app.manifest.jsonc` for the hub /
+// showcase targets: deck injects `route` / `navigate` into the manifest itself
+// on its build path (`deck_core::host_context::host_context_clients`). The
+// compiler has no convention fallback — a name resolves through the manifest
+// or not at all. The conformance manifest is the remaining checked-in
+// manifest; it covers hub / showcase cases (its `ship` / `api` declarations
+// are tree-shaken when unused, and deck's injection covers the `route` reads
+// those routes carry).
 const CONF_MANIFEST: &str = "crates/deck/deck-conformance/app/app.manifest.jsonc";
 const HUB_MANIFEST: &str = "crates/deck/deck-conformance/app/app.manifest.jsonc";
 const VIEWS_MANIFEST: &str = "crates/deck/deck-conformance/app/app.manifest.jsonc";
@@ -48,13 +49,13 @@ struct Target {
     name: &'static str,
     /// Feature surface this target exercises (for the table).
     features: &'static str,
-    /// `.sui` source, repo-relative.
+    /// `.sail` source, repo-relative.
     source: String,
     /// App manifest, repo-relative.
     manifest: &'static str,
     /// Sibling authored controller, repo-relative (when present).
     controller: Option<String>,
-    /// Does it read `<data>`/`<client>` ops (needs the demo client alias)?
+    /// Does it read controller data/client ops (needs the demo client alias)?
     needs_data: bool,
     /// Request pathname + route params (for `[id]` routes).
     pathname: &'static str,
@@ -75,8 +76,8 @@ struct Outcome {
     note: String,
 }
 
-/// The demo data surface: answers the ops the conformance data-views call.
-/// `ship.demo.boom` is deliberately absent — boom's `<data>` thunk must throw
+/// The demo data surface: answers the ops the conformance data-routes call.
+/// `ship.demo.boom` is deliberately absent — boom's query() thunk must throw
 /// (the error-boundary fixture), proving the error branch renders.
 struct DemoData;
 impl DataPort for DemoData {
@@ -96,10 +97,12 @@ impl DataPort for DemoData {
 }
 
 fn conf(view: &str) -> String {
-    format!("{CONF}/views/{view}/page.sui")
+    format!("{CONF}/routes/{view}/page.sail")
 }
-fn conf_ctrl(view: &str) -> Option<String> {
-    Some(format!("{CONF}/views/{view}/controller.ts"))
+fn conf_ctrl(_view: &str) -> Option<String> {
+    // Conformance routes carry their controller INLINE (`<controller>` block); the
+    // SSR bundler reads it directly — no sibling controller.ts path.
+    None
 }
 
 fn targets() -> Vec<Target> {
@@ -115,11 +118,11 @@ fn targets() -> Vec<Target> {
         expect,
     };
     vec![
-        // ── Launch-relevant: hub / and a real view-host view ───────────────
+        // ── Launch-relevant: hub / and a real route-host route ─────────────
         Target {
             name: "hub /",
             features: "text-binding, slots, custom-element chrome, authored controller",
-            source: "apps/hub/routes/page.sui".to_string(),
+            source: "apps/hub/routes/page.sail".to_string(),
             manifest: HUB_MANIFEST,
             controller: Some("apps/hub/routes/controller.ts".to_string()),
             needs_data: false,
@@ -130,24 +133,73 @@ fn targets() -> Vec<Target> {
             expect: "Your Ship workspace",
         },
         Target {
-            name: "views/showcase",
+            name: "routes/showcase",
             features: "static gallery, attribute props, custom-element charts, nesting",
-            source: "views/showcase/page.sui".to_string(),
+            source: "routes/showcase/page.sail".to_string(),
             manifest: VIEWS_MANIFEST,
             controller: None,
             needs_data: false,
             pathname: "/showcase",
             params: json!({}),
-            expect: "sui-area-chart",
+            expect: "sail-area-chart",
         },
-        // ── Control flow + bindings (conformance views) ────────────────────
-        v("board", "{#if}, {#for} keyed, class:, on:, nested component", "board", conf_ctrl("board"), false, "Alpha"),
-        v("counter", "on:, signal reactivity", "counter", conf_ctrl("counter"), false, "<button"),
-        v("todos", "{#for} keyed, {#if}, {#while}, class:, <data live>, form mutation", "todos", None, true, "ship it"),
-        v("feed", "{#while}, <data live>, <client>", "feed", None, true, "state"),
-        v("boom", "{#if}, {#while}, <data live> error branch", "boom", None, true, ""),
-        v("clock", "{#if}, {#while}, <data live>", "clock", None, true, ""),
-        v("glyph", "inline SVG, namespaced serialization", "glyph", None, false, "<svg"),
+        // ── Control flow + bindings (conformance routes) ───────────────────
+        v(
+            "board",
+            "{#if}, {#for} keyed, class:, on:, nested component",
+            "board",
+            conf_ctrl("board"),
+            false,
+            "Alpha",
+        ),
+        v(
+            "counter",
+            "on:, signal reactivity",
+            "counter",
+            conf_ctrl("counter"),
+            false,
+            "<button",
+        ),
+        v(
+            "todos",
+            "{#for} keyed, {#if}, {#while}, class:, controller live(), form mutation",
+            "todos",
+            None,
+            true,
+            "ship it",
+        ),
+        v(
+            "feed",
+            "{#while}, controller live() over host-dispatch",
+            "feed",
+            None,
+            true,
+            "state",
+        ),
+        v(
+            "boom",
+            "{#if}, {#while}, controller live() error branch",
+            "boom",
+            None,
+            true,
+            "",
+        ),
+        v(
+            "clock",
+            "{#if}, {#while}, controller live()",
+            "clock",
+            None,
+            true,
+            "",
+        ),
+        v(
+            "glyph",
+            "inline SVG, namespaced serialization",
+            "glyph",
+            None,
+            false,
+            "<svg",
+        ),
         Target {
             name: "greet/[id]",
             features: "dynamic route params (route.params.id)",
@@ -159,18 +211,95 @@ fn targets() -> Vec<Target> {
             params: json!({ "id": "zelda" }),
             expect: "zelda",
         },
-        v("hello", "constant folding, static markup", "hello", None, false, ""),
-        v("widgets", "repeated nested component (shared-chunk)", "widgets", None, false, "demo-chip"),
-        v("gallery", "on:, class:, authored controller, nested", "gallery", conf_ctrl("gallery"), false, ""),
-        // ── Component-gallery views (render real component tags) ────────────
-        v("gallery-sui-primitives", "{#if}, bind:, on:, style:, transitions, nested", "gallery-sui-primitives", conf_ctrl("gallery-sui-primitives"), false, ""),
-        v("gallery-sui-charts", "static chart components", "gallery-sui-charts", None, false, ""),
-        v("gallery-sui-media", "static media components", "gallery-sui-media", None, false, ""),
-        v("gallery-sui-viewer", "static viewer component", "gallery-sui-viewer", None, false, ""),
-        v("gallery-ship-markdown", "static markdown component", "gallery-ship-markdown", None, false, ""),
-        v("gallery-ship-pdf", "style:, transitions", "gallery-ship-pdf", None, false, ""),
-        v("gallery-ship-arcade", "on:, transitions", "gallery-ship-arcade", None, false, ""),
-        v("gallery-ship-code", "on:, code viewer component", "gallery-ship-code", None, false, ""),
+        v(
+            "hello",
+            "constant folding, static markup",
+            "hello",
+            None,
+            false,
+            "",
+        ),
+        v(
+            "widgets",
+            "repeated nested component (shared-chunk)",
+            "widgets",
+            None,
+            false,
+            "demo-chip",
+        ),
+        v(
+            "gallery",
+            "on:, class:, authored controller, nested",
+            "gallery",
+            conf_ctrl("gallery"),
+            false,
+            "",
+        ),
+        // ── Component-gallery routes (render real component tags) ───────────
+        v(
+            "gallery-sail-primitives",
+            "{#if}, bind:, on:, style:, transitions, nested",
+            "gallery-sail-primitives",
+            conf_ctrl("gallery-sail-primitives"),
+            false,
+            "",
+        ),
+        v(
+            "gallery-sail-charts",
+            "static chart components",
+            "gallery-sail-charts",
+            None,
+            false,
+            "",
+        ),
+        v(
+            "gallery-sail-media",
+            "static media components",
+            "gallery-sail-media",
+            None,
+            false,
+            "",
+        ),
+        v(
+            "gallery-sail-viewer",
+            "static viewer component",
+            "gallery-sail-viewer",
+            None,
+            false,
+            "",
+        ),
+        v(
+            "gallery-ship-markdown",
+            "static markdown component",
+            "gallery-ship-markdown",
+            None,
+            false,
+            "",
+        ),
+        v(
+            "gallery-ship-pdf",
+            "style:, transitions",
+            "gallery-ship-pdf",
+            None,
+            false,
+            "",
+        ),
+        v(
+            "gallery-ship-arcade",
+            "on:, transitions",
+            "gallery-ship-arcade",
+            None,
+            false,
+            "",
+        ),
+        v(
+            "gallery-ship-code",
+            "on:, code viewer component",
+            "gallery-ship-code",
+            None,
+            false,
+            "",
+        ),
     ]
 }
 
@@ -185,8 +314,10 @@ fn run_target(repo: &Path, t: &Target) -> Outcome {
         note: String::new(),
     };
 
-    let build_dir = repo.join("target/deck-ssr-reliability").join(sanitize(t.name));
-    // Always alias the demo client. A view-host always has its clients
+    let build_dir = repo
+        .join("target/deck-ssr-reliability")
+        .join(sanitize(t.name));
+    // Always alias the demo client. A route-host always has its clients
     // available; aliasing an UNused client is harmless (tree-shaken). This
     // also absorbs the synthetic scan's string-literal false positive —
     // `class:active={x === 'ship-light'}` trips the free-identifier scan on
@@ -201,7 +332,10 @@ fn run_target(repo: &Path, t: &Target) -> Outcome {
 
     // Synthesize + bundle (panics → recorded as a bundle failure, not abort).
     let bundle = catch_unwind(AssertUnwindSafe(|| {
-        let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
+        let rt = tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap();
         rt.block_on(synthesize_and_bundle_with(
             repo,
             &t.source,
@@ -287,15 +421,25 @@ fn slice1_reliability_sweep() {
     // launch-relevant core (hub /, showcase, board, counter, glyph,
     // greet/[id]) renders correctly — a regression in those is a real break.
     //
-    // `hub /` + `views/showcase` source from the `apps/` and `views/` trees,
+    // `hub /` + `routes/showcase` source from the `apps/` and `routes/` trees,
     // which live OUTSIDE the framework repo (the framework/app boundary split).
-    // When their `.sui` source is absent here, skip the gate with a note rather
+    // When their `.sail` source is absent here, skip the gate with a note rather
     // than fail — the conformance core (board, counter, glyph, greet/[id]) is
     // the in-repo fidelity floor. In an app repo (apps/ present) all six are
     // required again, unchanged.
-    let core = ["hub /", "views/showcase", "board", "counter", "glyph", "greet/[id]"];
+    let core = [
+        "hub /",
+        "routes/showcase",
+        "board",
+        "counter",
+        "glyph",
+        "greet/[id]",
+    ];
     for name in core {
-        let o = outcomes.iter().find(|o| o.name == name).expect("core target present");
+        let o = outcomes
+            .iter()
+            .find(|o| o.name == name)
+            .expect("core target present");
         let src = targets
             .iter()
             .find(|t| t.name == name)
@@ -304,11 +448,15 @@ fn slice1_reliability_sweep() {
         if !repo.join(&src).exists() {
             eprintln!(
                 "SKIP core target `{name}`: source `{src}` absent — \
-                 apps/ or views/ content outside the framework boundary"
+                 apps/ or routes/ content outside the framework boundary"
             );
             continue;
         }
-        assert!(o.correct, "core target `{}` must render correctly: {}", name, o.note);
+        assert!(
+            o.correct,
+            "core target `{}` must render correctly: {}",
+            name, o.note
+        );
     }
 }
 
@@ -321,12 +469,21 @@ fn slice1_warm_ssr_latency() {
     // pooled warm latency, not the floor.
     let repo = repo_root().expect("repo root");
     let samples: Vec<(&str, String, &str, Option<String>, &str)> = vec![
-        ("hub /", "apps/hub/routes/page.sui".to_string(), HUB_MANIFEST, Some("apps/hub/routes/controller.ts".to_string()), "/"),
-        ("board", conf("board"), CONF_MANIFEST, Some(format!("{CONF}/views/board/controller.ts")), "/"),
+        (
+            "hub /",
+            "apps/hub/routes/page.sail".to_string(),
+            HUB_MANIFEST,
+            Some("apps/hub/routes/controller.ts".to_string()),
+            "/",
+        ),
+        ("board", conf("board"), CONF_MANIFEST, None, "/"),
         ("glyph", conf("glyph"), CONF_MANIFEST, None, "/"),
     ];
     const N: usize = 9;
-    let mut lines = vec!["## Warm ship-js SSR latency (median of warm runs)\n".to_string(), format!("N = {N} renders per target (first dropped as cold), fresh isolate per render.\n")];
+    let mut lines = vec![
+        "## Warm ship-js SSR latency (median of warm runs)\n".to_string(),
+        format!("N = {N} renders per target (first dropped as cold), fresh isolate per render.\n"),
+    ];
     lines.push("| target | warm median | min | max |".to_string());
     lines.push("|---|---|---|---|".to_string());
     for (name, source, manifest, ctrl, pathname) in &samples {
@@ -343,10 +500,19 @@ fn slice1_warm_ssr_latency() {
         }
         let build_dir = repo.join("target/deck-ssr-latency").join(sanitize(name));
         let ctrl_abs = ctrl.as_ref().map(|c| repo.join(c));
-        let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
+        let rt = tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap();
         let bundle = rt
             .block_on(synthesize_and_bundle_with(
-                &repo, source, manifest, CompileMode::Component, ctrl_abs.as_deref(), &[], &build_dir,
+                &repo,
+                source,
+                manifest,
+                CompileMode::Component,
+                ctrl_abs.as_deref(),
+                &[],
+                &build_dir,
             ))
             .expect("bundle latency sample");
         let mut times = Vec::new();
@@ -380,60 +546,79 @@ fn slice1_warm_ssr_latency() {
     eprintln!("\nwrote {}", out_path.display());
 }
 
-/// The hub `/` launch closure is built from `@ship/sui-primitives` chrome
+/// The hub `/` launch closure is built from `@ship/sail-components/primitives` chrome
 /// components — and they are PROPFUL, which the synthetic emit rejects today
 /// (gap G1: props flow in at mount; the standalone synthetic controller can't
 /// model them). This catalogs that concretely on the ACTUAL closure, so the
 /// dominant sweep gap has honest, measurable counts rather than prose. The
-/// view hub `/` still renders (its chrome SSRs as custom-element tags); it is
+/// route hub `/` still renders (its chrome SSRs as custom-element tags); it is
 /// the components THEMSELVES that the synthetic emit can't yet synthesize.
 #[test]
 fn slice1_hub_closure_component_catalog() {
     let repo = repo_root().expect("repo root");
     let manifest = AppManifest::parse("{}").expect("empty manifest");
     let closure = [
-        "packages/components/sui/primitives/src/sui-nav-top/sui-nav-top.sui",
-        "packages/components/sui/primitives/src/sui-brand-mark/sui-brand-mark.sui",
-        "packages/components/sui/primitives/src/sui-theme-picker/sui-theme-picker.sui",
-        "packages/components/sui/primitives/src/sui-account-chip/sui-account-chip.sui",
-        "packages/components/sui/primitives/src/sui-icon/sui-icon.sui",
-        "packages/components/sui/primitives/src/sui-popover/sui-popover.sui",
+        "packages/components/sail/primitives/src/sail-navbar/sail-navbar.sail",
+        "packages/components/sail/primitives/src/sail-brand-mark/sail-brand-mark.sail",
+        "packages/components/sail/primitives/src/sail-theme-picker/sail-theme-picker.sail",
+        "packages/components/sail/primitives/src/sail-account-chip/sail-account-chip.sail",
+        "packages/components/sail/primitives/src/sail-icon/sail-icon.sail",
+        "packages/components/sail/primitives/src/sail-popover/sail-popover.sail",
     ];
     let mut rows = vec![
         "# Slice 1 — hub `/` component closure (synthetic emit)\n".to_string(),
-        "The launch chrome is propful `@ship/sui-primitives`; the synthetic emit rejects \
+        "The launch chrome is propful `@ship/sail-components/primitives`; the synthetic emit rejects \
          propful components today (gap G1). Honest count:\n"
             .to_string(),
         "| component | props | synthesizes | reason |".to_string(),
         "|---|--:|:--:|---|".to_string(),
     ];
     let mut rejected_propful = 0;
+    let mut dissolved = 0;
     for rel in &closure {
-        let src = std::fs::read_to_string(repo.join(rel)).expect("read component");
-        let props = src.matches("<prop").count();
-        let name = Path::new(rel).file_stem().and_then(|s| s.to_str()).unwrap_or(rel);
-        let (ok, reason) = match parse(&src)
-            .map_err(|e| e.render(&src))
-            .and_then(|p| {
+        // The hub-closure chrome was dissolved to L1 (bare elements + Style +
+        // framework primitives) — the @ship/sail-components/primitives pack no longer
+        // ships its own .sail files. The catalog records this honestly:
+        // ABSENT means the component has been dissolved, NOT that the test
+        // found a synthetic-emit gap to assert on.
+        let path = repo.join(rel);
+        let name = Path::new(rel)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or(rel);
+        let (ok, reason) = match std::fs::read_to_string(&path) {
+            Err(_) => {
+                dissolved += 1;
+                (false, "dissolved to L1 (no .sail source)".to_string())
+            }
+            Ok(src) => match parse(&src).map_err(|e| e.render(&src)).and_then(|p| {
                 emit_synthetic(&p, &manifest, None, "./c.ts", CompileMode::Component, None)
                     .map_err(|e| e.render(&src))
             }) {
-            Ok(_) => (true, "synthesizes (propless)".to_string()),
-            Err(e) => {
-                let first = e.lines().next().unwrap_or("").to_string();
-                if first.contains("prop") {
-                    rejected_propful += 1;
-                    (false, "rejected: propful (gap G1)".to_string())
-                } else {
-                    (false, format!("rejected: {}", first.chars().take(80).collect::<String>()))
+                Ok(_) => (true, "synthesizes (propless)".to_string()),
+                Err(e) => {
+                    let first = e.lines().next().unwrap_or("").to_string();
+                    if first.contains("prop") {
+                        rejected_propful += 1;
+                        (false, "rejected: propful (gap G1)".to_string())
+                    } else {
+                        (
+                            false,
+                            format!("rejected: {}", first.chars().take(80).collect::<String>()),
+                        )
+                    }
                 }
-            }
+            },
         };
-        rows.push(format!("| {name} | {props} | {} | {reason} |", yn(ok)));
+        rows.push(format!("| {name} | - | {} | {reason} |", yn(ok)));
     }
     rows.push(format!(
-        "\n**{rejected_propful} of {} hub-closure chrome components are blocked by gap G1 \
-         (propful components unsupported).** This is the dominant Slice-2 item.",
+        "\n**{} of {} hub-closure chrome components are dissolved to L1; {} of {} are \
+         blocked by gap G1 (propful components unsupported).** The dominant Slice-2 \
+         item remains the propful-component gap.",
+        dissolved,
+        closure.len(),
+        rejected_propful,
         closure.len()
     ));
     let out = rows.join("\n");
@@ -442,12 +627,18 @@ fn slice1_hub_closure_component_catalog() {
     std::fs::write(&out_path, format!("{out}\n")).expect("write closure table");
     eprintln!("\n{out}\nwrote {}", out_path.display());
 
-    // The finding, regression-guarded: the propful launch chrome is uniformly
-    // rejected with the props gap (G1) — not some other error, not silently.
+    // The finding, regression-guarded: the propful launch chrome (when present)
+    // is uniformly rejected with the props gap (G1). After the L1 dissolution
+    // the chrome is bare elements + primitives — G1 is no longer the dominant
+    // launch chrome blocker. This catalog captures that shift honestly: every
+    // entry is either dissolved (absent) or rejected by G1; the regression
+    // guard is "the closure is reported, not silently missing".
     assert!(
-        rejected_propful >= 5,
-        "expected the propful hub-closure chrome to be rejected by the props gap (G1); \
-         only {rejected_propful} were"
+        dissolved + rejected_propful == closure.len(),
+        "every hub-closure entry must be accounted for (dissolved or G1-rejected); \
+         only {} of {} were",
+        dissolved + rejected_propful,
+        closure.len()
     );
 }
 
@@ -482,5 +673,7 @@ fn first_line(s: &str) -> String {
 }
 
 fn sanitize(s: &str) -> String {
-    s.chars().map(|c| if c.is_ascii_alphanumeric() { c } else { '_' }).collect()
+    s.chars()
+        .map(|c| if c.is_ascii_alphanumeric() { c } else { '_' })
+        .collect()
 }

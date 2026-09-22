@@ -1,0 +1,32 @@
+{
+  "name": "@ship/sail-compiler-wasm",
+  "version": "0.3.0",
+  "private": false,
+  "type": "module",
+  "license": "MIT",
+  "description": "In-browser WebAssembly build of the SAIL compiler \u2014 compiles .sail source to ESM at edit time (docs playground + LSP worker).",
+  "keywords": [
+    "sail",
+    "compiler",
+    "wasm",
+    "webassembly",
+    "web-components"
+  ],
+  "files": [
+    "pkg"
+  ],
+  "scripts": {
+    "pretest": "test -f pkg/sail_compiler.js || (cd ../../.. && bun run wasm)",
+    "test": "vitest run",
+    "prepack": "test -f pkg/sail_compiler.js || (cd ../../.. && bun run wasm) ; printf '# override wasm-pack .gitignore\\n' > pkg/.npmignore"
+  },
+  "main": "./pkg/sail_compiler.js",
+  "types": "./pkg/sail_compiler.d.ts",
+  "exports": {
+    ".": "./pkg/sail_compiler.js",
+    "./sail_compiler_bg.wasm": "./pkg/sail_compiler_bg.wasm"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.5"
+  }
+}

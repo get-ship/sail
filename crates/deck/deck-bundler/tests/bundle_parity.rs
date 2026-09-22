@@ -1,6 +1,6 @@
 //! G3 — bundle-parity regression gate.
 //!
-//! Spec: `.artifacts/sui-arc/integrity/report.md` §4 (gate G3) + the
+//! Spec: `.artifacts/sail-arc/integrity/report.md` §4 (gate G3) + the
 //! bundling-robustness audit. This gate proves two things the default test
 //! sweep does not, on a pure-transformation surface (no daemon boot, no
 //! browser, no network):
@@ -8,8 +8,8 @@
 //! ## Part 1 — ALL-TARGETS build with a REAL exit check
 //!
 //! Enumerate `BundleLayout::all_targets()` — the static framework singletons
-//! (`sui-runtime`, `sui-dom`, the umbrella, the heavy lazy packs) PLUS every
-//! discovered per-component island AND every discovered view bundle —
+//! (`sail-runtime`, `sail-dom`, the umbrella, the heavy lazy packs) PLUS every
+//! discovered per-component island AND every discovered route bundle —
 //! and build each one through the deck Rolldown path. Every target must return
 //! `Ok`.
 //!
@@ -25,7 +25,7 @@
 //! We call `bundle_target` directly (not `Bundler::build`) for ONE reason: it
 //! takes a `BundleLayout`, so we can redirect output under a scratch
 //! `out_root` (`with_out_root`) and never clobber the committed
-//! `crates/deck/deck-core/assets`, `.deck/`, or `apps/shipd/assets` trees.
+//! `crates/deck/deck-core/assets`, `.sail/`, or `apps/shipd/assets` trees.
 //! `Bundler::build` hardcodes `out_root = repo_root` (no redirect seam) and
 //! would write into the source tree. `bundle_target` IS the function
 //! `Bundler::build` ends up awaiting inside `build_single_flight`, with the
@@ -36,18 +36,18 @@
 //!
 //! ## Part 2 — CROSS-PRODUCER parity (native vs wasm, #160)
 //!
-//! For each compiler fixture (`crates/sui/compiler/tests/fixtures/*.sui`),
-//! compile via the native `sui_compiler::compile` (in-process, x86_64) AND via
-//! the wasm `compile` export (the artifact `just sui-wasm` builds into
-//! `packages/sui/compiler-wasm/pkg`, the exact surface the docs playground +
+//! For each compiler fixture (`crates/sail/compiler/tests/fixtures/*.sail`),
+//! compile via the native `sail_compiler::compile` (in-process, x86_64) AND via
+//! the wasm `compile` export (the artifact `just sail-wasm` builds into
+//! `packages/sail/compiler-wasm/pkg`, the exact surface the docs playground +
 //! browser LSP ship). Assert the emitted `.js` is byte-identical (modulo the
 //! build-stamp comment — see below). One Rust grammar compiled to two targets
 //! must emit the same module; a divergence is the #160 native-vs-wasm class.
 //!
 //! The wasm `compile` is `#![cfg(target_arch = "wasm32")]`, so it is NOT
 //! callable in this native test process. We drive it the same way
-//! `parity.rs`/`parity_runner.mjs` drive their JS side: a sibling node script
-//! (`g3_wasm_compile.mjs`) instantiates the local `.wasm` bytes
+//! `parity.rs`/`parity_runner.ts` drive their JS side: a sibling node script
+//! (`g3_wasm_compile.ts`) instantiates the local `.wasm` bytes
 //! (`WebAssembly.instantiate`, no fetch/URL) and returns each fixture's `.js`.
 //! The native side runs the SAME `CompileOpts` the wasm export builds
 //! internally (`source_path: None`, `emit_dts/ssr: false`) so the `.js` body is
@@ -90,10 +90,10 @@
 //!
 //! Prerequisites (the gate skips with a loud message, never silently passes, if
 //! a tool is absent so a misconfigured CI cannot masquerade as green):
-//!   * `sui-compiler` built under `target/` (the bundler's Rolldown `load` hook
-//!     spawns it) — `cargo build -p sui-compiler`.
-//!   * `packages/sui/compiler-wasm/pkg/sui_compiler_bg.wasm` present —
-//!     `just sui-wasm`.
+//!   * `sail-compiler` built under `target/` (the bundler's Rolldown `load` hook
+//!     spawns it) — `cargo build -p sail-compiler`.
+//!   * `packages/sail/compiler-wasm/pkg/sail_compiler_bg.wasm` present —
+//!     `just sail-wasm`.
 //!   * `node` on PATH (drives the wasm side).
 
 #![cfg(feature = "g3")]
@@ -112,8 +112,8 @@ use std::time::Duration;
 use deck_bundler::rolldown_bundle::bundle_target;
 use deck_bundler::targets::BundleLayout;
 use deck_config::DeckConfig;
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 use serde_json::json;
-use sui_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
 
 // ── Safety constants (the founder OOM'd this box twice; a runaway here is
 // unacceptable — see #256) ───────────────────────────────────────────────────
@@ -145,11 +145,11 @@ fn repo_root() -> PathBuf {
 }
 
 fn fixtures_dir(repo: &Path) -> PathBuf {
-    repo.join("crates/sui/compiler/tests/fixtures")
+    repo.join("crates/sail/compiler/tests/fixtures")
 }
 
 fn wasm_pkg_dir(repo: &Path) -> PathBuf {
-    repo.join("packages/sui/compiler-wasm/pkg")
+    repo.join("packages/sail/compiler-wasm/pkg")
 }
 
 // ── Part 1: all-targets sequential build with real exit check ────────────────
@@ -163,10 +163,11 @@ async fn gate_bundle_parity_all_targets_build() {
     let scratch = tempfile::tempdir().expect("scratch out_root");
     let staging = tempfile::tempdir().expect("staging dir");
 
-    let layout = BundleLayout::with_config(repo.clone(), None, DeckConfig::defaults()).with_out_root(scratch.path().to_path_buf());
+    let layout = BundleLayout::with_config(repo.clone(), None, DeckConfig::defaults())
+        .with_out_root(scratch.path().to_path_buf());
 
     // The full target set: static framework singletons + discovered consumer
-    // bundles (per-package `deck.bundles`) + discovered view bundles. This is
+    // bundles (per-package `deck.bundles`) + discovered route bundles. This is
     // the EXACT set `Bundler::build_all` would iterate.
     let targets = layout.all_targets();
     assert!(
@@ -249,8 +250,9 @@ fn build_exit_is_honest_unlike_build_all() {
     // binding would fail to compile, flagging that the gate's rationale moved.
     fn _assert_build_sig(
         b: &deck_bundler::Bundler,
-    ) -> impl std::future::Future<Output = Result<deck_bundler::BundleManifest, deck_bundler::BundlerError>> + '_
-    {
+    ) -> impl std::future::Future<
+        Output = Result<deck_bundler::BundleManifest, deck_bundler::BundlerError>,
+    > + '_ {
         b.build("noop")
     }
     fn _assert_build_all_sig(
@@ -265,36 +267,105 @@ fn build_exit_is_honest_unlike_build_all() {
 // ── Part 2: cross-producer parity (native vs wasm) ───────────────────────────
 
 /// A fixture + the `CompileOpts` driven IDENTICALLY into the native and wasm
-/// producers. `setup_url` / `component_name` / `shadow` all affect the emitted
+/// producers. `setup_url` / `component_name` affect the emitted
 /// `.js`, so both sides must receive the same values — that is the whole point.
 struct Fixture {
     name: &'static str,
     mode: CompileMode,
     setup_url: Option<&'static str>,
     component_name: Option<&'static str>,
-    shadow: bool,
 }
 
-/// The fixture corpus. Views, components (light + shadow DOM), and the
+/// The fixture corpus. Route modules, components, and the
 /// control-flow / binding edge cases. Components carry a `component_name` so the
-/// component emit path is exercised on both producers, not just views.
+/// component emit path is exercised on both producers, not just route modules.
 fn fixtures() -> Vec<Fixture> {
-    use CompileMode::{Component, View};
+    use CompileMode::{Component, Route};
     vec![
-        Fixture { name: "hello", mode: View, setup_url: None, component_name: None, shadow: false },
-        Fixture { name: "counter", mode: View, setup_url: Some("./counter.controller.ts"), component_name: None, shadow: false },
-        Fixture { name: "agents", mode: View, setup_url: Some("./agents.controller.ts"), component_name: None, shadow: false },
-        Fixture { name: "comment-and-whitespace", mode: View, setup_url: None, component_name: None, shadow: false },
-        Fixture { name: "for-static", mode: View, setup_url: None, component_name: None, shadow: false },
-        Fixture { name: "for-static-text", mode: View, setup_url: None, component_name: None, shadow: false },
-        Fixture { name: "for-static-attr", mode: View, setup_url: None, component_name: None, shadow: false },
-        Fixture { name: "for-dynamic-mixed", mode: View, setup_url: None, component_name: None, shadow: false },
-        Fixture { name: "for-update", mode: View, setup_url: None, component_name: None, shadow: false },
-        Fixture { name: "route-view", mode: View, setup_url: None, component_name: None, shadow: false },
-        Fixture { name: "ship-button", mode: Component, setup_url: None, component_name: Some("ship-button-test"), shadow: false },
-        Fixture { name: "reflect-empty-slot", mode: Component, setup_url: None, component_name: Some("reflect-empty-slot"), shadow: false },
-        Fixture { name: "shadow-tones", mode: Component, setup_url: None, component_name: Some("shadow-tones"), shadow: true },
-        Fixture { name: "bind-this-button", mode: Component, setup_url: None, component_name: Some("bind-this-button"), shadow: false },
+        Fixture {
+            name: "hello",
+            mode: Route,
+            setup_url: None,
+            component_name: None,
+        },
+        Fixture {
+            name: "counter",
+            mode: Route,
+            setup_url: Some("./counter.controller.ts"),
+            component_name: None,
+        },
+        Fixture {
+            name: "agents",
+            mode: Route,
+            setup_url: Some("./agents.controller.ts"),
+            component_name: None,
+        },
+        Fixture {
+            name: "comment-and-whitespace",
+            mode: Route,
+            setup_url: None,
+            component_name: None,
+        },
+        Fixture {
+            name: "for-static",
+            mode: Route,
+            setup_url: None,
+            component_name: None,
+        },
+        Fixture {
+            name: "for-static-text",
+            mode: Route,
+            setup_url: None,
+            component_name: None,
+        },
+        Fixture {
+            name: "for-static-attr",
+            mode: Route,
+            setup_url: None,
+            component_name: None,
+        },
+        Fixture {
+            name: "for-dynamic-mixed",
+            mode: Route,
+            setup_url: None,
+            component_name: None,
+        },
+        Fixture {
+            name: "for-update",
+            mode: Route,
+            setup_url: None,
+            component_name: None,
+        },
+        Fixture {
+            name: "route-module",
+            mode: Route,
+            setup_url: None,
+            component_name: None,
+        },
+        Fixture {
+            name: "ship-button",
+            mode: Component,
+            setup_url: None,
+            component_name: Some("ship-button-test"),
+        },
+        Fixture {
+            name: "reflect-empty-slot",
+            mode: Component,
+            setup_url: None,
+            component_name: Some("reflect-empty-slot"),
+        },
+        Fixture {
+            name: "shadow-tones",
+            mode: Component,
+            setup_url: None,
+            component_name: Some("shadow-tones"),
+        },
+        Fixture {
+            name: "bind-this-button",
+            mode: Component,
+            setup_url: None,
+            component_name: Some("bind-this-button"),
+        },
     ]
 }
 
@@ -379,20 +450,20 @@ fn skip_balanced_object(s: &str) -> Option<&str> {
 /// internally (`source_path: None`, `emit_dts/ssr: false`). Returns
 /// `Ok(js)` / `Err(message)` so we can assert kind-parity with the wasm side.
 fn native_compile(repo: &Path, f: &Fixture) -> Result<String, String> {
-    let path = fixtures_dir(repo).join(format!("{}.sui", f.name));
+    let path = fixtures_dir(repo).join(format!("{}.sail", f.name));
     let source = std::fs::read_to_string(&path).map_err(|e| format!("read {}: {e}", f.name))?;
     let component_meta = f.component_name.map(|name| ComponentMeta {
         name: name.to_string(),
-        shadow: f.shadow,
     });
     let opts = CompileOpts {
+        route_params: None,
         setup_url: f.setup_url.map(String::from),
         mode: f.mode,
         // Matches the wasm export's `CompileOpts` exactly (wasm.rs).
         source_path: None,
-        styles: None,
         component_meta,
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
@@ -425,23 +496,27 @@ struct WasmRunnerOut {
 /// opts to `native_compile` — the wasm `WasmOpts` JSON-in shape mirrors them.
 fn wasm_compile_all(repo: &Path, fixtures: &[Fixture]) -> Vec<WasmRow> {
     let pkg = wasm_pkg_dir(repo);
-    if !pkg.join("sui_compiler_bg.wasm").exists() {
+    if !pkg.join("sail_compiler_bg.wasm").exists() {
         panic!(
-            "G3 PREREQ MISSING: wasm artifact not built at {}. Run `just sui-wasm`.",
+            "G3 PREREQ MISSING: wasm artifact not built at {}. Run `just sail-wasm`.",
             pkg.display()
         );
     }
-    let runner = repo.join("crates/deck/deck-bundler/tests/g3_wasm_compile.mjs");
-    assert!(runner.exists(), "g3_wasm_compile.mjs missing at {}", runner.display());
+    let runner = repo.join("crates/deck/deck-bundler/tests/g3_wasm_compile.ts");
+    assert!(
+        runner.exists(),
+        "g3_wasm_compile.ts missing at {}",
+        runner.display()
+    );
 
     let jobs: Vec<_> = fixtures
         .iter()
         .map(|f| {
-            let path = fixtures_dir(repo).join(format!("{}.sui", f.name));
+            let path = fixtures_dir(repo).join(format!("{}.sail", f.name));
             let source = std::fs::read_to_string(&path)
                 .unwrap_or_else(|e| panic!("read {} for wasm side: {e}", f.name));
             let mode = match f.mode {
-                CompileMode::View => "view",
+                CompileMode::Route => "route",
                 CompileMode::Component => "component",
                 CompileMode::Auto => "auto",
             };
@@ -451,7 +526,6 @@ fn wasm_compile_all(repo: &Path, fixtures: &[Fixture]) -> Vec<WasmRow> {
                 "opts": {
                     "mode": mode,
                     "componentName": f.component_name,
-                    "shadow": f.shadow,
                     "setupUrl": f.setup_url,
                 },
             })
@@ -461,13 +535,13 @@ fn wasm_compile_all(repo: &Path, fixtures: &[Fixture]) -> Vec<WasmRow> {
 
     // Spawn node, feed the corpus on stdin, read JSON on stdout, with a bounded
     // wall-clock wait so a hung node aborts the gate.
-    let mut child = Command::new("node")
+    let mut child = Command::new("bun")
         .arg(&runner)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::inherit())
         .spawn()
-        .unwrap_or_else(|e| panic!("G3 PREREQ MISSING: cannot spawn `node` ({e}). Install node."));
+        .unwrap_or_else(|e| panic!("G3 PREREQ MISSING: cannot spawn `bun` ({e}). Install bun."));
 
     use std::io::Write;
     child
@@ -564,7 +638,7 @@ fn gate_bundle_parity_native_vs_wasm() {
                 checked += 1;
             }
             // KIND DIVERGENCE — one producer compiled, the other didn't. This is
-            // exactly the dangerous #160 split: a `.sui` one toolchain accepts
+            // exactly the dangerous #160 split: a `.sail` one toolchain accepts
             // and the other rejects.
             (Ok(_), other) => diffs.push(format!(
                 "{}: native OK but wasm produced kind={other:?} (msg: {:?}) — producers disagree on acceptance",
@@ -581,7 +655,10 @@ fn gate_bundle_parity_native_vs_wasm() {
         }
     }
 
-    eprintln!("G3 cross-producer parity: {checked}/{} fixtures agreed", fixtures.len());
+    eprintln!(
+        "G3 cross-producer parity: {checked}/{} fixtures agreed",
+        fixtures.len()
+    );
     assert!(
         diffs.is_empty(),
         "G3: {} fixture(s) diverged between native and wasm producers (#160):\n\n{}",

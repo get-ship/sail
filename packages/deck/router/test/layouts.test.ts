@@ -9,20 +9,20 @@ describe('resolveLayoutChain', () => {
   })
 
   it('matches a single prefix layout', () => {
-    const layouts = [L('/studio', 'sui-studio-chrome')]
+    const layouts = [L('/studio', 'sail-studio-chrome')]
     expect(resolveLayoutChain('/studio/themes', layouts)).toEqual(layouts)
   })
 
   it('orders nested matches deepest-first (innermost chrome at index 0)', () => {
-    const studio = L('/studio', 'sui-studio-chrome')
-    const agents = L('/studio/agents', 'sui-agents-chrome')
+    const studio = L('/studio', 'sail-studio-chrome')
+    const agents = L('/studio/agents', 'sail-agents-chrome')
     // Registration order intentionally shallow-first to prove the sort.
     const chain = resolveLayoutChain('/studio/agents/42', [studio, agents])
-    expect(chain.map((l) => l.tag)).toEqual(['sui-agents-chrome', 'sui-studio-chrome'])
+    expect(chain.map((l) => l.tag)).toEqual(['sail-agents-chrome', 'sail-studio-chrome'])
   })
 
   it("a '/' layout matches every path", () => {
-    const root = L('/', 'sui-root-chrome')
+    const root = L('/', 'sail-root-chrome')
     expect(resolveLayoutChain('/anything/here', [root])).toEqual([root])
   })
 

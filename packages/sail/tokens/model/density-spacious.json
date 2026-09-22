@@ -1,0 +1,32 @@
+{
+  "$description": "Density overrides for data-density=spacious.",
+  "density": {
+    "row-py": {
+      "$value": "{space-3}",
+      "$type": "dimension"
+    },
+    "row-px": {
+      "$value": "{space-4}",
+      "$type": "dimension"
+    },
+    "row-gap": {
+      "$value": "{space-3}",
+      "$type": "dimension"
+    },
+    "text": {
+      "$value": "{text-md}",
+      "$type": "dimension"
+    },
+    "icon": {
+      "$value": "18px",
+      "$type": "dimension"
+    },
+    "$type": "dimension"
+  },
+  "$extensions": {
+    "sail": {
+      "selector": ":root[data-density='spacious']",
+      "layer": "density-spacious"
+    }
+  }
+}

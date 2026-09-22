@@ -1,0 +1,5 @@
+.sail-progress::-webkit-progress-bar { background:var(--muted);border-radius:var(--radius-full); }
+.sail-progress::-webkit-progress-value { background:var(--primary);border-radius:var(--radius-full); }
+.sail-progress::-moz-progress-bar { background:var(--primary);border-radius:var(--radius-full); }
+.sail-progress:not([value]) { background-image:linear-gradient(90deg, transparent 0%, var(--primary) 50%, transparent 100%);background-repeat:no-repeat;background-size:40% 100%;animation:var(--animate-progress-indeterminate); }
+.sail-progress:not([value])::-webkit-progress-bar { background-image:linear-gradient(90deg, transparent 0%, var(--primary) 50%, transparent 100%);background-repeat:no-repeat;background-size:40% 100%;animation:var(--animate-progress-indeterminate); }

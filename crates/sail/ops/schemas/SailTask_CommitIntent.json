@@ -1,0 +1,56 @@
+{
+  "service": "SailTask",
+  "method": "CommitIntent",
+  "mcp_tool": "sail_task_commit_intent",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "actor": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/TaskActor"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "id": {
+        "type": "string"
+      },
+      "project": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "id"
+    ],
+    "definitions": {
+      "TaskActor": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "TaskCommitIntentRet",
+    "type": "object"
+  }
+}

@@ -1,1 +1,0 @@
-<button bind:this={btnEl} part="button">click</button>

@@ -1,9 +1,0 @@
-{
-  // The clients seam loads the SUI theme + base styles and registers every
-  // <sui-*> primitive (so the component reference renders real components).
-  // No clients state is exposed — pages own their own scope.
-  "entry": {
-    "clientsModule": "./src/clients.ts",
-    "exposeNames": []
-  }
-}

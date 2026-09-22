@@ -1,8 +1,8 @@
 //! P2-8 — wire-level assertion that the HTML security header set actually
 //! reaches the transport. The transport-agnostic deck-core layer
 //! (`crates/deck/deck-core/src/response.rs::HTML_SECURITY_HEADERS` and the
-//! `html_view` constructor that emits it) pins the bytes in
-//! `response::tests::html_view_emits_exactly_the_security_header_set`; this
+//! `html_route` constructor that emits it) pins the bytes in
+//! `response::tests::html_route_emits_exactly_the_security_header_set`; this
 //! test closes the loop by running the same headers through `into_axum`
 //! and confirming the axum `Response` carries them on the wire — catches an
 //! adapter regression that silently drops `extra_headers`.
@@ -18,8 +18,8 @@ use deck_axum::into_axum;
 use deck_core::{DaemonMode, DeckResponse, HTML_SECURITY_HEADERS};
 
 #[tokio::test(flavor = "multi_thread")]
-async fn html_view_security_headers_reach_the_wire() {
-    let resp: Response<_> = into_axum(DeckResponse::html_view(
+async fn html_route_security_headers_reach_the_wire() {
+    let resp: Response<_> = into_axum(DeckResponse::html_route(
         "<html><body>x</body></html>",
         DaemonMode::Development,
     ));
@@ -32,7 +32,7 @@ async fn html_view_security_headers_reach_the_wire() {
 
     // We can't re-read headers after consuming the body, so re-derive: build
     // a fresh response just for the header check.
-    let resp = into_axum(DeckResponse::html_view(
+    let resp = into_axum(DeckResponse::html_route(
         "<html><body>x</body></html>",
         DaemonMode::Development,
     ));

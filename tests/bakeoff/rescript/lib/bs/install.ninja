@@ -1,0 +1,18 @@
+rescript = 1
+rule cp
+  command = cp $i $out
+rule touch
+ command = touch $out
+o Setup.cmi : cp ../bs/src/Setup.cmi
+o Setup.cmj : cp ../bs/src/Setup.cmj
+o Setup.cmt : cp ../bs/src/Setup.cmt
+o Setup.res : cp ../../src/Setup.res
+o Table.cmi : cp ../bs/src/Table.cmi
+o Table.cmj : cp ../bs/src/Table.cmj
+o Table.cmt : cp ../bs/src/Table.cmt
+o Table.res : cp ../../src/Table.res
+o SailSignal.cmi : cp ../bs/src/SailSignal.cmi
+o SailSignal.cmj : cp ../bs/src/SailSignal.cmj
+o SailSignal.cmt : cp ../bs/src/SailSignal.cmt
+o SailSignal.res : cp ../../src/SailSignal.res
+build install.stamp : touch Setup.cmi Setup.cmj Table.cmi Table.cmj SailSignal.cmi SailSignal.cmj 

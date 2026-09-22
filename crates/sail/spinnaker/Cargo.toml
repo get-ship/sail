@@ -1,0 +1,29 @@
+[package]
+name = "spinnaker"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Presentation crate: Style language + compile-time box-tree diagnostics (taffy). CSS realization is the css adapter."
+
+[lib]
+name = "spinnaker"
+path = "src/lib.rs"
+
+[[bin]]
+name = "sail-layout"
+path = "src/bin/sail-layout.rs"
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+# Flexbox/grid/block engine for the layout pass. Wasm-clean; keep
+# default-features off. `std` + `taffy_tree` are the non-wasm minimum.
+taffy = { version = "0.12", default-features = false, features = ["std", "grid", "flexbox", "block_layout", "taffy_tree"] }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+clap = { workspace = true }
+
+[lints]
+workspace = true
+
+

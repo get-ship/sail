@@ -1,0 +1,32 @@
+{
+  "$description": "Density overrides for data-density=compact.",
+  "density": {
+    "row-py": {
+      "$value": "4px",
+      "$type": "dimension"
+    },
+    "row-px": {
+      "$value": "8px",
+      "$type": "dimension"
+    },
+    "row-gap": {
+      "$value": "6px",
+      "$type": "dimension"
+    },
+    "text": {
+      "$value": "{text-sm}",
+      "$type": "dimension"
+    },
+    "icon": {
+      "$value": "14px",
+      "$type": "dimension"
+    },
+    "$type": "dimension"
+  },
+  "$extensions": {
+    "sail": {
+      "selector": ":root[data-density='compact']",
+      "layer": "density-compact"
+    }
+  }
+}

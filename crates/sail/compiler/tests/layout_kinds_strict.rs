@@ -1,0 +1,296 @@
+//! SPEC-LAYOUT-DIAG-1 / S4.1 — compiler bridge: experimental layout kinds + strict gate.
+//!
+//! Product contract:
+//! - Layout kinds `unintended-overflow` / `clipped-text` map to stable rule ids
+//!   `sail-unintended-overflow` / `sail-clipped-text` (register for diagnostic ratchet).
+//! - LAYOUT-5: `unintended-overflow` / `clipped-text` are default Error on collect.
+//! - `sub-min-tap-target` stays under `strict: true` **or** `layoutExperimental`.
+//!
+//! Config surface locked here (implementer lands recognition + bridge wiring):
+//! ```jsonc
+//! "strict": true
+//! // or without full lint strict:
+//! "layoutExperimental": true
+//! "layoutTextMetrics": true   // optional; clipped-text path
+//! ```
+//!
+//! Geometry fixtures use preprocessed-equivalent product Style classes that
+//! taffy already solves (see sail-layout layout_kinds tests).
+
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use sail_compiler::check::layout;
+use sail_compiler::diagnostics::DiagSeverity;
+use sail_lint::config::SailConfig;
+
+const RULE_UNINTENDED_OVERFLOW: &str = "sail-unintended-overflow";
+const RULE_CLIPPED_TEXT: &str = "sail-clipped-text";
+
+/// Child taller than fixed column, no overflow opt-in.
+const OVERFLOW_SRC: &str = r#"
+<column style({ size(20) })>
+  <div style({ size(40).shrink(0) })>x</div>
+</column>
+"#;
+
+/// Overflow opted in via overflow({ y: auto }).
+const OVERFLOW_OPTIN_SRC: &str = r#"
+<column style({ size(20).overflow({ y: auto }) })>
+  <div style({ size(40).shrink(0) })>x</div>
+</column>
+"#;
+
+/// Narrow + long text without truncate — clipped-text probe.
+const CLIPPED_TEXT_SRC: &str = r#"
+<p style({ size(16).overflow({ x: hidden }) })>Supercalifragilisticexpialidocious</p>
+"#;
+
+/// Truncate opt-in — must not fire clipped-text.
+const TRUNCATE_SRC: &str = r#"
+<p style({ size(16).type({ wrap: truncate }) })>Supercalifragilisticexpialidocious</p>
+"#;
+
+fn write_fixture(config: &str, body: &str) -> (tempfile::TempDir, PathBuf) {
+    let tmp = tempfile::tempdir().unwrap();
+    fs::write(tmp.path().join("sail.config.json"), config).unwrap();
+    let src_dir = tmp.path().join("src");
+    fs::create_dir_all(&src_dir).unwrap();
+    let sail = src_dir.join("page.sail");
+    fs::write(&sail, body).unwrap();
+    (tmp, sail)
+}
+
+fn layout_diags(src: &str, path: Option<&Path>) -> Vec<sail_compiler::Diagnostic> {
+    match path {
+        Some(p) => layout::collect_for(src, Some(p)),
+        None => layout::collect(src),
+    }
+}
+
+fn has_rule(diags: &[sail_compiler::Diagnostic], rule: &str) -> bool {
+    diags.iter().any(|d| d.rule.as_deref() == Some(rule))
+}
+
+// ── Config recognition (experimental layout keys) ───────────────────────────
+
+#[test]
+fn layout_experimental_keys_are_recognized_config_keys() {
+    // Explicit experimental gate without forcing full lint `strict`.
+    for key in ["layoutExperimental", "layoutTextMetrics"] {
+        let cfg = SailConfig::from_json(&format!(r#"{{ "{key}": true }}"#));
+        assert!(cfg.parse_ok(), "{key} config must parse");
+        assert!(
+            !cfg.unknown_keys().iter().any(|k| k == key),
+            "`{key}` must not be unknown: {:?}",
+            cfg.unknown_keys()
+        );
+    }
+}
+
+#[test]
+fn sail_config_layout_experimental_accessors() {
+    // Prefer missing API = compile-fail red. Implementer lands:
+    //   SailConfig::layout_experimental() -> bool
+    //   SailConfig::layout_text_metrics() -> bool
+    let on = SailConfig::from_json(r#"{ "layoutExperimental": true, "layoutTextMetrics": true }"#);
+    assert!(
+        on.layout_experimental(),
+        "layoutExperimental: true via SailConfig::layout_experimental()"
+    );
+    assert!(
+        on.layout_text_metrics(),
+        "layoutTextMetrics: true via SailConfig::layout_text_metrics()"
+    );
+
+    let off = SailConfig::from_json(r#"{ "preset": "full" }"#);
+    assert!(!off.layout_experimental());
+    assert!(!off.layout_text_metrics());
+}
+
+// ── 5. Promoted kinds emit Error on default collect; tap stays experimental ─
+
+#[test]
+fn default_collect_emits_overflow_as_error() {
+    let diags = layout_diags(OVERFLOW_SRC, None);
+    let hit = diags
+        .iter()
+        .find(|d| d.rule.as_deref() == Some(RULE_UNINTENDED_OVERFLOW))
+        .unwrap_or_else(|| {
+            panic!("default collect must emit `{RULE_UNINTENDED_OVERFLOW}`: {diags:?}")
+        });
+    assert_eq!(
+        hit.severity,
+        DiagSeverity::Error,
+        "promoted overflow is default Error: {hit:?}"
+    );
+}
+
+#[test]
+fn default_collect_emits_clipped_text_as_error() {
+    let diags = layout_diags(CLIPPED_TEXT_SRC, None);
+    let hit = diags
+        .iter()
+        .find(|d| d.rule.as_deref() == Some(RULE_CLIPPED_TEXT))
+        .unwrap_or_else(|| panic!("default collect must emit `{RULE_CLIPPED_TEXT}`: {diags:?}"));
+    assert_eq!(
+        hit.severity,
+        DiagSeverity::Error,
+        "promoted clipped-text is default Error: {hit:?}"
+    );
+}
+
+#[test]
+fn package_without_strict_still_emits_overflow_error() {
+    let (_tmp, sail) = write_fixture(r#"{ "preset": "full" }"#, OVERFLOW_SRC);
+    let diags = layout_diags(OVERFLOW_SRC, Some(&sail));
+    let hit = diags
+        .iter()
+        .find(|d| d.rule.as_deref() == Some(RULE_UNINTENDED_OVERFLOW))
+        .unwrap_or_else(|| {
+            panic!("full preset must emit promoted `{RULE_UNINTENDED_OVERFLOW}`: {diags:?}")
+        });
+    assert_eq!(hit.severity, DiagSeverity::Error, "{hit:?}");
+}
+
+#[test]
+fn clean_opt_in_stays_silent_on_default_collect() {
+    let diags = layout_diags(OVERFLOW_OPTIN_SRC, None);
+    assert!(
+        !has_rule(&diags, RULE_UNINTENDED_OVERFLOW),
+        "overflowY(auto) must stay silent on default collect: {diags:?}"
+    );
+    let clipped = layout_diags(TRUNCATE_SRC, None);
+    assert!(
+        !has_rule(&clipped, RULE_CLIPPED_TEXT),
+        "truncate() must stay silent on default collect: {clipped:?}"
+    );
+}
+
+const TAP_SRC: &str = r#"
+<button type="button" style({ size({ w: 23, h: 40 }) })>x</button>
+"#;
+
+#[test]
+fn default_collect_does_not_emit_tap_target() {
+    let diags = layout_diags(TAP_SRC, None);
+    assert!(
+        !has_rule(&diags, "sail-sub-min-tap-target"),
+        "tap target stays experimental: {diags:?}"
+    );
+}
+
+// ── 1. Overflow without opt-in under strict → finding + rule id ─────────────
+
+#[test]
+fn strict_true_emits_unintended_overflow_with_stable_rule_id() {
+    let (_tmp, sail) = write_fixture(r#"{ "preset": "full", "strict": true }"#, OVERFLOW_SRC);
+    let diags = layout_diags(OVERFLOW_SRC, Some(&sail));
+    let hit = diags
+        .iter()
+        .find(|d| d.rule.as_deref() == Some(RULE_UNINTENDED_OVERFLOW))
+        .unwrap_or_else(|| {
+            panic!(
+                "strict: true must enable `{RULE_UNINTENDED_OVERFLOW}` on \
+                 overflow-without-opt-in: {diags:?}"
+            )
+        });
+    // Under strict, gate is Error (S3.2: every finding → Error at gate).
+    // Experimental kinds may land as Warning first; strict promotes them.
+    assert_eq!(
+        hit.severity,
+        DiagSeverity::Error,
+        "under strict, `{RULE_UNINTENDED_OVERFLOW}` must be Error at the gate: {hit:?}"
+    );
+    assert!(hit.line >= 1, "must map to a source span/line: {hit:?}");
+}
+
+#[test]
+fn layout_experimental_config_emits_unintended_overflow_without_full_strict() {
+    let (_tmp, sail) = write_fixture(
+        r#"{ "preset": "full", "layoutExperimental": true }"#,
+        OVERFLOW_SRC,
+    );
+    let diags = layout_diags(OVERFLOW_SRC, Some(&sail));
+    assert!(
+        has_rule(&diags, RULE_UNINTENDED_OVERFLOW),
+        "layoutExperimental: true must enable `{RULE_UNINTENDED_OVERFLOW}` \
+         without top-level strict: {diags:?}"
+    );
+}
+
+// ── 2. Opt-in → no unintended-overflow rule ─────────────────────────────────
+
+#[test]
+fn strict_does_not_fire_unintended_overflow_when_overflow_y_auto() {
+    let (_tmp, sail) = write_fixture(
+        r#"{ "preset": "full", "strict": true }"#,
+        OVERFLOW_OPTIN_SRC,
+    );
+    let diags = layout_diags(OVERFLOW_OPTIN_SRC, Some(&sail));
+    assert!(
+        !has_rule(&diags, RULE_UNINTENDED_OVERFLOW),
+        "overflowY(auto) opt-in must suppress `{RULE_UNINTENDED_OVERFLOW}`: {diags:?}"
+    );
+}
+
+// ── 3–4. Clipped text under experimental text metrics ───────────────────────
+
+#[test]
+fn strict_emits_clipped_text_without_truncate() {
+    let (_tmp, sail) = write_fixture(
+        r#"{ "preset": "full", "strict": true, "layoutTextMetrics": true }"#,
+        CLIPPED_TEXT_SRC,
+    );
+    let diags = layout_diags(CLIPPED_TEXT_SRC, Some(&sail));
+    assert!(
+        has_rule(&diags, RULE_CLIPPED_TEXT),
+        "strict + text metrics must emit `{RULE_CLIPPED_TEXT}` without truncate: {diags:?}"
+    );
+}
+
+#[test]
+fn layout_experimental_and_text_metrics_emit_clipped_text() {
+    let (_tmp, sail) = write_fixture(
+        r#"{
+            "preset": "full",
+            "layoutExperimental": true,
+            "layoutTextMetrics": true
+        }"#,
+        CLIPPED_TEXT_SRC,
+    );
+    let diags = layout_diags(CLIPPED_TEXT_SRC, Some(&sail));
+    assert!(
+        has_rule(&diags, RULE_CLIPPED_TEXT),
+        "layoutExperimental + layoutTextMetrics must emit `{RULE_CLIPPED_TEXT}`: {diags:?}"
+    );
+}
+
+#[test]
+fn truncate_suppresses_clipped_text_under_strict() {
+    let (_tmp, sail) = write_fixture(
+        r#"{ "preset": "full", "strict": true, "layoutTextMetrics": true }"#,
+        TRUNCATE_SRC,
+    );
+    let diags = layout_diags(TRUNCATE_SRC, Some(&sail));
+    assert!(
+        !has_rule(&diags, RULE_CLIPPED_TEXT),
+        "truncate() opt-in must suppress `{RULE_CLIPPED_TEXT}`: {diags:?}"
+    );
+}
+
+// ── Rule id ratchet registration (implementer) ──────────────────────────────
+
+#[test]
+fn experimental_layout_rule_ids_are_registered_for_ratchet() {
+    // IDs are forever (diagnostic_id_drift pin). Adding the kinds requires
+    // registering these in sail_lint::all_rule_ids + PINNED_RULE_IDS.
+    let live = sail_lint::all_rule_ids();
+    for id in [RULE_UNINTENDED_OVERFLOW, RULE_CLIPPED_TEXT] {
+        assert!(
+            live.iter().any(|r| r == &id),
+            "`{id}` must be registered in sail_lint::all_rule_ids() for the \
+             diagnostic ratchet (got {live:?})"
+        );
+    }
+}

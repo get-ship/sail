@@ -10,11 +10,11 @@
 //! The daemon supplies its own build info as a `DaemonBuildInfo`
 //! because `build_info::build_info!()` is a macro that must expand
 //! inside the binary crate (cargo scopes `rustc-env` per crate).
-//! Compiler info comes from `sui_compiler` directly — it bakes the
+//! Compiler info comes from `sail_compiler` directly — it bakes the
 //! same env vars via its own `build.rs`.
 
 use serde::Serialize;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 /// Daemon-side build identity. Mirrors the relevant subset of
 /// `build_info::BuildInfo` — `&'static str` fields stay static across
@@ -48,7 +48,7 @@ pub fn serve_meta(daemon: Option<DaemonBuildInfo>) -> Value {
         dirty: false,
         built_at: "unknown",
     });
-    let compiler = sui_compiler::compiler_version();
+    let compiler = sail_compiler::compiler_version();
     json!({
         "compilerVersion": compiler.to_json(),
         "daemonVersion": daemon.to_json(),

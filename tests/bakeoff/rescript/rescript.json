@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/rescript-lang/rescript-compiler/master/docs/docson/build-schema.json",
+  "name": "bakeoff-rescript",
+  "sources": {
+    "dir": "src",
+    "subdirs": true
+  },
+  "package-specs": [
+    {
+      "module": "esmodule",
+      "in-source": false
+    }
+  ],
+  "suffix": ".js",
+  "warnings": {
+    "error": "+101"
+  }
+}

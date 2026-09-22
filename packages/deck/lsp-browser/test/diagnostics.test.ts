@@ -16,7 +16,7 @@ describe('diagnose', () => {
     const diags = await diagnose(src)
     expect(diags.length).toBeGreaterThan(0)
     expect(diags[0].severity).toBe('error')
-    expect(diags[0].source).toBe('sui')
+    expect(diags[0].source).toBe('sail')
     expect(diags[0].line).toBeGreaterThan(0)
   })
 

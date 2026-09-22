@@ -1,4 +1,4 @@
-//! SSE envelope encoders for the SUI live-data wire protocol.
+//! SSE envelope encoders for the SAIL live-data wire protocol.
 //!
 //! These pure formatting functions are the single source of truth for every
 //! SSE frame the runtime consumes. Both `shipd` and `deck-conformance` (and any
@@ -21,7 +21,7 @@
 //!
 //! `patch-signals` updates a named LiveSignal in the runtime scope.
 //! `patch-elements` is an out-of-band surgical DOM patch.
-//! `patch` (op: set) is the legacy `/_deck/data` single-expression channel.
+//! `patch` (op: set) is the `/_deck/data` single-expression channel.
 //! The keepalive comment prevents idle proxies from closing SSE connections.
 
 use serde::{Deserialize, Serialize};
@@ -30,7 +30,7 @@ use serde::{Deserialize, Serialize};
 
 /// Format one `patch-signals` SSE frame for a named data source.
 ///
-/// `name` is the `<data name="...">` declaration's name; `value` is the
+/// `name` is the live query declaration's name; `value` is the
 /// `LiveState<T>` JSON value to apply (e.g. `{"kind":"ok","value":{...}}`).
 pub fn format_patch_signals(name: &str, value: &serde_json::Value) -> String {
     let payload = serde_json::json!({
@@ -111,8 +111,8 @@ pub struct PatchElements {
 
 /// Format one `patch-elements` SSE frame.
 ///
-/// The selector is passed through verbatim — view-root scoping is the
-/// runtime's job (it queries against `[data-sui-root][data-view]`, not
+/// The selector is passed through verbatim — route-root scoping is the
+/// runtime's job (it queries against `[data-sail-root][data-view]`, not
 /// the document). The daemon does not rewrite or sanitize selectors.
 ///
 /// HTML is also passed through verbatim. Per the spec's "trust the server"
@@ -120,7 +120,10 @@ pub struct PatchElements {
 /// is the trust boundary.
 pub fn format_patch_elements(patch: &PatchElements) -> String {
     let mut payload = serde_json::Map::with_capacity(4);
-    payload.insert("selector".into(), serde_json::Value::String(patch.selector.clone()));
+    payload.insert(
+        "selector".into(),
+        serde_json::Value::String(patch.selector.clone()),
+    );
     payload.insert(
         "mode".into(),
         serde_json::Value::String(patch.mode.as_str().to_string()),
@@ -238,7 +241,10 @@ mod tests {
     #[test]
     fn patch_signals_frame_ends_with_double_newline() {
         let frame = format_patch_signals("x", &json!(null));
-        assert!(frame.ends_with("\n\n"), "SSE frames must end with \\n\\n; got: {frame:?}");
+        assert!(
+            frame.ends_with("\n\n"),
+            "SSE frames must end with \\n\\n; got: {frame:?}"
+        );
     }
 
     #[test]
@@ -253,7 +259,10 @@ mod tests {
     fn patch_signals_loading_envelope_round_trips() {
         let value = json!({"kind": "loading"});
         let frame = format_patch_signals("agents", &value);
-        let data_line = frame.lines().find(|l| l.starts_with("data: ")).expect("data line");
+        let data_line = frame
+            .lines()
+            .find(|l| l.starts_with("data: "))
+            .expect("data line");
         let parsed: serde_json::Value =
             serde_json::from_str(&data_line["data: ".len()..]).expect("valid JSON");
         assert_eq!(parsed["name"], "agents");
@@ -264,7 +273,10 @@ mod tests {
     fn patch_signals_ok_envelope_round_trips() {
         let value = json!({"kind": "ok", "value": {"commits": 3}});
         let frame = format_patch_signals("log", &value);
-        let data_line = frame.lines().find(|l| l.starts_with("data: ")).expect("data line");
+        let data_line = frame
+            .lines()
+            .find(|l| l.starts_with("data: "))
+            .expect("data line");
         let parsed: serde_json::Value =
             serde_json::from_str(&data_line["data: ".len()..]).expect("valid JSON");
         assert_eq!(parsed["value"]["kind"], "ok");
@@ -291,13 +303,19 @@ mod tests {
     #[test]
     fn patch_set_frame_ends_with_double_newline() {
         let frame = format_patch_set(&json!(42), "ship.x()");
-        assert!(frame.ends_with("\n\n"), "SSE frames must end with \\n\\n; got: {frame:?}");
+        assert!(
+            frame.ends_with("\n\n"),
+            "SSE frames must end with \\n\\n; got: {frame:?}"
+        );
     }
 
     #[test]
     fn patch_set_null_value_round_trips() {
         let frame = format_patch_set(&serde_json::Value::Null, "ship.actors.list()");
-        let data_line = frame.lines().find(|l| l.starts_with("data: ")).expect("data line");
+        let data_line = frame
+            .lines()
+            .find(|l| l.starts_with("data: "))
+            .expect("data line");
         let parsed: serde_json::Value =
             serde_json::from_str(&data_line["data: ".len()..]).expect("valid JSON");
         assert_eq!(parsed["op"], "set");
@@ -360,8 +378,7 @@ mod tests {
         };
         let frame = format_patch_elements(&p);
         let data_line = frame.lines().find(|l| l.starts_with("data: ")).unwrap();
-        let parsed: serde_json::Value =
-            serde_json::from_str(&data_line["data: ".len()..]).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&data_line["data: ".len()..]).unwrap();
         assert_eq!(parsed["selector"], "#main-list .item[data-id='42']");
         assert_eq!(parsed["mode"], "morph");
         assert_eq!(parsed["html"], "<div class='item' data-id='42'>x</div>");
@@ -378,9 +395,11 @@ mod tests {
         };
         let frame = format_patch_elements(&p);
         let data_line = frame.lines().find(|l| l.starts_with("data: ")).unwrap();
-        let parsed: serde_json::Value =
-            serde_json::from_str(&data_line["data: ".len()..]).unwrap();
-        assert!(parsed.get("settle").is_none(), "settle should be absent: {parsed}");
+        let parsed: serde_json::Value = serde_json::from_str(&data_line["data: ".len()..]).unwrap();
+        assert!(
+            parsed.get("settle").is_none(),
+            "settle should be absent: {parsed}"
+        );
     }
 
     #[test]
@@ -431,7 +450,10 @@ mod tests {
     #[test]
     fn keepalive_is_sse_comment() {
         let ka = format_keepalive();
-        assert!(ka.starts_with(':'), "SSE comments start with colon; got: {ka:?}");
+        assert!(
+            ka.starts_with(':'),
+            "SSE comments start with colon; got: {ka:?}"
+        );
     }
 
     #[test]

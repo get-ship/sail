@@ -8,6 +8,15 @@ description = "Thin re-export facade over deck-core + deck-axum + deck-host + de
 [lib]
 name = "deck"
 path = "src/lib.rs"
+# Work around a Cargo cdylib/rlib filename collision: sail-compiler is built as
+# both `lib` (hashed rlib for dependents) and `cdylib` (unhashed native shared
+# lib) in the same workspace. The cdylib link step drops an unhashed
+# `libsail_compiler.rlib` into `target/debug/deps`, which rustc then treats as a
+# "newer version" of the crate and rejects when loading deck's dependencies
+# during doctest compilation (error[E0463]/E0460). deck has no doctests, so
+# disabling them avoids the harness compilation that triggers the collision
+# without losing test coverage. See claim c-2026-07-19T18-12-45-685Z-f499ce4b.
+doctest = false
 
 [features]
 default = []

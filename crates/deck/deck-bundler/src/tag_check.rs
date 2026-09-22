@@ -1,7 +1,7 @@
 //! Post-bundle tag-collision check (#308).
 //!
 //! The deck bundler deduplicates shared modules into a single chunk via
-//! `manual_code_splitting` so two views importing the same primitive get one
+//! `manual_code_splitting` so two routes importing the same primitive get one
 //! `customElements.define("ship-foo", …)` call across the whole bundle —
 //! the silent-hijack class this check kills was the regression where
 //! `min_share_count: Some(1)` was off and a primitive was duplicated per
@@ -19,8 +19,8 @@
 //!
 //! Module boundary: byte-level scan. The compiler only emits
 //! `customElements.define("<tag>", <ClassName>)` literals — see
-//! `crates/sui/compiler/src/emit/js/component.rs:60` and the runtime's
-//! `defineComponent` in `packages/sui/runtime/src/component.ts:235,330`.
+//! `crates/sail/compiler/src/emit/js/component.rs:60` and the runtime's
+//! `defineComponent` in `packages/sail/runtime/src/component.ts:235,330`.
 //! The pattern is short enough to match by hand and not worth a regex
 //! dependency. If a future caller needs richer patterns, swap for the
 //! `regex` crate.
@@ -29,7 +29,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 
 /// Walk `out_dir` (recursively), collect every `customElements.define("<tag>", …)`
 /// call across all `.js` files, and return a map from tag → list of files that
@@ -123,9 +123,7 @@ fn extract_tag_defines(body: &str) -> Vec<String> {
         let tag_start = j;
         j += 1;
         while j < bytes.len()
-            && (bytes[j].is_ascii_lowercase()
-                || bytes[j].is_ascii_digit()
-                || bytes[j] == b'-')
+            && (bytes[j].is_ascii_lowercase() || bytes[j].is_ascii_digit() || bytes[j] == b'-')
         {
             j += 1;
         }
@@ -135,8 +133,8 @@ fn extract_tag_defines(body: &str) -> Vec<String> {
         }
         // SAFETY: tag_start..j is ASCII lowercase / digit / '-' (we just walked it)
         // and the surrounding `body` is str, so this is a valid byte boundary.
-        let tag = std::str::from_utf8(&bytes[tag_start..j])
-            .expect("ascii tag bytes are valid utf-8");
+        let tag =
+            std::str::from_utf8(&bytes[tag_start..j]).expect("ascii tag bytes are valid utf-8");
         out.push(tag.to_string());
         i = j + 1;
     }
@@ -224,19 +222,19 @@ mod tests {
             &dir,
             "view-a.js",
             r#"
-                customElements.define("sui-pagination", class PaginationA {});
+                customElements.define("sail-pagination", class PaginationA {});
             "#,
         );
         write_chunk(
             &dir,
             "view-b.js",
             r#"
-                customElements.define("sui-pagination", class PaginationB {});
+                customElements.define("sail-pagination", class PaginationB {});
             "#,
         );
         let err = verify_no_duplicate_tag_defines(&dir).unwrap_err();
         let msg = format!("{err:#}");
-        assert!(msg.contains("sui-pagination"), "msg must name tag: {msg}");
+        assert!(msg.contains("sail-pagination"), "msg must name tag: {msg}");
         assert!(
             msg.contains("view-a.js") && msg.contains("view-b.js"),
             "msg must name both chunks: {msg}"
@@ -254,15 +252,15 @@ mod tests {
         write_chunk(
             &dir,
             "a.js",
-            "customElements.define('sui-collider', class ColliderA {});",
+            "customElements.define('sail-collider', class ColliderA {});",
         );
         write_chunk(
             &dir,
             "b.js",
-            "customElements.define('sui-collider', class ColliderB {});",
+            "customElements.define('sail-collider', class ColliderB {});",
         );
         let err = verify_no_duplicate_tag_defines(&dir).unwrap_err();
-        assert!(format!("{err:#}").contains("sui-collider"));
+        assert!(format!("{err:#}").contains("sail-collider"));
         fs::remove_dir_all(&dir).ok();
     }
 
@@ -272,15 +270,15 @@ mod tests {
         write_chunk(
             &dir,
             "chunks/view-a.js",
-            "customElements.define(\"sui-stage\", class StageA {});",
+            "customElements.define(\"sail-stage\", class StageA {});",
         );
         write_chunk(
             &dir,
             "chunks/deep/nested/view-b.js",
-            "customElements.define(\"sui-stage\", class StageB {});",
+            "customElements.define(\"sail-stage\", class StageB {});",
         );
         let err = verify_no_duplicate_tag_defines(&dir).unwrap_err();
-        assert!(format!("{err:#}").contains("sui-stage"));
+        assert!(format!("{err:#}").contains("sail-stage"));
         fs::remove_dir_all(&dir).ok();
     }
 
@@ -295,10 +293,10 @@ mod tests {
         // future contributors know not to expect semantic awareness.
         let body = r#"
             // The following string happens to contain the literal sequence
-            // customElements.define("sui-x", …) but it is a comment.
-            const s = "customElements.define('sui-y', …)";
+            // customElements.define("sail-x", …) but it is a comment.
+            const s = "customElements.define('sail-y', …)";
         "#;
-        // This *will* match `sui-x` and `sui-y` — the byte scan is
+        // This *will* match `sail-x` and `sail-y` — the byte scan is
         // intentionally dumb. The intent of this test is to document that
         // the check is positional, not to assert no-match. If semantic
         // awareness becomes a requirement, the fix is to swap the byte
@@ -306,7 +304,7 @@ mod tests {
         let tags = extract_tag_defines(body);
         assert_eq!(
             tags,
-            vec!["sui-x".to_string(), "sui-y".to_string()],
+            vec!["sail-x".to_string(), "sail-y".to_string()],
             "positional byte scan matches substrings; documented behavior"
         );
     }

@@ -12,8 +12,8 @@ import { test, expect } from '@playwright/test'
 //   • <a> navigation is client-side (mountRouter intercepts; no document reload)
 //   • the counter hydrates to 0 and signal reactivity drives DOM updates
 //
-// NOTE on rendering: the dev SPA path is CLIENT-rendered. Per-route SSR holds
-// for the named-`view` path (see deck-conformance/e2e/counter.sh) but NOT here.
+// NOTE on rendering: the dev SPA path is CLIENT-rendered. Per-route SSR is
+// not on this loop.
 // The shell test pins `deck-render:csr` on purpose: if deck ever adds dev-time
 // per-route SSR, that assertion goes red and we update it consciously.
 
@@ -34,8 +34,8 @@ test.describe('deck dev — standalone SPA runtime loop', () => {
 
   test('client entry mounts the router and renders the home route', async ({ page }) => {
     await page.goto('/')
-    await expect(page.locator('main.home h1')).toHaveText('deck e2e')
-    await expect(page.locator('.ssr-probe')).toHaveText('two plus two is 4')
+    await expect(page.getByRole('heading', { name: 'deck e2e' })).toBeVisible()
+    await expect(page.getByText('two plus two is 4')).toBeVisible()
   })
 
   test('<a> navigation is client-side — mounts the counter without a full reload', async ({
@@ -49,7 +49,7 @@ test.describe('deck dev — standalone SPA runtime loop', () => {
     })
     await page.getByRole('link', { name: 'counter' }).click()
     await expect(page).toHaveURL(/\/counter$/)
-    await expect(page.locator('.counter h1')).toHaveText('Counter')
+    await expect(page.getByRole('heading', { name: 'Counter' })).toBeVisible()
     const sentinel = await page.evaluate(
       () => (window as unknown as { __deckE2E?: string }).__deckE2E,
     )
@@ -58,7 +58,7 @@ test.describe('deck dev — standalone SPA runtime loop', () => {
 
   test('counter hydrates to 0 and signal reactivity drives DOM updates', async ({ page }) => {
     await page.goto('/counter')
-    const count = page.locator('.counter strong')
+    const count = page.locator('strong')
     await expect(count).toHaveText('0')
     await page.getByRole('button', { name: 'increment' }).click()
     await expect(count).toHaveText('1')

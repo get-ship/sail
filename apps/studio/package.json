@@ -1,0 +1,36 @@
+{
+  "name": "@ship/studio",
+  "private": true,
+  "type": "module",
+  "description": "Sail Studio \u2014 activity rail and editor workspace. Surfaces: Edit \u00b7 Components \u00b7 Themes \u00b7 Tasks \u00b7 Config. Checks is a shell panel.",
+  "exports": {
+    ".": "./src/compositions/shell/index.ts",
+    "./shell": "./src/compositions/shell/index.ts",
+    "./edit": "./src/edit/index.ts",
+    "./checks": "./src/checks/index.ts",
+    "./design": "./src/design/index.ts",
+    "./tasks": "./src/tasks/index.ts"
+  },
+  "scripts": {
+    "dev": "cd ../.. && cargo run -q -p deck-cli --bin sail -- dev --project apps/studio --addr ${STUDIO_ADDR:-127.0.0.1:7891}",
+    "build": "cd ../.. && cargo run -q -p deck-cli --bin sail -- build --project apps/studio --base assets",
+    "test": "vitest run",
+    "test:boot-smoke": "bun ./scripts/boot-smoke.ts",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@ship/sail-runtime": "workspace:*",
+    "@ship/sail-highlight": "workspace:*",
+    "@ship/sail-dom": "workspace:*",
+    "@ship/sail-l1": "workspace:*",
+    "@ship/sail-studio-client": "workspace:*",
+    "@ship/sail-studio-bridge": "workspace:*",
+    "@ship/sail-studio-shell": "workspace:*",
+    "@ship/tokens": "workspace:*",
+    "@ship/sail-components": "workspace:*"
+  },
+  "devDependencies": {
+    "happy-dom": "^20.9.0",
+    "vitest": "^4.1.5"
+  }
+}

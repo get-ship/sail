@@ -1,6 +1,6 @@
 // Standalone vitest config for the integration suite.
 //
-// Aliases sui runtime + dom to the sui repo's own source, and the
+// Aliases sail runtime + dom to the sail repo's own source, and the
 // contract SDK to ship-contracts. Relative paths so the config is
 // portable across clones — earlier revisions hardcoded
 // absolute author-machine paths which only worked on the original
@@ -11,15 +11,15 @@
 // touching this file.
 
 // Resolve the sibling ship-contracts checkout relative to a discovered
-// Ship umbrella root, not a hardcoded absolute path. Walks up from
+// umbrella root, not a hardcoded absolute path. Walks up from
 // import.meta.url looking for a parent that contains a `ship-contracts`
-// subdir (the same idiom helm's `scripts/_path.ts discoverShipRoot` uses).
-// `SHIP_CONTRACTS_DIR` overrides for CI / containers / non-umbrella layouts.
+// subdir. `SHIP_CONTRACTS_DIR` overrides for CI / containers / non-umbrella
+// layouts.
 
 import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { defineConfig } from 'vitest/config'
-import { SHIP_VITEST_DEFAULTS } from '../packages/sui/test-setup/src/vitest.ts'
+import { SHIP_VITEST_DEFAULTS } from '../packages/sail/test-setup/src/vitest.ts'
 
 function discoverShipContractsDir(): string {
   let dir = new URL('.', import.meta.url).pathname
@@ -43,26 +43,26 @@ const SHIP_CONTRACTS_SDK_CLIENT = resolve(
 export default defineConfig({
   resolve: {
     alias: {
-      // `@ship/sui-*` resolves to this repo's source (sui owns the framework).
-      '@ship/sui-runtime/template-hooks': resolve(
+      // `@ship/sail-*` resolves to this repo's source (sail owns the framework).
+      '@ship/sail-runtime/template-hooks': resolve(
         __dirname,
-        '../packages/sui/runtime/src/template-hooks/index.ts',
+        '../packages/sail/runtime/src/template-hooks/index.ts',
       ),
-      '@ship/sui-runtime/dev': resolve(
+      '@ship/sail-runtime/dev': resolve(
         __dirname,
-        '../packages/sui/runtime/src/dev.ts',
+        '../packages/sail/runtime/src/dev.ts',
       ),
-      '@ship/sui-runtime': resolve(
+      '@ship/sail-runtime': resolve(
         __dirname,
-        '../packages/sui/runtime/src/index.ts',
+        '../packages/sail/runtime/src/index.ts',
       ),
-      '@ship/sui-dom/test-utils': resolve(
+      '@ship/sail-dom/test-utils': resolve(
         __dirname,
-        '../packages/sui/dom/src/test-utils/compile-sui.ts',
+        '../packages/sail/dom/test/compile-sail.ts',
       ),
-      '@ship/sui-dom': resolve(
+      '@ship/sail-dom': resolve(
         __dirname,
-        '../packages/sui/dom/src/index.ts',
+        '../packages/sail/dom/src/index.ts',
       ),
       // Contract SDK lives in ship-contracts.
       '@ship/sdk-client': SHIP_CONTRACTS_SDK_CLIENT,

@@ -1,0 +1,2 @@
+.sail-chip:not([removable]) button[aria-label='Remove'] { display:none; }
+.sail-chip[removable] button[aria-label='Remove'] { display:inline-flex;align-items:center;justify-content:center; }

@@ -1,0 +1,202 @@
+//! The `<scope>` grammar — one source of truth for every construct a
+//! `<scope>` block accepts: prop forms, type aliases, Style consts, and
+//! residual CVA/compound (typed, no paint).
+//!
+//! **Paint variance (product):** host Style — `match` / `when` / `compound`
+//! plus scope Style consts. Residual CVA-in-props key maps type as key unions
+//! only (no paint). Shared `tone` / `size` bare defaults expand to stdlib
+//! convention unions — ordinary reflected props.
+//!
+//! A sibling of `block_manifest` / `directive_manifest`: the closed grammar
+//! is data, not a hand-listed paragraph on the docs page. The parser
+//! (`parse::scope_block`) is the enforcement point; every row here carries
+//! an `example` that the tests below actually compile (or, for refused
+//! rows, assert fails to compile), so this table cannot drift from the
+//! grammar without failing the build.
+
+use serde::Serialize;
+
+/// One `<scope>` grammar construct: its authored form and what it means.
+#[derive(Debug, Clone, Serialize)]
+pub struct ScopeEntry {
+    /// Short name of the construct, e.g. "union prop".
+    pub form: &'static str,
+    /// The declaration as authored, e.g. `open = false`.
+    pub syntax: &'static str,
+    /// One-line description of the semantics.
+    pub summary: &'static str,
+    /// A complete component source exercising the construct. Compiled by
+    /// the tests; rendered on the reference page as the worked example.
+    pub example: &'static str,
+}
+
+/// The `<scope>` grammar, in documentation order: props forms first, then
+/// type aliases, Style consts, residual CVA / compound.
+pub const SCOPE_GRAMMAR: &[ScopeEntry] = &[
+    ScopeEntry {
+        form: "boolean prop",
+        syntax: "open = false",
+        summary: "a true/false literal default infers a boolean attribute, reflected onto the host",
+        example: "<scope>\n  props: { open = false }\n</scope>\n<p>{open}</p>",
+    },
+    ScopeEntry {
+        form: "number prop",
+        syntax: "count = 0",
+        summary: "a numeric literal default infers a number prop",
+        example: "<scope>\n  props: { count = 0 }\n</scope>\n<p>{count}</p>",
+    },
+    ScopeEntry {
+        form: "string prop",
+        syntax: "label = 'Hi'",
+        summary: "a quoted literal default infers a string prop",
+        example: "<scope>\n  props: { label = 'Hi' }\n</scope>\n<p>{label}</p>",
+    },
+    ScopeEntry {
+        form: "annotated prop",
+        syntax: "title: string",
+        summary: "an annotation may stand alone (string / number / boolean); annotation and default are each optional, but a field needs at least one",
+        example: "<scope>\n  props: { title: string }\n</scope>\n<p>{title}</p>",
+    },
+    ScopeEntry {
+        form: "union prop",
+        syntax: "variant: 'solid' | 'soft' = 'solid'",
+        summary: "a union of string literals, reflected as an attribute; default is optional (omit = rest) and when present must be a member — no first-member magic",
+        example: "<scope>\n  props: { variant: 'solid' | 'soft' = 'solid' }\n</scope>\n<p>{variant}</p>",
+    },
+    ScopeEntry {
+        form: "shared tone/size prop",
+        syntax: "tone = 'primary'  ·  size = 'md'",
+        summary: "Bare tone/size defaults type as the shared stdlib unions (tone: primary·info·success·warning·danger·accent·muted; size: xs·sm·md·lg) and reflect as ordinary props — CVA axes by convention",
+        example: "<scope>\n  props: { tone = 'primary', size = 'md' }\n</scope>\n<p>{tone}</p>",
+    },
+    ScopeEntry {
+        form: "identity prop",
+        syntax: "rows: Row[] = []",
+        summary: "any other TS type is an identity prop — a plain reactive JS property (set with plain name={expr}), never an attribute, no coercion; the type is carried verbatim into the .d.ts",
+        example: "<scope>\n  type Row = { id: string }\n  props: { rows: Row[] = [] }\n</scope>\n<p>{rows.length}</p>",
+    },
+    ScopeEntry {
+        form: "as-cast default",
+        syntax: "items = [] as string[]",
+        summary: "a literal default with an `as` cast — the cast supplies the type when no annotation was written",
+        example: "<scope>\n  props: { items = [] as string[] }\n</scope>\n<p>{items.length}</p>",
+    },
+    ScopeEntry {
+        form: "kebab-case name",
+        syntax: "'line-numbers' = false",
+        summary: "quote a prop name to declare a hyphenated attribute",
+        example: "<scope>\n  props: { 'line-numbers' = false }\n</scope>\n<p>ok</p>",
+    },
+    ScopeEntry {
+        form: "documented prop",
+        syntax: "/** Shown when the list is empty. */ emptyText = ''",
+        summary: "a JSDoc block immediately before a field becomes the prop's description — it feeds the CEM and the generated docs tables",
+        example: "<scope>\n  props: {\n    /** Shown when the list is empty. */\n    emptyText = ''\n  }\n</scope>\n<p>{emptyText}</p>",
+    },
+    ScopeEntry {
+        form: "type alias",
+        syntax: "type Row = { id: string }  ·  export type …",
+        summary: "TypeScript type aliases, threaded verbatim into the compiled module; `export type` makes the alias importable from the emitted .d.ts",
+        example: "<scope>\n  export type Item = { id: string, label: string }\n  props: { selected: Item | null = null }\n</scope>\n<p>ok</p>",
+    },
+    ScopeEntry {
+        form: "type import",
+        syntax: "import type { Row } from './types'",
+        summary: "type-only imports are legal in `<scope>` (static surface); value/behavior imports are refused",
+        example: "<scope>\n  import type { Row } from './row-types'\n  props: { rows: Row[] = [] }\n</scope>\n<p>ok</p>",
+    },
+    ScopeEntry {
+        form: "Style declaration",
+        syntax: "style filled = { bg(primary).pad({ x: 2 }) }",
+        summary: "first-class compile-time Style (object / compose / call form); attach with tag-position style(name) on the host",
+        example: "<scope>\n  style filled = { bg(primary).pad({ x: 2 }) }\n  props: { label = '' }\n</scope>\n<span style(filled)>\n  {label}\n</span>",
+    },
+    ScopeEntry {
+        form: "Identity type annotation",
+        syntax: "name: { /* arbitrary TypeScript type */ }",
+        summary: "object type annotations are passed through verbatim as Identity; CVA key→sx maps are no longer special-cased — declare a string union and paint with host match / Style",
+        example: "<scope>\n  props: {\n    density: { cozy: string, compact: string }\n  }\n</scope>\n<p>ok</p>",
+    },
+    ScopeEntry {
+        form: "residual compound array",
+        syntax: "compound: [ { when: { variant: 'solid', size: 'lg' }, sx: '…' } ]",
+        summary: "residual scope compound arrays are skipped (no paint); product form is style({ compound: [ … ] })",
+        example: "<scope>\n  props: {\n    variant: 'solid' | 'soft' = 'solid'\n    size: 'sm' | 'lg' = 'sm'\n  }\n  compound: [ { when: { variant: 'solid', size: 'lg' }, sx: 'tracking-wide' } ]\n</scope>\n<p>ok</p>",
+    },
+];
+
+/// One member kind `<scope>` refuses, with the redirect the error names.
+#[derive(Debug, Clone, Serialize)]
+pub struct ScopeRefusal {
+    pub syntax: &'static str,
+    pub instead: &'static str,
+    /// A source that must FAIL to compile — asserted by the tests.
+    pub example: &'static str,
+}
+
+/// What `<scope>` is not: nothing in the block executes. These members are
+/// refused with an error naming the alternative.
+pub const SCOPE_REFUSALS: &[ScopeRefusal] = &[
+    ScopeRefusal {
+        syntax: "runtime value import",
+        instead: "import type { … } for types, or import { styleName } from './peer.sail' for Style values — behavior imports belong in <controller>",
+        example: "<scope>\n  import { signal } from '@ship/sail-runtime'\n  props: { open = false }\n</scope>\n<p>ok</p>",
+    },
+    ScopeRefusal {
+        syntax: "let / var / non-Style const",
+        instead: "Style declaration (`style name = {…}`) or a literal prop default; computation belongs in <controller>",
+        example: "<scope>\n  let n = 1\n  props: { open = false }\n</scope>\n<p>ok</p>",
+    },
+];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{CompileMode, CompileOpts, ComponentMeta, compile};
+
+    fn opts() -> CompileOpts {
+        CompileOpts {
+            mode: CompileMode::Component,
+            component_meta: Some(ComponentMeta {
+                name: "scope-doc-demo".into(),
+            }),
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn every_grammar_example_compiles() {
+        for row in SCOPE_GRAMMAR {
+            if let Err(e) = compile(row.example, opts()) {
+                panic!(
+                    "scope manifest row `{}` has a non-compiling example:\n{}\n-> {}",
+                    row.form, row.example, e.message
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn every_refusal_example_fails() {
+        for row in SCOPE_REFUSALS {
+            assert!(
+                compile(row.example, opts()).is_err(),
+                "scope refusal `{}` unexpectedly compiled — the grammar accepts what this table documents as refused",
+                row.syntax
+            );
+        }
+    }
+
+    #[test]
+    fn forms_are_unique() {
+        let mut forms: Vec<&str> = SCOPE_GRAMMAR.iter().map(|r| r.form).collect();
+        let before = forms.len();
+        forms.sort_unstable();
+        forms.dedup();
+        assert_eq!(
+            forms.len(),
+            before,
+            "SCOPE_GRAMMAR must have unique form names"
+        );
+    }
+}

@@ -1,0 +1,72 @@
+{
+  "service": "SailTask",
+  "method": "List",
+  "mcp_tool": "sail_task_list",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "actor": {
+        "description": "Filter by last comment actor: `human` | `agent` | `all`.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "drift": {
+        "description": "Filter by drift: `ok` | `moved` | `lost` | `all`.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "label": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "open": {
+        "description": "When true, only open statuses (backlog|todo|in_progress|review).",
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "project": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "status": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "TaskListRet",
+    "type": "object",
+    "required": [
+      "ok",
+      "tasks"
+    ],
+    "properties": {
+      "ok": {
+        "type": "boolean"
+      },
+      "tasks": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Json"
+        }
+      }
+    },
+    "definitions": {
+      "Json": {}
+    }
+  }
+}

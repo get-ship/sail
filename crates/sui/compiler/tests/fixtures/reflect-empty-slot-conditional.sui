@@ -1,9 +1,0 @@
-<prop name="busy" type="bool" default="false" />
-
-<button part="button">
-  {#if busy()}
-    <span class="spinner" aria-hidden="true"></span>
-  {:else}
-    <slot reflect-empty="data-icon-only"></slot>
-  {/if}
-</button>

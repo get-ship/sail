@@ -1,0 +1,139 @@
+{
+  "service": "SailAuthoring",
+  "method": "Edit",
+  "mcp_tool": "sail_edit",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "actor": {
+        "description": "Attribution for applied auto-fixes.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "autofix": {
+        "description": "Auto-fix mode: `off` | `suggest` | `apply` (default `off`).",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "dryRun": {
+        "description": "When true, validate and return result without writing disk.",
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "identity": {
+        "description": "WI7 element identity target. Scopes the edit to the resolved component (path from `identity.file`; ops nodeIds rewritten when the element moved).",
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Json"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "ops": {
+        "description": "Atomic batch of structured ops (`insert`/`replace`/`wrap`/`setAttr`/ `removeAttr`/`setSx`/`move`). For full-content write pass `[]` with `writeSource: true` and the complete body in `source` (WI3 check-guard).",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Json"
+        }
+      },
+      "path": {
+        "description": "Workspace-relative `.sail` path. Optional when `identity.file` is set (WI7 identity-scoped target).",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "source": {
+        "description": "Optional inline source (else file is read). With `writeSource: true` and empty `ops`, this is the full file body to check-guard and commit. Combined with dryRun for validate-only.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "writeSource": {
+        "description": "Full-content check-guarded write (WI3). When true with empty `ops` and a string `source`, run check on the body; on error diagnostics leave the file byte-identical and return `applied: false`; on success write and return diagnostics for the new state. Prefer over any patch DSL.",
+        "type": [
+          "boolean",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "ops"
+    ],
+    "definitions": {
+      "Json": {}
+    }
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "EditRet",
+    "type": "object",
+    "required": [
+      "applied",
+      "autoFixed",
+      "diagnostics",
+      "modelRevision"
+    ],
+    "properties": {
+      "applied": {
+        "type": "boolean"
+      },
+      "autoFixed": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Json"
+        }
+      },
+      "diagnostics": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Json"
+        }
+      },
+      "identity": {
+        "description": "Resolved live identity when an identity-scoped edit was requested.",
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Json"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "message": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "modelRevision": {
+        "type": "string"
+      },
+      "path": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "source": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "definitions": {
+      "Json": {}
+    }
+  }
+}

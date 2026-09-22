@@ -4,12 +4,12 @@ import { test, expect } from '@playwright/test'
 //
 // The dev loop (dev-loop.spec) proves `deck dev`. THIS proves the path a user
 // actually SHIPS: `deck build --bundle-framework` → a self-contained dir → served
-// by a dumb static host (serve-built.mjs), no deck process, no shipd. If the
+// by a dumb static host (serve-built.ts), no deck process, no shipd. If the
 // build emits a broken bundle (e.g. an un-importmapped bare pack import — the
 // exact blank-page class deck-bundler now fails loud on), these go red.
 //
 // Runs on its own port against `--out ./.prod-build` so it never clobbers the
-// dev server's `./app/.deck`. Absolute URLs (own webServer, no baseURL).
+// dev server's `./app/dist`. Absolute URLs (own webServer, no baseURL).
 
 // Must match playwright.config.ts's PROD_PORT default (7882 — off the example
 // app's 7880 to avoid a cross-harness collision).
@@ -43,10 +43,10 @@ test.describe('deck build — shipped static SPA', () => {
 
   test('the built entry mounts and renders the home route', async ({ page }) => {
     await page.goto(`${BASE}/`)
-    await expect(page.locator('main.home h1')).toHaveText('deck e2e')
+    await expect(page.getByRole('heading', { name: 'deck e2e' })).toBeVisible()
     // Proof the self-contained framework singletons loaded + the bundled packs
     // resolved: the route actually rendered.
-    await expect(page.locator('.ssr-probe')).toHaveText('two plus two is 4')
+    await expect(page.getByText('two plus two is 4')).toBeVisible()
   })
 
   test('client-side <a> navigation works from the built bundle (no full reload)', async ({
@@ -58,7 +58,7 @@ test.describe('deck build — shipped static SPA', () => {
     })
     await page.getByRole('link', { name: 'counter' }).click()
     await expect(page).toHaveURL(/\/counter$/)
-    await expect(page.locator('.counter h1')).toHaveText('Counter')
+    await expect(page.getByRole('heading', { name: 'Counter' })).toBeVisible()
     const sentinel = await page.evaluate(
       () => (window as unknown as { __deckE2E?: string }).__deckE2E,
     )
@@ -67,7 +67,7 @@ test.describe('deck build — shipped static SPA', () => {
 
   test('signal reactivity works in the built bundle', async ({ page }) => {
     await page.goto(`${BASE}/counter`)
-    const count = page.locator('.counter strong')
+    const count = page.locator('strong')
     await expect(count).toHaveText('0')
     await page.getByRole('button', { name: 'increment' }).click()
     await expect(count).toHaveText('1')

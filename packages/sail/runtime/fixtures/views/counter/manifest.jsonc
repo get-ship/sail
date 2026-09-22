@@ -1,0 +1,8 @@
+// Route metadata for views/counter/.
+{
+  "name": "counter",
+  "path": "/counter",
+  "title": "Counter",
+  "layout": "default",
+  "auth": "public"
+}

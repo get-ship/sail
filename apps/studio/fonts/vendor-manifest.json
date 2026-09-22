@@ -1,0 +1,13 @@
+{
+  "Fraunces": {
+    "family": "Fraunces",
+    "source": "google-fonts",
+    "license": "OFL-1.1",
+    "licenseUrl": "https://scripts.sil.org/OFL",
+    "files": [
+      "fraunces-latin-100900-2.woff2"
+    ],
+    "css": "fonts.css",
+    "axes": null
+  }
+}

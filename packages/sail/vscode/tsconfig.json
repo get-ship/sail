@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "rootDir": "src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "types": ["node", "vscode"],
+    "noEmit": true,
+    "noUncheckedIndexedAccess": true
+  },
+  "include": ["src"]
+}

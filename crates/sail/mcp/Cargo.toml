@@ -1,0 +1,32 @@
+[package]
+name = "sail-mcp"
+version = "0.1.0"
+edition = "2024"
+license.workspace = true
+publish = false
+description = "MCP 2026-07-28 stateless server for Sail agent authoring — generated projection of sail-ops contracts."
+
+[[bin]]
+name = "sail-mcp"
+path = "src/main.rs"
+
+[lib]
+name = "sail_mcp"
+path = "src/lib.rs"
+
+[dependencies]
+sail-ops = { path = "../ops" }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+axum = { workspace = true, features = ["http1"] }
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros", "net", "io-util"] }
+base64 = "0.22"
+
+[dev-dependencies]
+tempfile = { workspace = true }
+http-body-util = "0.1"
+tower = { version = "0.5", features = ["util"] }
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros", "net", "io-util"] }
+
+[lints]
+workspace = true

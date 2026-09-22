@@ -1,8 +1,0 @@
-{
-  // Space Chrome editor — paired editing task (recorded lane output)
-  "name": "space-editor",
-  "path": "/space-editor",
-  "title": "Space Chrome editor",
-  "layout": "default",
-  "auth": "public"
-}

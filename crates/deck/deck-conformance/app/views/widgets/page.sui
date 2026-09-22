@@ -1,6 +1,0 @@
-<div class="widgets-demo">
-  <h1>Widgets</h1>
-  <p>Using the shared demo-chip component:</p>
-  <demo-chip>widget-alpha</demo-chip>
-  <demo-chip>widget-beta</demo-chip>
-</div>

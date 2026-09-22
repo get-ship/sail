@@ -7,7 +7,7 @@
 
 import { beforeAll, describe, expect, it } from 'vitest'
 
-import { confineController, isRealmLocked, lockdownRealm } from '../src/confine.ts'
+import { confineController, createConfinedFetch, isRealmLocked, lockdownRealm } from '../src/confine.ts'
 
 interface Probe {
   count: number
@@ -91,5 +91,48 @@ describe('SES confined controller execution', () => {
     })
     // ship.secrets is not endowed → access throws, not silently succeeds.
     expect(result.reached).not.toBe(true)
+  })
+})
+
+describe('createConfinedFetch — the runtime network-capability wall', () => {
+  it('delegates to the real fetch for a granted origin', async () => {
+    let called: [RequestInfo | URL, RequestInit | undefined] | undefined
+    const realFetch = ((input: RequestInfo | URL, init?: RequestInit) => {
+      called = [input, init]
+      return Promise.resolve(new Response('ok'))
+    }) as typeof fetch
+
+    const confined = createConfinedFetch(['https://api.example.com'], realFetch)
+    const res = await confined('https://api.example.com/x')
+    expect(await res.text()).toBe('ok')
+    expect(called?.[0]).toBe('https://api.example.com/x')
+  })
+
+  it('throws for an origin outside the allowlist, never reaching the real fetch', async () => {
+    let reached = false
+    const realFetch = (() => {
+      reached = true
+      return Promise.resolve(new Response('ok'))
+    }) as typeof fetch
+
+    const confined = createConfinedFetch(['https://api.example.com'], realFetch)
+    await expect(confined('https://evil.com/x')).rejects.toThrow()
+    expect(reached).toBe(false)
+  })
+
+  it('"self" grants a relative target but not an absolute cross-origin one', async () => {
+    const realFetch = (() => Promise.resolve(new Response('ok'))) as typeof fetch
+    const confined = createConfinedFetch(['self'], realFetch)
+    await expect(confined('/api/x')).resolves.toBeInstanceOf(Response)
+    await expect(confined('https://evil.com/x')).rejects.toThrow()
+  })
+
+  it('accepts URL and Request inputs, matching the same allowlist', async () => {
+    const realFetch = (() => Promise.resolve(new Response('ok'))) as typeof fetch
+    const confined = createConfinedFetch(['https://api.example.com'], realFetch)
+    await expect(confined(new URL('https://api.example.com/x'))).resolves.toBeInstanceOf(Response)
+    await expect(
+      confined(new Request('https://evil.com/x')),
+    ).rejects.toThrow()
   })
 })

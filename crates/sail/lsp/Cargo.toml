@@ -1,0 +1,27 @@
+[package]
+name = "sail-lsp"
+version = "0.1.0"
+edition = "2024"
+license.workspace = true
+description = "Language Server for SAIL `.sail` templates — thin LSP shell over sail-compiler."
+
+[lib]
+name = "sail_lsp"
+path = "src/lib.rs"
+
+[[bin]]
+name = "sail-lsp"
+path = "src/bin/sail-lsp.rs"
+
+[dependencies]
+sail-compiler = { path = "../compiler" }
+sail-lint = { path = "../lint" }
+spinnaker = { path = "../spinnaker" }
+lsp-server = "0.7"
+lsp-types = "0.95"
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+
+[lints]
+workspace = true

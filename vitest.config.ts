@@ -11,22 +11,28 @@
 import { defineConfig } from 'vitest/config'
 
 const PROJECTS = [
-  'packages/components/sui/canvas',
-  'packages/components/sui/charts',
-  'packages/components/sui/chat-elements',
-  'packages/components/sui/media',
-  'packages/components/sui/primitives',
-  'packages/components/sui/viewer',
-  'packages/deck/eval',
+  'packages/components/sail/code-editor',
+  'packages/components/sail/mermaid',
+  'packages/components/sail/chat-elements',
+  'packages/components/sail/media',
+  'packages/components/sail/primitives',
+  'packages/components/sail/viewer',
   'packages/deck/host',
+  'packages/deck/hono',
   'packages/deck/router',
-  'packages/sui/dom',
-  'packages/sui/runtime',
-  'packages/sui/test-setup',
-  'packages/sui/tutorial',
+  'packages/sail/dom',
+  'packages/sail/l1',
+  'packages/sail/runtime',
+  'packages/sail/tokens',
+  'crates/sail/compiler/stdlib',
+  'packages/sail/test-setup',
+  'packages/sail/sail-test',
+  'packages/sail/studio-bridge',
+  'packages/sail/studio-shell',
+  'apps/studio',
   // `tests/integration` is intentionally omitted — its `vitest.config.ts`
   // has a pre-existing module-resolution issue (rolldown can't resolve the
-  // relative TS import of `../packages/sui/test-setup/src/vitest.ts`).
+  // relative TS import of `../packages/sail/test-setup/src/vitest.ts`).
   // Track re-inclusion in a follow-up; until then, run it directly with
   // `cd tests/integration && vitest run`.
 ]

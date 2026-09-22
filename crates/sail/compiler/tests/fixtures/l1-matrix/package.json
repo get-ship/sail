@@ -1,0 +1,15 @@
+{
+  "name": "l1-matrix",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Owned L1 × theme matrix. Not the docs site.",
+  "scripts": {
+    "dev": "sail dev"
+  },
+  "dependencies": {
+    "@ship/sail-runtime": "^0.3.0",
+    "@ship/sail-dom": "^0.3.0",
+    "@ship/tokens": "^0.3.0"
+  }
+}

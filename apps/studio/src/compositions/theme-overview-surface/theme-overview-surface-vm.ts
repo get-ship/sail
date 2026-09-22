@@ -1,0 +1,30 @@
+/**
+ * Overview surface entry — re-exports session nav + composition factory.
+ * Prefer createThemeSession + createOverviewEdit in new surfaces.
+ */
+export {
+  PATH_NAV,
+  FACET_DOORS,
+  themeFacetHref,
+  type ThemeFacet,
+} from '../theme-session/theme-nav'
+export {
+  createThemeSession,
+  resolvePaintId,
+  modesForPaintId,
+  themeIdFromLocation,
+  themeDisplayName,
+} from '../theme-session/theme-session'
+export { createOverviewEdit } from './theme-overview-edit'
+
+import { createThemeSession } from '../theme-session/theme-session'
+import { createOverviewEdit } from './theme-overview-edit'
+
+export function createThemeOverviewSurface() {
+  const session = createThemeSession({
+    facet: 'overview',
+    editGuardMessage: 'Add this theme to the project to edit identity.',
+  })
+  const overview = createOverviewEdit(session)
+  return { session, overview }
+}

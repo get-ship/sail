@@ -1,0 +1,5 @@
+/* UA Choose-file chrome is unthemeable. The native input is an opacity
+   overlay in file.sail so click / drop / form stay platform — do not
+   display:none it. */
+.sail-file input[type='file']::file-selector-button { display: none; }
+.sail-file input[type='file']::-webkit-file-upload-button { display: none; }

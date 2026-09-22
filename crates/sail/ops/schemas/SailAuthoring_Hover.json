@@ -1,0 +1,72 @@
+{
+  "service": "SailAuthoring",
+  "method": "Hover",
+  "mcp_tool": "sail_hover",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "column": {
+        "description": "1-based column.",
+        "type": "integer",
+        "format": "uint32",
+        "minimum": 0.0
+      },
+      "line": {
+        "description": "1-based line (matches Check diagnostics / compiler hover).",
+        "type": "integer",
+        "format": "uint32",
+        "minimum": 0.0
+      },
+      "path": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "source": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "column",
+      "line"
+    ]
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "HoverRet",
+    "type": "object",
+    "properties": {
+      "contents": {
+        "description": "Markdown hover contents. Empty/absent when nothing to show.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "range": {
+        "description": "Optional range in 1-based line/col.",
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Json"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "typescriptStatus": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "definitions": {
+      "Json": {}
+    }
+  }
+}

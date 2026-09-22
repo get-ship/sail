@@ -1,8 +1,9 @@
 {
   "name": "@ship/deck-hono",
   "version": "0.2.0",
-  "description": "Deck transport adaptor for Hono / Bun — the TypeScript sibling of deck-axum. Serves a `deck build` SPA output (index.html + hashed assets), the /_deck/* framework singletons, and the live-data SSE / data port, mirroring deck-core's DeckResponse serve contract byte-for-byte. The serve core is framework-agnostic (Request -> Response); the Hono binding is a thin layer.",
+  "description": "Deck transport adaptor for Hono / Bun — the TypeScript sibling of deck-axum. Serves a `deck build` SPA output (index.html + hashed assets), the /_deck/* framework singletons, and /api token + theme CSS, mirroring deck-core's DeckResponse serve contract. Live-data SSE is host-owned (`config.live`). The serve core is framework-agnostic (Request -> Response); the Hono binding is a thin layer.",
   "type": "module",
+  "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -21,7 +22,8 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
   },
   "peerDependencies": {
     "hono": "^4"
@@ -34,6 +36,7 @@
   "devDependencies": {
     "@types/node": "^24.0.0",
     "hono": "^4",
-    "typescript": "~5.8.3"
+    "typescript": "~7.0.2",
+    "vitest": "^4.1.5"
   }
 }

@@ -1,0 +1,459 @@
+<!--
+  /components — component browser.
+
+  One catalog grid: every registry entry shows a LIVE preview when its pack
+  is in scope (lang always; pack CEs only when that pack is selected, so
+  CodeMirror/Mermaid stay off the default path). No dual "featured demo"
+  wall and no "Open for full live demo" placeholders.
+-->
+
+<controller>
+import type { ControllerScope } from '@ship/sail-runtime'
+import type { Scope } from './page.sail'
+import { CATALOG, PACKS, CATEGORIES, packCount, type CatalogEntry, type Pack } from '../../src/compositions/component-catalog'
+
+export default controller((_ctx: ControllerScope<Scope>) => {
+    const { query, filtered } = filteredList(
+      () => CATALOG,
+      (c: CatalogEntry, q: string) => (c.tag + ' ' + c.cat + ' ' + c.pack).toLowerCase().includes(q),
+    )
+    const packSel = signal<string>('lang')
+    const catSel = signal<string>('all')
+    const pickPack = (id: string): void => packSel.set(id)
+    const pickCat = (id: string): void => catSel.set(id)
+
+    const SKIP_TAGS = new Set([
+      'sail-canvas', 'sail-board', 'sail-draw', 'sail-graph-canvas',
+      'sail-annotation-layer', 'sail-annotation-list', 'sail-annotation-marker',
+      'sail-message-list', 'sail-media-csv',
+    ])
+
+    const packBadgeTone = (pack: string): string => {
+      switch (pack) {
+        case 'lang': return 'primary'
+        case 'charts': return 'accent'
+        case 'media': return 'info'
+        case 'chat': return 'primary'
+        case 'mermaid': return 'success'
+        case 'code-editor': return 'muted'
+        default: return 'muted'
+      }
+    }
+    const packBadgeLabel = (pack: string): string => {
+      switch (pack) {
+        case 'lang': return 'primitives'
+        case 'code-editor': return 'code-editor'
+        default: return pack
+      }
+    }
+
+    // Live mount only when the tile's pack is selected (or All packs).
+    // Lang (component primitives) always mounts — reflections are batched.
+    const livePack = (pack: string): boolean => {
+      const p = packSel()
+      return pack === 'lang' || p === 'all' || p === pack
+    }
+
+    const visibleList = derived(() => {
+      const p = packSel()
+      const c = catSel()
+      const out: Array<CatalogEntry & { badgeTone: string; badgeLabel: string; live: boolean }> = []
+      for (const e of filtered()) {
+        if (SKIP_TAGS.has(e.tag)) continue
+        if ((p === 'all' || e.pack === p) && (c === 'all' || e.cat === c)) {
+          out.push({
+            ...e,
+            badgeTone: packBadgeTone(e.pack),
+            badgeLabel: packBadgeLabel(e.pack),
+            live: livePack(e.pack),
+          })
+        }
+      }
+      return out
+    })
+
+    const packs = () => PACKS.map((p: Pack) => ({ ...p, count: packCount(p.id) }))
+    const cats = () => CATEGORIES.map((c: string) => c)
+    const countLabel = derived(() => {
+      const n = visibleList().length
+      return n > 0 ? `${n} in catalog` : ''
+    })
+    const none = derived(() => visibleList().length === 0)
+
+    const email = signal('ada@ship.dev')
+    const agreed = signal(true)
+    const notify = signal(true)
+    const volume = signal(60)
+    const team = signal('Design')
+    const plan = signal('pro')
+    const kept = signal(true)
+    const dropChip = (): void => kept.set(false)
+    // Catalog toast tile: dismiss removes the instance; re-push remounts.
+    let catalogToastSeq = 0
+    const catalogToastItems = signal<{ key: string }[]>([{ key: 'catalog-toast-0' }])
+    const catalogToastEmpty = derived(() => catalogToastItems().length === 0)
+    const pushCatalogToast = (): void => {
+      catalogToastSeq += 1
+      catalogToastItems.set([{ key: `catalog-toast-${catalogToastSeq}` }])
+    }
+    const onCatalogToastDismiss = (): void => {
+      catalogToastItems.set([])
+    }
+    // Code-editor tile sample — template exprs ban the `function` keyword.
+    const editorSample = () =>
+      "const greet = (name) => {\n  return `hello, ${name}`\n}\n\ngreet('sail')\n"
+    const toolArgs = () => '{ "env": "prod", "limit": 5 }'
+    const toolResult = () => '[{ "id": "d-1842", "status": "healthy" }]'
+    // Landscape demo raster — album covers stay on /cover-*.webp for shanty.
+    const DEMO_PHOTO =
+      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=640&h=400&fit=crop&auto=format&q=80'
+
+    return {
+      query, packSel, catSel, pickPack, pickCat,
+      packs, cats, visibleList, countLabel, none,
+      email, agreed, notify, volume, team, plan, kept, dropChip,
+      catalogToastItems, catalogToastEmpty, pushCatalogToast, onCatalogToastDismiss,
+      editorSample, toolArgs, toolResult,
+      DEMO_PHOTO,
+    }
+})
+</controller>
+
+<column gap="5">
+  <column gap="1">
+    <p>Components</p>
+    <h1>Catalog</h1>
+    <p>
+      Every tile is a live element — click a name for API, variants, and usage.
+      Packs other than Component primitives load when you select them.
+    </p>
+  </column>
+
+  <column gap="2">
+    <p>Packs</p>
+    <row gap="2" label="Component packs">
+      <for {packs() as p} key={p.id}>
+        <chip size="sm" tone="primary" variant="outline" selected={packSel() === p.id ? true : null} on:click={() => pickPack(p.id)}>
+          <icon slot="leading" name={p.icon} size="sm"></icon>
+          <strong>{p.label}</strong>
+          <span>{p.count}</span>
+        </chip>
+      </for>
+    </row>
+    <p>
+      Primitives compile in with no import. Charts, media, chat, mermaid, and the code editor mount from their pack when selected.
+    </p>
+  </column>
+
+  <column gap="4">
+    <row gap="2" align="center" justify="between">
+      <row gap="2" align="center">
+        <if {countLabel()}>
+          <p>{countLabel()}</p>
+        </if>
+      </row>
+      <row gap="1" align="center">
+        <for {cats() as c} key={c}>
+          <button size="sm" tone="primary" variant={catSel() === c ? 'solid' : 'ghost'} on:click={() => pickCat(c)} pressed={catSel() === c ? 'true' : 'false'}>{c}</button>
+        </for>
+      </row>
+    </row>
+    <row gap="2" align="center" justify="end">
+      <input type="search" placeholder="Search components…" bind:value={query}>
+    </row>
+
+    <grid cols="2" gap="3">
+        <for {visibleList() as e} key={e.key}>
+          <card padding="none" tile={e.tag} live={e.live ? 'true' : null}>
+            <column gap="0">
+              <row align="center" justify="center">
+                <if {!e.live}>
+                  <p>Select pack in the rail to mount</p>
+                {else-if {e.tag === 'button'} => <row gap="2" align="center">
+                    <button variant="solid" tone="primary">Save</button>
+                    <button variant="outline">Cancel</button>
+                    <button variant="ghost" tone="danger" size="sm">Delete</button>
+                  </row>}{else-if {e.tag === 'a'} => <column gap="2" align="center">
+                    <a href="/components/a">Open the anchor docs</a>
+                    <a href="/components/card">
+                      <card>
+                        <strong>Wrapped card</strong>
+                        <p>The whole surface is the link.</p>
+                      </card>
+                    </a>
+                  </column>}{else-if {e.tag === 'input'} => <column gap="2">
+                    <input type="email" size="sm" placeholder="you@company.com" bind:value={email} />
+                  </column>}{else-if {e.tag === 'textarea'} => <column gap="1">
+                    <label>Release notes</label>
+                    <textarea size="sm" rows="2" placeholder="What changed in this ship?" />
+                  </column>}{else-if {e.tag === 'select'} => <column gap="1">
+                    <label>Team</label>
+                    <select bind:value={team}>
+                      <option>Engineering</option>
+                      <option>Design</option>
+                      <option>Research</option>
+                    </select>
+                  </column>}{else-if {e.tag === 'combobox'} => <column gap="1">
+                    <label>Fruit</label>
+                    <combobox placeholder="Pick a fruit">
+                      <option value="apple">Apple</option>
+                      <option value="mango">Mango</option>
+                      <option value="plum">Plum</option>
+                    </combobox>
+                  </column>}{else-if {e.tag === 'checkbox'} => <column gap="2">
+                    <label>
+                      <checkbox bind:checked={agreed} /> Email me product updates
+                    </label>
+                    <label>
+                      <checkbox disabled /> Admin-only (disabled)
+                    </label>
+                    <p>input type=checkbox — not a separate tag</p>
+                  </column>}{else-if {e.tag === 'radio-group'} => <radio-group name="catalog-plan" value={plan()}>
+                    <radio value="free">Free — community</radio>
+                    <radio value="pro">Pro — team seats</radio>
+                    <radio value="enterprise">Enterprise</radio>
+                  </radio-group>}{else-if {e.tag === 'switch'} => <row gap="2" align="center">
+                    <switch bind:checked={notify}></switch>
+                    <p>{notify() ? 'Notifications on' : 'Notifications off'}</p>
+                  </row>}{else-if {e.tag === 'slider'} => <column gap="1">
+                    <row justify="between" align="center">
+                      <span>Volume</span>
+                      <span>{volume()}%</span>
+                    </row>
+                    <slider bind:value={volume}></slider>
+                  </column>}{else-if {e.tag === 'toggle-group'} => <toggle-group value="day" label="Range">
+                    <toggle value="day">Day</toggle>
+                    <toggle value="week">Week</toggle>
+                    <toggle value="month">Month</toggle>
+                  </toggle-group>}{else-if {e.tag === 'field'} => <field>
+                    <label slot="label">Email</label>
+                    <input type="email" placeholder="you@ship.dev" />
+                    <span slot="hint">We’ll never share this.</span>
+                  </field>}{else-if {e.tag === 'label'} => <column gap="1">
+                    <label for="demo-label-input" required>Display name</label>
+                    <input id="demo-label-input" size="sm" placeholder="Ada Lovelace" />
+                  </column>}{else-if {e.tag === 'fieldset'} => <fieldset>
+                    <legend>Billing options</legend>
+                    <column gap="1">
+                      <label><checkbox checked /> Include trials</label>
+                      <label><checkbox /> Annual discount</label>
+                    </column>
+                  </fieldset>}{else-if {e.tag === 'theme-picker'} => <theme-picker></theme-picker>}{else-if {e.tag === 'ticker'} => <ticker>
+                    <row nowrap align="center" gap="3">
+                      <icon name="zap" size="sm"></icon>
+                      <span>api 14ms</span>
+                      <span>·</span>
+                      <span>worker 41ms</span>
+                      <span>·</span>
+                      <icon name="rocket" size="sm"></icon>
+                      <span>edge 9ms</span>
+                    </row>
+                  </ticker>}{else-if {e.tag === 'alert'} => <alert tone="success"><strong>Deployed.</strong> v0.4.2 is live on production.</alert>}{else-if {e.tag === 'progress'} => <column gap="1">
+                    <span>Uploading assets… 62%</span>
+                    <progress value="0.62"></progress>
+                  </column>}{else-if {e.tag === 'meter'} => <column gap="1">
+                    <span>Storage used</span>
+                    <meter value="0.7" min="0" max="1"></meter>
+                  </column>}{else-if {e.tag === 'spinner'} => <row gap="2" align="center">
+                    <spinner></spinner>
+                    <span>Syncing…</span>
+                  </row>}{else-if {e.tag === 'skeleton'} => <column gap="2">
+                    <skeleton size="md"></skeleton>
+                    <skeleton size="sm"></skeleton>
+                  </column>}{else-if {e.tag === 'empty-state'} => <empty-state>
+                    <strong slot="title">No deploys yet</strong>
+                    Ship something from the CLI to populate this list.
+                  </empty-state>}{else-if {e.tag === 'error-state'} => <error-state code="ERR_TIMEOUT">
+                    <strong slot="title">Upstream timed out</strong>
+                    Retry in a moment — the registry is slow.
+                  </error-state>}{else-if {e.tag === 'error-boundary'} => <error-boundary>
+                    <p>Child tree isolated from render faults.</p>
+                  </error-boundary>}{else-if {e.tag === 'toast'} => <column gap="2">
+                    <if {catalogToastEmpty()}>
+                      <button type="button" size="sm" variant="ghost" on:click={pushCatalogToast} toast-show>Show toast</button>
+                    </if>
+                    <for {catalogToastItems() as t} key={t.key}>
+                      <toast tone="primary" duration="0" on-dismiss={onCatalogToastDismiss}>Invite sent.</toast>
+                    </for>
+                  </column>}{else-if {e.tag === 'badge'} => <row gap="2" align="center">
+                    <badge tone="primary">v0.4</badge>
+                    <badge tone="success" variant="soft">Healthy</badge>
+                    <badge tone="danger" variant="outline">3 errors</badge>
+                  </row>}{else-if {e.tag === 'chip'} => <row gap="2" align="center">
+                    <if {kept()}>
+                      <chip size="sm" tone="primary" removable on-dismiss={dropChip}>typescript</chip>
+                    </if>
+                    <chip size="sm" variant="outline">a11y</chip>
+                    <chip size="sm" variant="outline">ssr</chip>
+                  </row>}{else-if {e.tag === 'card'} => <card interactive>
+                    <strong>Harbor Signals</strong>
+                    <p>4 tracks · last played today</p>
+                  </card>}{else-if {e.tag === 'avatar'} => <row gap="2" align="center">
+                    <avatar name="Ada Lovelace" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=128&h=128&fit=crop&auto=format&q=80"></avatar>
+                    <avatar name="Grace Hopper" src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=128&h=128&fit=crop&auto=format&q=80" tone="accent"></avatar>
+                    <avatar initials="SK" size="sm"></avatar>
+                  </row>}{else-if {e.tag === 'icon'} => <row gap="3" align="center">
+                    <icon name="check"></icon>
+                    <icon name="search"></icon>
+                    <icon name="settings"></icon>
+                  </row>}{else-if {e.tag === 'separator'} => <row align="center" justify="center">
+                    <separator orientation="vertical"></separator>
+                  </row>}{else-if {e.tag === 'accordion'} => <accordion>
+                    <span slot="trigger">Webhook endpoints</span>
+                    <p>POST /v1/hooks · signed with your workspace secret.</p>
+                  </accordion>}{else-if {e.tag === 'kbd'} => <row gap="1" align="center">
+                    <kbd>Ctrl</kbd>
+                    <span>+</span>
+                    <kbd>K</kbd>
+                  </row>}{else-if {e.tag === 'code-block'} => <code-block code={'const x = signal(1)'} lang="ts"></code-block>}{else-if {e.tag === 'prose'} => <prose><p>Body type with <strong>emphasis</strong>, <code>inline()</code>, and lists — no class soup.</p></prose>}{else-if {e.tag === 'tooltip'} => <!-- placement bottom so the bubble stays inside the tile band -->
+                  <tooltip content="Copy URL" placement="bottom">
+                    <span>ship.dev/d/ab12</span>
+                  </tooltip>}{else-if {e.tag === 'hover-card'} => <column gap="2" align="center">
+                    <a href="#" popovertarget="grid-hc">@ada</a>
+                    <hover-card id="grid-hc">
+                      <row gap="2" align="center">
+                        <avatar name="Ada Lovelace" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=64&h=64&fit=crop&auto=format&q=80" size="sm"></avatar>
+                        <column gap="0">
+                          <strong>Ada Lovelace</strong>
+                          <p>Mathematician · first programmer</p>
+                        </column>
+                      </row>
+                    </hover-card>
+                  </column>}{else-if {e.tag === 'popover'} => <column gap="2" align="center">
+                    <button size="sm" variant="outline" popovertarget="grid-pop">Filters</button>
+                    <popover id="grid-pop">
+                      <column gap="2">
+                        <p>Status</p>
+                        <label><checkbox checked /> Healthy</label>
+                        <label><checkbox /> Failed</label>
+                      </column>
+                    </popover>
+                  </column>}{else-if {e.tag === 'dropdown'} => <column gap="2" align="center">
+                    <button size="sm" variant="outline" popovertarget="grid-dd">Row actions ▾</button>
+                    <dropdown id="grid-dd">
+                      <menu-item value="edit">Edit</menu-item>
+                      <menu-item value="duplicate">Duplicate</menu-item>
+                      <menu-item value="archive">Archive</menu-item>
+                    </dropdown>
+                  </column>}{else-if {e.tag === 'context-menu'} => <column gap="2" align="center">
+                    <p id="grid-cm-target">Right-click this card</p>
+                    <context-menu for="grid-cm-target" id="grid-cm">
+                      <menu-item value="copy">Copy id</menu-item>
+                      <menu-item value="paste">Paste</menu-item>
+                      <menu-item value="delete">Delete</menu-item>
+                    </context-menu>
+                  </column>}{else-if {e.tag === 'dialog'} => <column gap="2" align="center">
+                    <button size="sm" tone="primary" command="show-modal" commandfor="grid-dlg">Invite teammate</button>
+                    <dialog id="grid-dlg">
+                      <header>Invite to workspace</header>
+                      <section>
+                        <field>
+                          <label slot="label">Email</label>
+                          <input type="email" placeholder="name@company.com" />
+                        </field>
+                      </section>
+                      <footer>
+                        <button command="close" commandfor="grid-dlg" variant="ghost" size="sm">Cancel</button>
+                        <button command="close" commandfor="grid-dlg" variant="solid" tone="primary" size="sm">Send invite</button>
+                      </footer>
+                    </dialog>
+                  </column>}{else-if {e.tag === 'tabs'} => <tabs>
+                    <tab title="Overview"><p>Uptime 99.98% · 12 deploys this week.</p></tab>
+                    <tab title="Metrics"><p>p95 latency 42ms.</p></tab>
+                  </tabs>}{else-if {e.tag === 'breadcrumb'} => <breadcrumb>
+                    <a href="/components">components</a>
+                    <a href="/components">inputs</a>
+                    <small>field</small>
+                  </breadcrumb>}{else-if {e.tag === 'pagination'} => <pagination value="2" label="Pages">
+                    <page-item value="1">1</page-item>
+                    <page-item value="2">2</page-item>
+                    <page-item value="3">3</page-item>
+                  </pagination>}{else-if {e.tag === 'page'} => <page>
+                    <h1>Edition</h1>
+                  </page>}{else-if {e.tag === 'navbar'} => <navbar bordered>
+                    <strong slot="brand">Harbor</strong>
+                    <span>Docs</span>
+                    <span>App</span>
+                  </navbar>}{else-if {e.tag === 'table'} => <table>
+                    <thead><tr><th>Service</th><th>Status</th></tr></thead>
+                    <tbody>
+                      <tr><td>api</td><td>healthy</td></tr>
+                      <tr><td>worker</td><td>degraded</td></tr>
+                    </tbody>
+                  </table>}{else-if {e.tag === 'layout'} => <row gap="2">
+                    <card><small>main</small></card>
+                    <card><small>aside</small></card>
+                  </row>}{else-if {e.tag === 'scroll-area'} => <scroll-area>
+                    <column gap="0">
+                      <row align="center" justify="between">
+                        <span>v0.4.2</span>
+                        <badge size="sm" tone="success" variant="soft">shipped</badge>
+                      </row>
+                      <row align="center" justify="between">
+                        <span>v0.4.1</span>
+                        <badge size="sm" tone="success" variant="soft">shipped</badge>
+                      </row>
+                      <row align="center" justify="between">
+                        <span>v0.4.0</span>
+                        <badge size="sm" tone="danger" variant="soft">failed</badge>
+                      </row>
+                      <row align="center" justify="between">
+                        <span>v0.3.9</span>
+                        <badge size="sm" tone="success" variant="soft">shipped</badge>
+                      </row>
+                      <row align="center" justify="between">
+                        <span>v0.3.8</span>
+                        <badge size="sm" tone="muted" variant="soft">skipped</badge>
+                      </row>
+                    </column>
+                  </scroll-area>}{else-if {e.tag === 'sail-sparkline'} => <sail-sparkline data="2,5,3,8,4,6,7" width="120" height="40"></sail-sparkline>}{else-if {e.tag === 'sail-area-chart'} => <sail-area-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="160" height="60"></sail-area-chart>}{else-if {e.tag === 'sail-bar-chart'} => <sail-bar-chart data="2,5,3,8,4" labels="A,B,C,D,E" width="160" height="60"></sail-bar-chart>}{else-if {e.tag === 'sail-donut'} => <sail-donut data='[{"label":"a","value":40},{"label":"b","value":30},{"label":"c","value":30}]' diameter="80" thickness="10"></sail-donut>}{else-if {e.tag === 'sail-gauge'} => <sail-gauge value="72" diameter="80" thickness="10"></sail-gauge>}{else-if {e.tag === 'sail-heatmap'} => <sail-heatmap rows="3" cols="5" values="1,2,3,4,3,4,5,6,5,4,3,2,1,2,3" cell-size="18" gap="3" tone="primary"></sail-heatmap>}{else-if {e.tag === 'sail-line-chart'} => <sail-line-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="160" height="60"></sail-line-chart>}{else-if {e.tag === 'sail-media-image'} => <div>
+                    <sail-media-image src={DEMO_PHOTO} alt="Mountain lake at dusk" fit="cover" zoomable={false}></sail-media-image>
+                  </div>}{else-if {e.tag === 'sail-media-av'} => <sail-media-av></sail-media-av>}{else-if {e.tag === 'sail-code-editor'} => <sail-code-editor value={editorSample()} language="javascript" line-numbers></sail-code-editor>}{else-if {e.tag === 'sail-mermaid'} => <sail-mermaid value="graph TD; A[Idea]-->B[Build]; B-->C[Ship]"></sail-mermaid>}{else-if {e.tag === 'sail-message'} => <column gap="2">
+                    <sail-message from="user" status="sent">Can you summarize yesterday’s deploy?</sail-message>
+                    <sail-message from="assistant" status="sent">v0.4.2 went out at 14:02 — 3 services, zero rollbacks.</sail-message>
+                  </column>}{else-if {e.tag === 'sail-citation'} => <sail-citation source="docs.ship.dev" href="https://docs.ship.dev">Deploy pipeline overview</sail-citation>}{else-if {e.tag === 'sail-composer'} => <sail-composer placeholder="Message the agent…"></sail-composer>}{else-if {e.tag === 'sail-thinking-dots'} => <row gap="2" align="center">
+                    <sail-thinking-dots></sail-thinking-dots>
+                    <span>Agent is thinking…</span>
+                  </row>}{else-if {e.tag === 'sail-tool-call'} => <sail-tool-call name="list_deploys" status="ok" open>
+                    {toolArgs()}
+                    <span slot="result">{toolResult()}</span>
+                  </sail-tool-call>}{else-if {e.tag === 'date'} => <date type="date"></date>}{else-if {e.tag === 'file'} => <file></file>}{else-if {e.tag === 'color'} => <color value="#3b82f6"></color>}{else-if {e.tag === 'drawer'} => <column gap="2" align="center">
+                    <button size="sm" variant="outline" command="show" commandfor="grid-drawer">Open drawer</button>
+                    <drawer id="grid-drawer" side="end" size="sm">
+                      <header>Filters</header>
+                      <section>
+                        <p>Edge sheet — swipe or close to dismiss.</p>
+                      </section>
+                    </drawer>
+                  </column>}{else-if {e.tag === 'resizable'} => <div>
+                    <resizable>
+                      <div slot="start">
+                        <p>Start</p>
+                      </div>
+                      <div slot="end">
+                        <p>End</p>
+                      </div>
+                    </resizable>
+                  </div>}{else => <p>{e.tag}</p>}</if>
+              </row>
+              <column gap="1">
+                <a href={`/components/${e.slug}`}>{e.tag === 'a' ? 'anchor' : e.tag}</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone={e.badgeTone} variant="soft">{e.badgeLabel}</badge>
+                  <span>{e.cat}</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        </for>
+      </grid>
+
+    <if {none()}>
+      <empty-state>
+        <strong slot="title">Nothing matches</strong>
+        Clear a filter or two — or search for less.
+      </empty-state>
+    </if>
+  </column>
+
+</column>

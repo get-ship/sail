@@ -1,0 +1,32 @@
+// Code snippets for the behavior page. Kept out of the controller so the
+// compiler's scope scan isn't fooled by `return {…}` / `signal(…)` patterns.
+// Every Sail sample is compiled by the build
+// (crates/sail/compiler/tests/site_snippets_compile.rs).
+import { signal } from '@ship/sail-runtime'
+export const code = {
+  attach: `<!-- use: hands the element to a function. Nothing to store. -->
+<textarea use:autosize />
+<div use:clickOutside={close}>…</div>`,
+
+  author: `// src/actions/autofocus.ts — author hatch under the action floor.
+// No style/class, no signal/store/query, no fetch, host-only.
+export const autofocus: Action<void> = (node) => {
+  // Action env observation pack may use rAF; Pure compositions must not.
+  const id = /* rAF */ 0
+  queueMicrotask(() => { (node as { focus?: () => void }).focus?.() })
+  return { destroy: () => { void id } }
+}`,
+
+  param: `<!-- an action takes a reactive param: its update() runs on change -->
+<div use:anchor={{ to: trigger, placement: 'bottom-start' }}>…</div>`,
+
+  stdlib: `<!-- Prefer the L1 widget. Widget-private behavior is closed impl —
+     not a public use: you reattach. -->
+<combobox placeholder="Search">
+  <option value="a">Apple</option>
+</combobox>
+<tabs>
+  <tab-list><tab>A</tab></tab-list>
+  <tab-panel>…</tab-panel>
+</tabs>`,
+}

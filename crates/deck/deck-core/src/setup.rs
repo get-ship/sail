@@ -12,8 +12,14 @@ use crate::{CachePolicy, DaemonMode, DeckResponse};
 
 /// A `303 See Other` redirect to `location` (empty body, no-cache).
 pub fn redirect(location: impl Into<String>, mode: DaemonMode) -> DeckResponse {
-    DeckResponse::new(303, "text/plain; charset=utf-8", CachePolicy::None, mode, Vec::new())
-        .with_header("Location", location)
+    DeckResponse::new(
+        303,
+        "text/plain; charset=utf-8",
+        CachePolicy::None,
+        mode,
+        Vec::new(),
+    )
+    .with_header("Location", location)
 }
 
 #[cfg(test)]
@@ -24,7 +30,11 @@ mod tests {
     fn redirect_sets_location_and_303() {
         let r = redirect("/setup", DaemonMode::Development);
         assert_eq!(r.status, 303);
-        let loc = r.extra_headers.iter().find(|(k, _)| *k == "Location").map(|(_, v)| v.as_str());
+        let loc = r
+            .extra_headers
+            .iter()
+            .find(|(k, _)| *k == "Location")
+            .map(|(_, v)| v.as_str());
         assert_eq!(loc, Some("/setup"));
     }
 }

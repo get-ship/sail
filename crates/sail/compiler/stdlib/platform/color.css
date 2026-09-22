@@ -1,0 +1,3 @@
+.sail-color::-webkit-color-swatch-wrapper { padding:0;border:none;width:100%;height:100%; }
+.sail-color::-webkit-color-swatch { border:none;border-radius:var(--radius-sm);width:100%;height:100%; }
+.sail-color::-moz-color-swatch { border:none;border-radius:var(--radius-sm); }

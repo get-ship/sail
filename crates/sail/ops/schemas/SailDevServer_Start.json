@@ -1,0 +1,67 @@
+{
+  "service": "SailDevServer",
+  "method": "Start",
+  "mcp_tool": "sail_dev_server_start",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "addr": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "project": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "project"
+    ]
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "DevServerStartRet",
+    "type": "object",
+    "properties": {
+      "addr": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "ok": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "pid": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "format": "uint32",
+        "minimum": 0.0
+      },
+      "project": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "status": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "url": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  }
+}

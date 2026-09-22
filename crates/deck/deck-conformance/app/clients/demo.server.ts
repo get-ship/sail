@@ -7,9 +7,9 @@
 // shape matches `./demo.ts` (the client/type module) exactly — same contract,
 // host-backed resolution.
 
-import type { LiveSource, LiveSignal } from '@ship/sui-runtime'
+import type { LiveSource, LiveSignal } from '@ship/sail-runtime'
 import { call } from 'ship'
-import type { ShipClient, ApiClient, TodoList, DemoConfig, Tick } from './demo'
+import type { ShipClient, ApiClient, TodoList, DemoConfig, Tick, BoomOk } from './demo'
 
 /** A one-shot host-dispatch `LiveSource<T>`: ask the host for the op value,
  *  push `ok`/`error` into the live signal. The host owns the data. */
@@ -43,6 +43,7 @@ export function makeShip(): ShipClient {
     demo: {
       todos: () => hostSource<TodoList>('ship.demo.todos'),
       config: () => hostSource<DemoConfig>('ship.demo.config'),
+      boom: () => hostSource<BoomOk>('ship.demo.boom'),
     },
   }
 }

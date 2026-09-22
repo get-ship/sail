@@ -1,0 +1,16 @@
+<controller>
+import { controller, signal, derived } from '@ship/sail-runtime'
+
+export default controller(() => {
+  const count = signal(0)
+  const doubled = derived(() => count() * 2)
+  return { count, doubled }
+})
+</controller>
+
+<div>
+  <span data-testid="count">{count()}</span>
+  <span data-testid="doubled">{doubled()}</span>
+  <button data-testid="inc" on:click={() => count.set(count() + 1)}>+</button>
+  <button data-testid="reset" on:click={() => count.set(0)}>reset</button>
+</div>

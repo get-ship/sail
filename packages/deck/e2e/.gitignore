@@ -5,14 +5,15 @@
 /.cache/
 
 # deck build artifacts emitted into the app fixtures by the CLI
-/app/.deck/
+/app/dist/
+/app/.sail/
+/app/tsconfig.json
 /app/routes.gen.ts
 /app/entry.gen.ts
 /app/components.gen.ts
-/app-ssr/.deck/
-/app-ssr/routes.gen.ts
-/app-ssr/entry.gen.ts
-/app-ssr/components.gen.ts
+
+# SSR is a mode of ./app — runner overlay copy (deck.render: ssr)
+/.ssr-src/
 
 # prod-mode harness: isolated copied source + `deck build --out` output
 /.prod-src/

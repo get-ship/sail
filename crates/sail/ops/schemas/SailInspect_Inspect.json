@@ -1,0 +1,94 @@
+{
+  "service": "SailInspect",
+  "method": "Inspect",
+  "mcp_tool": "sail_inspect",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "nodeId": {
+        "description": "Optional filter to one tree node id.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "path": {
+        "description": "Workspace-relative `.sail` path (required for file topics).",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "themeId": {
+        "description": "Cascade / themes: theme id filter.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "token": {
+        "description": "Cascade: design token path or cssName tail.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "topic": {
+        "description": "tree | geometry | cascade | states | a11y | invalidations | uses | cost | themes",
+        "type": "string"
+      },
+      "viewport": {
+        "description": "Geometry viewport `{ width, height }`.",
+        "anyOf": [
+          {
+            "$ref": "#/definitions/InspectViewport"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "required": [
+      "topic"
+    ],
+    "definitions": {
+      "InspectViewport": {
+        "type": "object",
+        "required": [
+          "height",
+          "width"
+        ],
+        "properties": {
+          "height": {
+            "type": "number",
+            "format": "double"
+          },
+          "width": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      }
+    }
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "InspectRet",
+    "type": "object",
+    "required": [
+      "modelVersion",
+      "topic"
+    ],
+    "properties": {
+      "modelVersion": {
+        "type": "integer",
+        "format": "uint32",
+        "minimum": 0.0
+      },
+      "topic": {
+        "type": "string"
+      }
+    }
+  }
+}

@@ -1,17 +1,16 @@
 // The conformance app's demo data clients, as REAL typed ESM modules.
 //
-// In the ambient/`BUILTINS` path these are injected at runtime via
-// `ctx.clients` (the `<client name="…">` seam). The synthetic path replaces
-// that with a real import named by the app manifest: `ship` → `makeShip`,
-// `api` → `makeApi`. tsgo/tsc then type-checks every `<data source="ship.…">`
-// and template read against THESE types — there is no ambient passthrough.
+// Injected at mount as flat host providers (`ctx.ship`, `ctx.api`). The
+// synthetic path uses a real import named by the app manifest: `ship` →
+// `makeShip`, `api` → `makeApi`. tsgo/tsc then type-checks every
+// `query(() => ship.…)` and template read against THESE types.
 //
 // The SSR build aliases `./clients/demo` to a host-dispatch-backed server
-// entry (see the deck view-host SSR path), so server-side these methods
+// entry (see the deck route-host SSR path), so server-side these methods
 // resolve through `op_ship_call`; in the browser they fetch the deck op
 // surface. Either way the typed shape is the one source of truth.
 
-import type { LiveSource, LiveSignal } from '@ship/sui-runtime'
+import type { LiveSource, LiveSignal } from '@ship/sail-runtime'
 
 /** The deck op-surface URL prefix (mirrors `@ship/sdk-client`'s `DECK_PREFIX`,
  *  inlined so the demo client has no codegen-bearing dependency). */
@@ -34,7 +33,7 @@ export interface Tick {
   now: string
 }
 
-/** A demo app config blob (the non-live `<data>` shape exerciser). */
+/** A demo app config blob (the non-live query() shape exerciser). */
 export interface DemoConfig {
   title: string
 }
@@ -64,11 +63,18 @@ function once<T>(op: string, args: Record<string, unknown> = {}): LiveSource<T> 
   }
 }
 
+/** Intentional error payload shape for the boom ok-arm (rarely hit). */
+export interface BoomOk {
+  data: string
+}
+
 /** The `ship` client: app-domain demo ops. */
 export interface ShipClient {
   demo: {
     todos(): LiveSource<TodoList>
     config(): LiveSource<DemoConfig>
+    /** Always fails — error-boundary / match {error} showcase. */
+    boom(): LiveSource<BoomOk>
   }
 }
 
@@ -85,6 +91,7 @@ export function makeShip(): ShipClient {
     demo: {
       todos: () => once<TodoList>('demo.todos'),
       config: () => once<DemoConfig>('demo.config'),
+      boom: () => once<BoomOk>('demo.boom'),
     },
   }
 }

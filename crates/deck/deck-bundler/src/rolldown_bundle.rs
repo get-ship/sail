@@ -1,19 +1,19 @@
-//! Rolldown bundler — drives Rolldown with the SUI plugin to bundle each target.
-//! Output goes to `assets_dir_for` (sui-out/dist) — no source-tree writes.
+//! Rolldown bundler — drives Rolldown with the SAIL plugin to bundle each target.
+//! Output goes to `assets_dir_for` (under `.sail/` / dist) — no source-tree writes.
 //!
-//! The SUI resolve/load plugin lives in `sui_plugin.rs`; this module owns the
+//! The SAIL resolve/load plugin lives in `sail_plugin.rs`; this module owns the
 //! target-to-bundle driver and its integration tests.
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use anyhow::{anyhow, Result};
-use rolldown::{BundlerBuilder, BundlerOptions, InputItem, OutputFormat};
+use anyhow::{Context, Result, anyhow, bail};
+use rolldown::{BundlerBuilder, BundlerOptions, CodeSplittingMode, InputItem, OutputFormat};
 use rolldown_common::{ManualCodeSplittingOptions, PreserveEntrySignatures};
 
 use super::proto::BundleManifest;
 use super::targets::{BundleLayout, BundleTarget, TargetEntry};
-use crate::sui_plugin::{ResolverIndex, SuiPlugin, component_index};
+use crate::sail_plugin::{ResolverIndex, SailPlugin, component_index};
 
 /// Build one target with Rolldown. Output written under `assets_dir_for`;
 /// returns the manifest. `staging` holds generated virtual-aggregate entries.
@@ -23,7 +23,7 @@ pub async fn bundle_target(
     staging: &Path,
     production: bool,
 ) -> Result<BundleManifest> {
-    // Entry: real `.ts`/`.sui` directly, or a generated `.ts` for virtual
+    // Entry: real `.ts`/`.sail` directly, or a generated `.ts` for virtual
     // aggregates importing each source's `.compiled.js` (so `load` compiles it).
     let entry: PathBuf = match &target.entry {
         TargetEntry::Real(p) => p.clone(),
@@ -41,8 +41,13 @@ pub async fn bundle_target(
     };
 
     let out_dir = layout.assets_dir_for(&target.name);
+    let stage_dir = crate::atomic::stage_dir_for(&out_dir, &target.name.replace('/', "_"));
     std::fs::create_dir_all(&out_dir)?;
-    let entry_name = target.out_file.strip_suffix(".js").unwrap_or(&target.out_file);
+    std::fs::create_dir_all(&stage_dir)?;
+    let entry_name = target
+        .out_file
+        .strip_suffix(".js")
+        .unwrap_or(&target.out_file);
 
     let options = BundlerOptions {
         input: Some(vec![InputItem {
@@ -50,53 +55,60 @@ pub async fn bundle_target(
             import: entry.to_string_lossy().to_string(),
         }]),
         cwd: Some(layout.repo_root.clone()),
-        dir: Some(out_dir.to_string_lossy().to_string()),
+        dir: Some(stage_dir.to_string_lossy().to_string()),
         format: Some(OutputFormat::Esm),
         minify: Some(production.into()),
-        // Hoist every shared module into its own chunk (mirrors the multi-view
-        // build in views_bundle.rs). Without this the single-view path uses
+        // The target's DECLARED externals (e.g. `@ship/sail-compiler-wasm` for
+        // sail-lsp-diagnostics — importmap-covered framework singletons) are
+        // applied here. Before this they were recorded on the target but never
+        // handed to Rolldown, so a declared external externalized ONLY by
+        // accident — through rolldown's unresolved-import fallback ("Module
+        // not found, treating it as an external dependency") — which the
+        // `assert_no_unresolved_imports` guard below now treats as a build
+        // failure. Declaration, not resolution luck, decides what stays bare.
+        external: (!target.externals.is_empty()).then(|| target.externals.clone().into()),
+        // Hoist every shared module into its own chunk (mirrors the multi-route
+        // build in routes_bundle.rs). Without this the single-route path uses
         // rolldown's default per-entry split, which produces 1 chunk per shared
-        // primitive *per consumer* — N chunks for `sui-pagination` where 1
+        // primitive *per consumer* — N chunks for `sail-pagination` where 1
         // would do. Each duplicate chunk's `customElements.define()` adds a no-op
         // "called twice" warning at runtime; cumulative heap retention is the
         // 1.5 GB Firefox OOM. See .artifacts/2026-06-06-spaces-isolation.md.
-        manual_code_splitting: Some(ManualCodeSplittingOptions {
+        code_splitting: Some(CodeSplittingMode::Advanced(ManualCodeSplittingOptions {
             min_share_count: Some(1),
             min_size: Some(0.0),
             min_module_size: Some(0.0),
             ..Default::default()
-        }),
-        // Framework singletons (sui-runtime/sui-dom/sui-sdk-client) are libraries
+        })),
+        // Framework singletons (sail-runtime/sail-dom/sail-sdk-client) are libraries
         // consumed by name via the host importmap — preserve their full public
         // export surface. The default `ExportsOnly` tree-shook a re-exported const
         // (`DECK_API_ASSETS`) with no in-bundle consumer, producing a runtime
         // "does not provide an export named …" error. `Strict` makes the entry's
-        // declared exports roots. App/view targets keep the default.
+        // declared exports roots. App/route targets keep the default.
         preserve_entry_signatures: crate::targets::is_framework_singleton(&target.name)
             .then_some(PreserveEntrySignatures::Strict),
         ..Default::default()
     };
 
-    // Per-view resolver (#255/#267): view builds emit `@sui-tag/<tag>` imports
+    // Per-route resolver (#255/#267): route builds emit `@sail-tag/<tag>` imports
     // that resolve to component source so the bundle carries exactly what the
-    // view uses. Always on for views — the in-process compiler is the linked
+    // route uses. Always on for routes — the in-process compiler is the linked
     // crate, so there is no compiler-version drift to gate around. Framework/
-    // app builds leave component_index empty (no `@sui-tag` imports emitted).
-    let emit_component_imports = target.name.starts_with("views/");
+    // app builds leave component_index empty (no `@sail-tag` imports emitted).
+    let emit_component_imports = target.name.starts_with("routes/");
     let resolver = if emit_component_imports {
-        component_index(
-            &layout.repo_root,
-            &layout.cfg.packs,
-        )
+        component_index(&layout.repo_root, &[])
     } else {
         ResolverIndex::empty()
     };
-    let plugin = SuiPlugin {
+    let plugin = SailPlugin {
         repo_root: layout.repo_root.clone(),
         emit_component_imports,
         component_index: resolver.index,
         shadowed_tags: resolver.shadowed,
         component_roots: crate::catalog::component_package_roots(&layout.repo_root),
+        project_dir: None,
     };
     // The bundler + its oxc module graph live in `bundler` and are dropped at
     // the end of this scope. Earlier this called malloc_trim(0) via
@@ -106,15 +118,35 @@ pub async fn bundle_target(
     let module_paths = {
         let mut bundler = BundlerBuilder::default()
             .with_options(options)
-            .with_plugins(vec![Arc::new(plugin)])
+            .with_plugins(vec![
+                Arc::new(plugin),
+                Arc::new({
+                    // Framework targets have no app theme emit set — document
+                    // floor roles only. App builds pass the project via app.rs.
+                    let used = crate::fonts::used_font_files_for_project(None);
+                    if production {
+                        crate::ship_asset_css::ShipAssetCssPlugin::production()
+                            .with_used_fonts(used)
+                    } else {
+                        crate::ship_asset_css::ShipAssetCssPlugin::development()
+                            .with_used_fonts(used)
+                    }
+                }),
+            ])
             .build()
             .map_err(|e| anyhow!("rolldown build({}): {e:?}", target.name))?;
         let output = bundler
             .write()
             .await
             .map_err(|e| anyhow!("rolldown write({}): {e:?}", target.name))?;
+        assert_no_unresolved_imports(&output, &target.name)?;
         extract_module_paths(&output)
     };
+
+    // Publish atomically from the staging dir to the live dir. A reader of
+    // .sail/framework/ never sees a partially-written bundle.
+    crate::atomic::publish_dir(&stage_dir, &out_dir)
+        .with_context(|| format!("publish bundle for {}", target.name))?;
 
     // Post-bundle tag-collision check (#308). Walks every emitted
     // chunk and errors on a tag defined by more than one file. Runs
@@ -124,8 +156,14 @@ pub async fn bundle_target(
     // called twice` runtime warning + first-write-wins hijack.
     crate::tag_check::verify_no_duplicate_tag_defines(&out_dir)
         .map_err(|e| anyhow!("{} tag-collision check failed: {e}", target.name))?;
+    // Post-bundle duplicate-package-version WARNING (#89 item 3, diagnostic
+    // only — never changes what gets bundled). See `dup_version_check` for
+    // the CodeMirror 6.7.0/6.7.1 case this catches.
+    crate::dup_version_check::warn_duplicate_versions(&module_paths);
     let out_path = out_dir.join(&target.out_file);
-    let bytes = std::fs::metadata(&out_path).map(|m| m.len() as usize).unwrap_or(0);
+    let bytes = std::fs::metadata(&out_path)
+        .map(|m| m.len() as usize)
+        .unwrap_or(0);
     let dropped_side_effect_modules = detect_dropped_side_effect_modules(&module_paths, &entry);
     // Emit a warning per drop. The manifest already records the drops
     // (so callers and the watcher can surface them), but the spec also
@@ -153,13 +191,55 @@ pub async fn bundle_target(
         bytes,
         inputs: match &target.entry {
             TargetEntry::Real(p) => vec![p.to_string_lossy().to_string()],
-            TargetEntry::Virtual { sources } => {
-                sources.iter().map(|p| p.to_string_lossy().to_string()).collect()
-            }
+            TargetEntry::Virtual { sources } => sources
+                .iter()
+                .map(|p| p.to_string_lossy().to_string())
+                .collect(),
         },
         modules: module_paths,
         dropped_side_effect_modules,
     })
+}
+
+/// Fail the build when Rolldown could not resolve an import and silently
+/// externalized it. Rolldown reports an unresolvable BARE specifier as an
+/// `UNRESOLVED_IMPORT` *warning* ("Module not found, treating it as an
+/// external dependency") and ships the specifier verbatim in the emitted
+/// chunk. The document importmap only covers deck's framework singletons, so
+/// the browser dies at module-instantiation time — `Failed to resolve module
+/// specifier "<spec>"` — on EVERY route: a blank page from a build that
+/// reported success. The class case is dependencies missing at bake time —
+/// a fresh clone that ran the gen/dev step before `bun install`, or an
+/// install predating a newly-added dependency (`motion/mini` in
+/// `@ship/sail-runtime` shipped exactly this way). Deliberate externals never
+/// reach this guard: deck's resolve hooks mark them `external: true`, so
+/// Rolldown never warns on them. (An unresolvable PATH-LIKE specifier is
+/// already a hard error inside Rolldown; this guard covers the bare-import
+/// half.)
+pub(crate) fn assert_no_unresolved_imports(
+    output: &rolldown::BundleOutput,
+    target: &str,
+) -> Result<()> {
+    let unresolved: Vec<String> = output
+        .warnings
+        .iter()
+        // `EventKind` has no `PartialEq` in rolldown_error 1.0; its `Display`
+        // IS the stable diagnostic code rolldown prints ("UNRESOLVED_IMPORT").
+        .filter(|w| w.kind().to_string() == "UNRESOLVED_IMPORT")
+        .map(|w| w.to_string())
+        .collect();
+    if unresolved.is_empty() {
+        return Ok(());
+    }
+    bail!(
+        "bundle({target}): {} import(s) did not resolve and would ship as bare \
+         specifiers no importmap covers — the browser would fail with \
+         `Failed to resolve module specifier` on every route:\n  {}\nA \
+         dependency the bundle inlines is missing from node_modules — run \
+         `bun install` at the workspace root and rebuild.",
+        unresolved.len(),
+        unresolved.join("\n  "),
+    );
 }
 
 /// Detect side-effect-only modules that the bundler dropped (a bare
@@ -236,7 +316,7 @@ fn detect_dropped_side_effect_modules(
             //
             // The list mirrors what the deck bundler hands to
             // the AssetModulePlugin via `module_types` (the
-            // `.css` → Asset mapping in `app.rs` / the per-view
+            // `.css` → Asset mapping in `app.rs` / the per-route
             // build). The detector's contract is "JS side-effect
             // imports" — assets are out of scope; their absence
             // from the JS chunk graph is expected, not a bug.
@@ -334,8 +414,8 @@ fn parse_bare_import_spec(after_kw: &str) -> Option<String> {
 /// correct without a per-extension patch).
 fn is_asset_extension(path: &Path) -> bool {
     const ASSET_EXTS: &[&str] = &[
-        "css", "json", "svg", "png", "jpg", "jpeg", "gif", "webp",
-        "avif", "ico", "woff", "woff2", "ttf", "otf", "eot",
+        "css", "json", "svg", "png", "jpg", "jpeg", "gif", "webp", "avif", "ico", "woff", "woff2",
+        "ttf", "otf", "eot",
     ];
     path.extension()
         .and_then(|e| e.to_str())
@@ -344,7 +424,7 @@ fn is_asset_extension(path: &Path) -> bool {
 }
 
 /// Supports relative paths (`.`, `..`, absolute) and the
-/// `@ship/<name>` workspace map (the `SuiPlugin` resolves bare
+/// `@ship/<name>` workspace map (the `SailPlugin` resolves bare
 /// specifiers through this map). Anything else is left to the caller.
 fn resolve_import(importer: &Path, spec: &str) -> Option<PathBuf> {
     use std::path::PathBuf;
@@ -353,7 +433,7 @@ fn resolve_import(importer: &Path, spec: &str) -> Option<PathBuf> {
     } else if spec.starts_with('/') {
         PathBuf::from(spec)
     } else if let Some(rest) = spec.strip_prefix("@ship/") {
-        // The SuiPlugin re-anchors `@ship/<name>` to the workspace
+        // The SailPlugin re-anchors `@ship/<name>` to the workspace
         // package's `src/index.ts`. The detector uses the same map
         // (via `discover_workspace_packages`) so the warning names
         // the exact file the plugin resolved.
@@ -374,7 +454,11 @@ fn resolve_import(importer: &Path, spec: &str) -> Option<PathBuf> {
         "/index.js",
     ];
     for ext in candidates {
-        let candidate = if ext.is_empty() { p.clone() } else { p.with_extension(&ext[1..]) };
+        let candidate = if ext.is_empty() {
+            p.clone()
+        } else {
+            p.with_extension(&ext[1..])
+        };
         if candidate.is_file() {
             return Some(candidate);
         }
@@ -388,15 +472,13 @@ fn resolve_import(importer: &Path, spec: &str) -> Option<PathBuf> {
 /// importer looking for a `package.json` that declares a `workspaces`
 /// field (the repo root), then asking the catalog for the package
 /// map (`@ship/<name>` → dir) and reading `src/index.ts`. This is the
-/// same map `SuiPlugin::resolve_id` uses to re-anchor bare specifiers,
+/// same map `SailPlugin::resolve_id` uses to re-anchor bare specifiers,
 /// so the drop detector stays in lockstep with the live resolver.
 fn resolve_ship_package(importer: &Path, name: &str) -> Option<PathBuf> {
     let repo_root = find_workspace_root(importer)?;
     let roots = crate::catalog::discover_workspace_packages(&repo_root).unwrap_or_default();
-    let map: std::collections::HashMap<String, std::path::PathBuf> = roots
-        .into_iter()
-        .map(|p| (p.name, p.root))
-        .collect();
+    let map: std::collections::HashMap<String, std::path::PathBuf> =
+        roots.into_iter().map(|p| (p.name, p.root)).collect();
     let dir = map.get(name)?;
     let idx = dir.join("src/index.ts");
     if idx.is_file() {
@@ -408,7 +490,7 @@ fn resolve_ship_package(importer: &Path, name: &str) -> Option<PathBuf> {
 
 /// Walk up from `start` looking for a directory whose `package.json`
 /// declares a `workspaces` field. That directory is the workspace root
-/// `SuiPlugin` reads via `component_package_roots`. Returns the first
+/// `SailPlugin` reads via `component_package_roots`. Returns the first
 /// such ancestor; the test fixture's own package.json sets
 /// `workspaces: [...]` so this resolves to the temp root.
 fn find_workspace_root(start: &Path) -> Option<PathBuf> {
@@ -451,9 +533,16 @@ fn side_effects_reason(module_path: &Path) -> String {
     "no package.json found".to_string()
 }
 
-
-
-const MODULE_PRUNE: &[&str] = &["node_modules", ".git", "target", "dist", ".deck", ".sui-out", "sui-out"];
+const MODULE_PRUNE: &[&str] = &[
+    "node_modules",
+    ".git",
+    "target",
+    "dist",
+    deck_config::DECK_OUT_DIRNAME,
+    deck_config::SAIL_GENERATE_DIRNAME,
+    ".sail-out",
+    "sail-out",
+];
 
 fn extract_module_paths(output: &rolldown::BundleOutput) -> Vec<PathBuf> {
     use rolldown_common::Output;
@@ -496,7 +585,7 @@ mod tests {
         }
     }
 
-    /// The `sui-marketing` bundle is now TRACED from the site-owned entry
+    /// The `sail-marketing` bundle is now TRACED from the site-owned entry
     /// `apps/site/src/marketing/marketing-bundle.ts` (no hardcoded source list).
     /// Rolldown must follow that import graph and register exactly the marketing
     /// tag set — no tag dropped, and the full umbrella must NOT leak in.
@@ -505,13 +594,13 @@ mod tests {
         let repo = repo_root();
         let scratch = tempfile::tempdir().unwrap();
         let staging = tempfile::tempdir().unwrap();
-        let layout =
-            BundleLayout::with_config(repo, None, DeckConfig::defaults()).with_out_root(scratch.path().to_path_buf());
+        let layout = BundleLayout::with_config(repo, None, DeckConfig::defaults())
+            .with_out_root(scratch.path().to_path_buf());
 
         let targets = layout.all_targets();
-        let Some(marketing) = targets.iter().find(|t| t.name == "sui-marketing") else {
+        let Some(marketing) = targets.iter().find(|t| t.name == "sail-marketing") else {
             eprintln!(
-                "SKIP rolldown_bundles_marketing_traced: no sui-marketing target — \
+                "SKIP rolldown_bundles_marketing_traced: no sail-marketing target — \
                  apps/site content outside the framework boundary"
             );
             return;
@@ -520,7 +609,7 @@ mod tests {
         assert!(
             matches!(&marketing.entry, TargetEntry::Real(p)
                 if p.ends_with("apps/site/src/marketing/marketing-bundle.ts")),
-            "sui-marketing must be a Real (traced) entry, got {:?}",
+            "sail-marketing must be a Real (traced) entry, got {:?}",
             marketing.entry
         );
 
@@ -528,16 +617,22 @@ mod tests {
             .await
             .expect("marketing should bundle");
         let body = std::fs::read_to_string(&m.out_path).unwrap();
-        assert!(body.contains("@ship/sui-runtime"), "runtime kept external");
+        assert!(body.contains("@ship/sail-runtime"), "runtime kept external");
 
-        // The traceable marketing components (sui-stat / sui-toolbar /
-        // sui-progress from the retired const have no `.sui` source and are not
+        // The traceable marketing components (sail-stat / sail-toolbar /
+        // sail-progress from the retired const have no `.sail` source and are not
         // members — see marketing-bundle.ts). Each registers via its
         // `component(\`<tag>\`, …)` call; the tag literal survives minification.
         for tag in [
-            "sui-icon", "sui-badge", "sui-button", "sui-separator",
-            "sui-status-dot", "sui-table", "sui-bar-chart",
-            "sui-sparkline", "sui-brand-mark", "sui-theme-picker",
+            "sail-icon",
+            "sail-badge",
+            "sail-button",
+            "sail-separator",
+            "sail-table",
+            "sail-bar-chart",
+            "sail-sparkline",
+            "sail-brand-mark",
+            "sail-theme-picker",
         ] {
             assert!(
                 body.contains(&format!("`{tag}`")),
@@ -553,23 +648,23 @@ mod tests {
         );
     }
 
-    /// The `sui-arcade` bundle is the heavy lazy chunk for the marketing site's
+    /// The `sail-arcade` bundle is the heavy lazy chunk for the marketing site's
     /// games. Its `index.ts` registers every arcade tag and pulls the
     /// pixi + arcade-engine graph. pixi + arcade-engine must be BUNDLED (it's the
     /// big chunk), while the runtime singleton stays EXTERNAL — exactly one
-    /// `@ship/sui-runtime` instance across the page.
+    /// `@ship/sail-runtime` instance across the page.
     #[tokio::test(flavor = "multi_thread")]
     async fn rolldown_bundles_arcade_pixi_inline_runtime_external() {
         let repo = repo_root();
         let scratch = tempfile::tempdir().unwrap();
         let staging = tempfile::tempdir().unwrap();
-        let layout =
-            BundleLayout::with_config(repo, None, DeckConfig::defaults()).with_out_root(scratch.path().to_path_buf());
+        let layout = BundleLayout::with_config(repo, None, DeckConfig::defaults())
+            .with_out_root(scratch.path().to_path_buf());
 
         let targets = layout.all_targets();
-        let Some(arcade) = targets.iter().find(|t| t.name == "sui-arcade") else {
+        let Some(arcade) = targets.iter().find(|t| t.name == "sail-arcade") else {
             eprintln!(
-                "SKIP rolldown_bundles_arcade_pixi_inline_runtime_external: no sui-arcade target — \
+                "SKIP rolldown_bundles_arcade_pixi_inline_runtime_external: no sail-arcade target — \
                  apps/site content outside the framework boundary"
             );
             return;
@@ -578,16 +673,26 @@ mod tests {
             .await
             .expect("arcade should bundle");
         // The heavy lazy chunk: pixi (~800 KB) is bundled in.
-        assert!(m.bytes > 200_000, "arcade bundles pixi, got {} bytes", m.bytes);
+        assert!(
+            m.bytes > 200_000,
+            "arcade bundles pixi, got {} bytes",
+            m.bytes
+        );
         let body = std::fs::read_to_string(&m.out_path).unwrap();
         // Runtime stays external (one instance) — an import of the bare
         // specifier survives, not an inlined second copy.
         assert!(
-            body.contains("@ship/sui-runtime"),
+            body.contains("@ship/sail-runtime"),
             "arcade keeps the runtime singleton external"
         );
         // Each arcade tag registers via its `component(\`<tag>\`, …)` call.
-        for tag in ["sui-stage", "sui-sprite", "sui-emitter", "sui-stage-input", "sui-hud"] {
+        for tag in [
+            "sail-stage",
+            "sail-sprite",
+            "sail-emitter",
+            "sail-stage-input",
+            "sail-hud",
+        ] {
             assert!(
                 body.contains(&format!("`{tag}`")),
                 "arcade bundle must register {tag}"
@@ -595,7 +700,7 @@ mod tests {
         }
     }
 
-    /// The `sui-pdf` bundle wraps the pdf.js (`pdfjs-dist`) engine. The pack's
+    /// The `sail-pdf` bundle wraps the pdf.js (`pdfjs-dist`) engine. The pack's
     /// `index.ts` side-effect-imports the worker module
     /// (`pdfjs-dist/build/pdf.worker.mjs`) instead of a `?url` asset — the deck
     /// bundler has no `?url` support, so a `?url` import ABORTS the build (the bug
@@ -609,13 +714,13 @@ mod tests {
         let repo = repo_root();
         let scratch = tempfile::tempdir().unwrap();
         let staging = tempfile::tempdir().unwrap();
-        let layout =
-            BundleLayout::with_config(repo, None, DeckConfig::defaults()).with_out_root(scratch.path().to_path_buf());
+        let layout = BundleLayout::with_config(repo, None, DeckConfig::defaults())
+            .with_out_root(scratch.path().to_path_buf());
 
         let targets = layout.all_targets();
-        let Some(pdf) = targets.iter().find(|t| t.name == "sui-pdf") else {
+        let Some(pdf) = targets.iter().find(|t| t.name == "sail-pdf") else {
             eprintln!(
-                "SKIP rolldown_bundles_pdf_with_worker_inlined: no sui-pdf target — \
+                "SKIP rolldown_bundles_pdf_with_worker_inlined: no sail-pdf target — \
                  apps/site content outside the framework boundary"
             );
             return;
@@ -624,11 +729,15 @@ mod tests {
             .await
             .expect("pdf pack must bundle through Rolldown (no `?url` abort)");
         // The heavy lazy chunk: pdf.js engine + worker are inlined.
-        assert!(m.bytes > 200_000, "pdf bundles the engine, got {} bytes", m.bytes);
+        assert!(
+            m.bytes > 200_000,
+            "pdf bundles the engine, got {} bytes",
+            m.bytes
+        );
         let body = std::fs::read_to_string(&m.out_path).unwrap();
         // Runtime stays external (one instance).
         assert!(
-            body.contains("@ship/sui-runtime"),
+            body.contains("@ship/sail-runtime"),
             "pdf keeps the runtime singleton external"
         );
         // The worker module is bundled, not fetched — it side-effect-registers the
@@ -644,12 +753,54 @@ mod tests {
             "the `?url` asset suffix must be gone (it aborts the deck bundler)"
         );
         for needle in ["cdnjs", "unpkg", "jsdelivr"] {
-            assert!(!body.contains(needle), "worker must not load from a CDN ({needle})");
+            assert!(
+                !body.contains(needle),
+                "worker must not load from a CDN ({needle})"
+            );
         }
         // `<ship-pdf>` registers via its `component(\`ship-pdf\`, …)` call.
         assert!(
             body.contains("`ship-pdf`"),
             "pdf bundle must register the ship-pdf tag"
+        );
+    }
+
+    /// STUDIO-BOOT-1: deck-route must keep `@ship/sail-runtime/internal` external
+    /// so host `mount` is not inlined with a second CURRENT_SCOPE. The importmap
+    /// maps bare + `/internal` to one `/_deck/runtime.js`; inlining forks it.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn deck_route_keeps_runtime_internal_external() {
+        let repo = repo_root();
+        let scratch = tempfile::tempdir().unwrap();
+        let staging = tempfile::tempdir().unwrap();
+        let layout = BundleLayout::with_config(repo, None, DeckConfig::defaults())
+            .with_out_root(scratch.path().to_path_buf());
+
+        let targets = layout.all_targets();
+        let Some(route) = targets.iter().find(|t| t.name == "deck-route") else {
+            eprintln!(
+                "SKIP deck_route_keeps_runtime_internal_external: no deck-route target \
+                 (package not resolvable from this root)"
+            );
+            return;
+        };
+        let m = bundle_target(&layout, route, staging.path(), true)
+            .await
+            .expect("deck-route should bundle");
+        let body = std::fs::read_to_string(&m.out_path).unwrap();
+        assert!(
+            body.contains("@ship/sail-runtime"),
+            "deck-route keeps bare @ship/sail-runtime external"
+        );
+        assert!(
+            body.contains("@ship/sail-runtime/internal"),
+            "deck-route keeps @ship/sail-runtime/internal external (host mount)"
+        );
+        // Host mount.ts lives on /internal; if it is inlined, this sentinel from
+        // packages/sail/runtime/src/mount.ts rides into deck-route.js.
+        assert!(
+            !body.contains("missing default.setup()"),
+            "host mount must not be inlined into deck-route (dual CURRENT_SCOPE)"
         );
     }
 
@@ -659,9 +810,16 @@ mod tests {
         let root = tmp.path();
         std::fs::create_dir_all(root.join("app")).unwrap();
         std::fs::create_dir_all(root.join("lib")).unwrap();
-        std::fs::write(root.join("app/main.ts"),
-            "import { getX } from '../lib/util.ts'; export default getX;").unwrap();
-        std::fs::write(root.join("lib/util.ts"), "export function getX() { return Math.random(); }").unwrap();
+        std::fs::write(
+            root.join("app/main.ts"),
+            "import { getX } from '../lib/util.ts'; export default getX;",
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("lib/util.ts"),
+            "export function getX() { return Math.random(); }",
+        )
+        .unwrap();
 
         let scratch = tempfile::tempdir().unwrap();
         let staging = tempfile::tempdir().unwrap();
@@ -674,14 +832,101 @@ mod tests {
             out_file: "main.js".to_string(),
             lazy: false,
         };
-        let manifest = bundle_target(&layout, &target, staging.path(), false).await.unwrap();
-        assert!(manifest.modules.iter().any(|m| m.ends_with("app/main.ts")),
-            "entry in module set, got: {:?}", manifest.modules);
-        assert!(manifest.modules.iter().any(|m| m.ends_with("lib/util.ts")),
-            "imported dep from different dir in module set, got: {:?}", manifest.modules);
-        assert!(!manifest.modules.iter().any(|m| m.components().any(|c| {
-            matches!(c, std::path::Component::Normal(n) if n == "node_modules")
-        })), "node_modules must not appear in module set");
+        let manifest = bundle_target(&layout, &target, staging.path(), false)
+            .await
+            .unwrap();
+        assert!(
+            manifest.modules.iter().any(|m| m.ends_with("app/main.ts")),
+            "entry in module set, got: {:?}",
+            manifest.modules
+        );
+        assert!(
+            manifest.modules.iter().any(|m| m.ends_with("lib/util.ts")),
+            "imported dep from different dir in module set, got: {:?}",
+            manifest.modules
+        );
+        assert!(
+            !manifest.modules.iter().any(|m| m
+                .components()
+                .any(|c| { matches!(c, std::path::Component::Normal(n) if n == "node_modules") })),
+            "node_modules must not appear in module set"
+        );
+    }
+
+    /// The unresolved-import guard's failure contract: a bare import rolldown
+    /// cannot resolve must FAIL the build naming the specifier — never ship
+    /// as a silent external the importmap doesn't cover (the `motion/mini`
+    /// blank-page class).
+    #[tokio::test(flavor = "multi_thread")]
+    async fn unresolved_bare_import_fails_the_build() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir_all(root.join("app")).unwrap();
+        std::fs::write(
+            root.join("app/main.ts"),
+            "import { ghost } from 'this-package-does-not-exist'; export default ghost;",
+        )
+        .unwrap();
+
+        let scratch = tempfile::tempdir().unwrap();
+        let staging = tempfile::tempdir().unwrap();
+        let layout = BundleLayout::with_config(root.to_path_buf(), None, DeckConfig::defaults())
+            .with_out_root(scratch.path().to_path_buf());
+        let target = BundleTarget {
+            name: "test/main".to_string(),
+            entry: TargetEntry::Real(root.join("app/main.ts")),
+            externals: vec![],
+            out_file: "main.js".to_string(),
+            lazy: false,
+        };
+        let err = bundle_target(&layout, &target, staging.path(), false)
+            .await
+            .expect_err("an unresolvable bare import must fail the build");
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("this-package-does-not-exist"),
+            "error must name the unresolved specifier, got: {msg}"
+        );
+        assert!(
+            msg.contains("bun install"),
+            "error must carry the install hint, got: {msg}"
+        );
+    }
+
+    /// The other half of the contract: a DECLARED external stays external by
+    /// declaration, not by resolution luck — it builds fine with the package
+    /// absent from disk, and the bare specifier rides the output (the
+    /// importmap's job to cover it, e.g. `@ship/sail-compiler-wasm`).
+    #[tokio::test(flavor = "multi_thread")]
+    async fn declared_external_stays_external_without_resolving() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir_all(root.join("app")).unwrap();
+        std::fs::write(
+            root.join("app/main.ts"),
+            "import { ghost } from 'ghost-pkg'; export default ghost;",
+        )
+        .unwrap();
+
+        let scratch = tempfile::tempdir().unwrap();
+        let staging = tempfile::tempdir().unwrap();
+        let layout = BundleLayout::with_config(root.to_path_buf(), None, DeckConfig::defaults())
+            .with_out_root(scratch.path().to_path_buf());
+        let target = BundleTarget {
+            name: "test/main".to_string(),
+            entry: TargetEntry::Real(root.join("app/main.ts")),
+            externals: vec!["ghost-pkg".to_string()],
+            out_file: "main.js".to_string(),
+            lazy: false,
+        };
+        let manifest = bundle_target(&layout, &target, staging.path(), false)
+            .await
+            .expect("a declared external builds with the package absent");
+        let body = std::fs::read_to_string(&manifest.out_path).unwrap();
+        assert!(
+            body.contains("ghost-pkg"),
+            "declared external must stay a bare specifier in the output, got: {body}"
+        );
     }
 
     #[tokio::test(flavor = "multi_thread")]
@@ -690,9 +935,16 @@ mod tests {
         let root = tmp.path();
         std::fs::create_dir_all(root.join("app/routes")).unwrap();
         std::fs::create_dir_all(root.join("app/src")).unwrap();
-        std::fs::write(root.join("app/routes/page.ts"),
-            "import { getHelper } from '../src/helper.ts'; export default getHelper;").unwrap();
-        std::fs::write(root.join("app/src/helper.ts"), "export function getHelper() { return Math.random().toString(); }").unwrap();
+        std::fs::write(
+            root.join("app/routes/page.ts"),
+            "import { getHelper } from '../src/helper.ts'; export default getHelper;",
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("app/src/helper.ts"),
+            "export function getHelper() { return Math.random().toString(); }",
+        )
+        .unwrap();
         let scratch = tempfile::tempdir().unwrap();
         let staging = tempfile::tempdir().unwrap();
         let layout = BundleLayout::with_config(root.to_path_buf(), None, DeckConfig::defaults())
@@ -704,11 +956,23 @@ mod tests {
             out_file: "page.js".to_string(),
             lazy: false,
         };
-        let manifest = bundle_target(&layout, &target, staging.path(), false).await.unwrap();
-        assert!(manifest.modules.iter().any(|m| m.ends_with("app/routes/page.ts")),
-            "entry in module set");
-        assert!(manifest.modules.iter().any(|m| m.ends_with("app/src/helper.ts")),
-            "imported src file in module set — this is the apps/hub regression");
+        let manifest = bundle_target(&layout, &target, staging.path(), false)
+            .await
+            .unwrap();
+        assert!(
+            manifest
+                .modules
+                .iter()
+                .any(|m| m.ends_with("app/routes/page.ts")),
+            "entry in module set"
+        );
+        assert!(
+            manifest
+                .modules
+                .iter()
+                .any(|m| m.ends_with("app/src/helper.ts")),
+            "imported src file in module set — this is the apps/hub regression"
+        );
     }
 
     /// Unit test for the detector's asset-extension filter. A
@@ -744,20 +1008,13 @@ mod tests {
             "import '../styles/global.css';\nexport const ready = true;\n",
         )
         .unwrap();
-        std::fs::write(
-            root.join("styles/global.css"),
-            ":root { --x: 1; }\n",
-        )
-        .unwrap();
+        std::fs::write(root.join("styles/global.css"), ":root { --x: 1; }\n").unwrap();
         let entry = root.join("app/entry.ts");
         // No JS modules in the bundle beyond the entry —
         // emulating "the CSS was emitted as an asset, not a
         // JS chunk".
         let module_paths = vec![entry.clone()];
-        let dropped = detect_dropped_side_effect_modules(
-            &module_paths,
-            &entry,
-        );
+        let dropped = detect_dropped_side_effect_modules(&module_paths, &entry);
         assert!(
             dropped.is_empty(),
             "detector must skip the CSS bare import — the \
@@ -777,17 +1034,10 @@ mod tests {
             "import '../data/manifest.json';\nexport const ready = true;\n",
         )
         .unwrap();
-        std::fs::write(
-            root.join("data/manifest.json"),
-            r#"{"name":"fixture"}"#,
-        )
-        .unwrap();
+        std::fs::write(root.join("data/manifest.json"), r#"{"name":"fixture"}"#).unwrap();
         let entry = root.join("app/entry.ts");
         let module_paths = vec![entry.clone()];
-        let dropped = detect_dropped_side_effect_modules(
-            &module_paths,
-            &entry,
-        );
+        let dropped = detect_dropped_side_effect_modules(&module_paths, &entry);
         assert!(
             dropped.is_empty(),
             "detector must skip the JSON bare import. dropped={dropped:?}"
@@ -812,10 +1062,7 @@ mod tests {
         .unwrap();
         let entry = root.join("app/entry.ts");
         let module_paths = vec![entry.clone()];
-        let dropped = detect_dropped_side_effect_modules(
-            &module_paths,
-            &entry,
-        );
+        let dropped = detect_dropped_side_effect_modules(&module_paths, &entry);
         assert!(
             dropped.is_empty(),
             "detector must skip the SVG bare import. dropped={dropped:?}"
@@ -848,17 +1095,10 @@ mod tests {
         // The .ts file isn't in the bundle (the analyzer
         // finds no side effect, so the body is dropped).
         let module_paths = vec![entry.clone()];
-        let dropped = detect_dropped_side_effect_modules(
-            &module_paths,
-            &entry,
-        );
+        let dropped = detect_dropped_side_effect_modules(&module_paths, &entry);
         let ts_drops: Vec<_> = dropped
             .iter()
-            .filter(|d| {
-                d.module_path
-                    .extension()
-                    .is_some_and(|e| e == "ts")
-            })
+            .filter(|d| d.module_path.extension().is_some_and(|e| e == "ts"))
             .collect();
         assert!(
             !ts_drops.is_empty(),
@@ -867,11 +1107,10 @@ mod tests {
         );
     }
 
-
     /// effect is a top-level `customElements.define(...)` — must NOT silently
     /// disappear. The default Rolldown setting (`module_side_effects = true`)
     /// keeps the module's body in the bundle; the deck bundler must NOT
-    /// override that. Regression for the sui-sideeffects footgun: authors
+    /// override that. Regression for the sail-sideeffects footgun: authors
     /// were forced to route such imports through a graph-anchored module
     /// (the shell) because the bundler dropped their CSS/registration
     /// import without warning.
@@ -907,7 +1146,9 @@ mod tests {
             out_file: "sidefx.js".to_string(),
             lazy: false,
         };
-        let manifest = bundle_target(&layout, &target, staging.path(), false).await.unwrap();
+        let manifest = bundle_target(&layout, &target, staging.path(), false)
+            .await
+            .unwrap();
         let body = std::fs::read_to_string(&manifest.out_path).unwrap();
         // The side effect must survive — the registration call is the
         // observable proof the module's body ran.
@@ -930,7 +1171,7 @@ mod tests {
     /// '@ship/<pkg>'`) wins over `package.json`'s
     /// `sideEffects: false` / array form — otherwise the body
     /// vanishes and a CSS or `customElements.define` import
-    /// silently disappears (the sui-sideeffects footgun).
+    /// silently disappears (the sail-sideeffects footgun).
     ///
     /// This is the deck bundler's "respect" contract: the
     /// import statement is a deliberate side-effect request from
@@ -945,17 +1186,13 @@ mod tests {
         let root = tmp.path();
         std::fs::create_dir_all(root.join("app")).unwrap();
         std::fs::create_dir_all(root.join("sidefx-pkg/src")).unwrap();
-        // Workspace marker so the fixture mirrors a real Sui
+        // Workspace marker so the fixture mirrors a real Sail
         // workspace. The `*` glob matches every subdir of root
         // (each subdir is a package) — the same pattern the
         // deck-bundler test fixtures use to keep the test
         // self-contained without depending on npm-style nested
         // workspace globs.
-        std::fs::write(
-            root.join("package.json"),
-            r#"{"workspaces":["*"]}"#,
-        )
-        .unwrap();
+        std::fs::write(root.join("package.json"), r#"{"workspaces":["*"]}"#).unwrap();
         // `sideEffects: false` is the bait: without the
         // `load`-hook override, Rolldown would honor this field
         // and drop the registration body's `customElements.define`
@@ -994,7 +1231,9 @@ mod tests {
             out_file: "sidefx-pkg.js".to_string(),
             lazy: false,
         };
-        let manifest = bundle_target(&layout, &target, staging.path(), false).await.unwrap();
+        let manifest = bundle_target(&layout, &target, staging.path(), false)
+            .await
+            .unwrap();
         let body = std::fs::read_to_string(&manifest.out_path).unwrap();
         // The body MUST survive — the `load`-hook override
         // forces `side_effects = true` regardless of
@@ -1007,7 +1246,7 @@ mod tests {
              `load`-hook `side_effects: true` override. The package \
              contract (`sideEffects: false`) is being honored instead \
              of the importer's intent (a bare `import` statement). \
-             This is the sui-sideeffects footgun. bundle: {body}"
+             This is the sail-sideeffects footgun. bundle: {body}"
         );
         // And the dropped list MUST be empty — the module
         // wasn't dropped, so nothing to warn about.
@@ -1035,11 +1274,7 @@ mod tests {
         let root = tmp.path();
         std::fs::create_dir_all(root.join("app")).unwrap();
         std::fs::create_dir_all(root.join("sidefx-pkg/src")).unwrap();
-        std::fs::write(
-            root.join("package.json"),
-            r#"{"workspaces":["*"]}"#,
-        )
-        .unwrap();
+        std::fs::write(root.join("package.json"), r#"{"workspaces":["*"]}"#).unwrap();
         std::fs::write(
             root.join("sidefx-pkg/package.json"),
             r#"{"name":"@ship/sidefx-orphan","sideEffects":false}"#,
@@ -1060,7 +1295,16 @@ mod tests {
         // finds no `SideEffectDetail::Unknown` statements, so
         // the body can't justify itself. The module is
         // dropped entirely (its only export was never
-        // consumed either).
+        // consumed either). The file must EXIST: an
+        // unresolvable bare import is a build failure now
+        // (`assert_no_unresolved_imports`), not a silent
+        // external — this test exercises the resolved-then-
+        // tree-shaken drop path.
+        std::fs::write(
+            root.join("sidefx-pkg/src/index.ts"),
+            "export const sentinelOrphan = 'sentinel-orphan';\n",
+        )
+        .unwrap();
 
         let scratch = tempfile::tempdir().unwrap();
         let staging = tempfile::tempdir().unwrap();
@@ -1073,7 +1317,9 @@ mod tests {
             out_file: "sidefx-orphan.js".to_string(),
             lazy: false,
         };
-        let manifest = bundle_target(&layout, &target, staging.path(), false).await.unwrap();
+        let manifest = bundle_target(&layout, &target, staging.path(), false)
+            .await
+            .unwrap();
         let body = std::fs::read_to_string(&manifest.out_path).unwrap();
         // The dead export is gone (tree-shaken), and the
         // package's body is also gone (nothing references
@@ -1096,7 +1342,7 @@ mod tests {
         );
     }
 
-    /// Direct unit test for `SuiPlugin::load`'s read-error
+    /// Direct unit test for `SailPlugin::load`'s read-error
     /// path. A failed read must fail-loud (the "no silent
     /// errors" rule) — silently emitting an empty `code`
     /// would surface downstream as a confusing
@@ -1113,28 +1359,27 @@ mod tests {
     /// the read-error propagation specifically.
     #[tokio::test(flavor = "multi_thread")]
     async fn load_hook_propagates_read_error_for_missing_module() {
-        use crate::sui_plugin::SuiPlugin;
+        use crate::sail_plugin::SailPlugin;
         use rolldown::plugin::{
-            HookLoadArgs, LoadPluginContext, Plugin, PluginContext,
-            SharedLoadPluginContext,
+            HookLoadArgs, LoadPluginContext, Plugin, PluginContext, SharedLoadPluginContext,
         };
         use rolldown_common::ModuleIdx;
-        // The SuiPlugin's `load` hook doesn't read the
+        // The SailPlugin's `load` hook doesn't read the
         // context (it only uses `args.id`), so a
         // `PluginContext::new_napi_context()` is a valid
         // stand-in for the test — it's the only
         // public constructor the type exposes.
-        let ctx: SharedLoadPluginContext =
-            std::sync::Arc::new(LoadPluginContext::new(
-                PluginContext::new_napi_context(),
-                ModuleIdx::new(0),
-            ));
-        let plugin = SuiPlugin {
+        let ctx: SharedLoadPluginContext = std::sync::Arc::new(LoadPluginContext::new(
+            PluginContext::new_napi_context(),
+            ModuleIdx::new(0),
+        ));
+        let plugin = SailPlugin {
             repo_root: PathBuf::from("/nonexistent"),
             emit_component_imports: false,
             component_index: Default::default(),
             shadowed_tags: Default::default(),
             component_roots: Default::default(),
+            project_dir: None,
         };
         // A path that does not exist on disk. The
         // `read_to_string` call in `load` will fail; the
@@ -1165,8 +1410,6 @@ mod tests {
             "load hook error must name the missing file path; got: {err_str}"
         );
     }
-
-
 
     /// entry that exports a name with no consumer in the entry must still
     /// be tree-shaken (the constant must NOT appear in the bundle). This
@@ -1205,7 +1448,9 @@ mod tests {
             out_file: "dead.js".to_string(),
             lazy: false,
         };
-        let manifest = bundle_target(&layout, &target, staging.path(), false).await.unwrap();
+        let manifest = bundle_target(&layout, &target, staging.path(), false)
+            .await
+            .unwrap();
         let body = std::fs::read_to_string(&manifest.out_path).unwrap();
         assert!(
             !body.contains("sentinel-please-shake"),

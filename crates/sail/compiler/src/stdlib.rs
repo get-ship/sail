@@ -1,0 +1,361 @@
+//! The L1 STDLIB REGISTRY — the language's element sources, authored in
+//! `.sail` (one technology per layer) and compiled BY THIS CRATE on first use
+//! (self-hosting: the compiler compiles its own standard library; no build
+//! codegen, no drift). Element sources compile through
+//! `parse_element_source` — the pipeline minus the stdlib pass — so there is
+//! no recursion and no element-in-element.
+//!
+//! AUTHORING NOTE — the `empty:hidden` gate. Optional-region wrappers (card
+//! header/footer, alert icon/title/actions, empty-state / error-state
+//! sections, field hint) collapse when unfilled via
+//! `when({ empty: style.display(none) })` on the wrapper's sx. The gate is
+//! spelled out per element, per wrapper, because stdlib sources compile
+//! STANDALONE (one `compile_element` per file below; the Style const env is
+//! built from that file's own `<scope>`) and there is no include/import
+//! between stdlib `.sail` files — a shared `emptyGate` Style const has no
+//! home a second file could reference. If a cross-stdlib Style module
+//! mechanism ever lands, this gate is the first candidate to hoist.
+
+use crate::emit::element::ElementOutput;
+use std::path::PathBuf;
+use std::sync::LazyLock;
+
+pub struct StdlibElement {
+    pub tag: &'static str,
+    pub out: ElementOutput,
+}
+
+const SOURCES: &[(&str, &str)] = &[
+    ("spinner", include_str!("../stdlib/spinner/spinner.sail")),
+    ("skeleton", include_str!("../stdlib/skeleton/skeleton.sail")),
+    ("button", include_str!("../stdlib/button/button.sail")),
+    ("input", include_str!("../stdlib/input/input.sail")),
+    ("checkbox", include_str!("../stdlib/checkbox/checkbox.sail")),
+    ("date", include_str!("../stdlib/date/date.sail")),
+    ("dialog", include_str!("../stdlib/dialog/dialog.sail")),
+    ("drawer", include_str!("../stdlib/drawer/drawer.sail")),
+    ("file", include_str!("../stdlib/file/file.sail")),
+    ("color", include_str!("../stdlib/color/color.sail")),
+    ("textarea", include_str!("../stdlib/textarea/textarea.sail")),
+    ("select", include_str!("../stdlib/select/select.sail")),
+    (
+        "accordion",
+        include_str!("../stdlib/accordion/accordion.sail"),
+    ),
+    ("table", include_str!("../stdlib/table/table.sail")),
+    ("th", include_str!("../stdlib/table/th.sail")),
+    ("td", include_str!("../stdlib/table/td.sail")),
+    ("caption", include_str!("../stdlib/table/caption.sail")),
+    ("fieldset", include_str!("../stdlib/fieldset/fieldset.sail")),
+    ("legend", include_str!("../stdlib/fieldset/legend.sail")),
+    ("progress", include_str!("../stdlib/progress/progress.sail")),
+    ("meter", include_str!("../stdlib/meter/meter.sail")),
+    ("a", include_str!("../stdlib/a/anchor.sail")),
+    (
+        "separator",
+        include_str!("../stdlib/separator/separator.sail"),
+    ),
+    ("kbd", include_str!("../stdlib/kbd/kbd.sail")),
+    ("icon", include_str!("../stdlib/icon/icon.sail")),
+    ("label", include_str!("../stdlib/label/label.sail")),
+    ("card", include_str!("../stdlib/card/card.sail")),
+    ("switch", include_str!("../stdlib/switch/switch.sail")),
+    ("badge", include_str!("../stdlib/badge/badge.sail")),
+    ("avatar", include_str!("../stdlib/avatar/avatar.sail")),
+    ("tooltip", include_str!("../stdlib/tooltip/tooltip.sail")),
+    ("alert", include_str!("../stdlib/alert/alert.sail")),
+    (
+        "empty-state",
+        include_str!("../stdlib/empty-state/empty-state.sail"),
+    ),
+    (
+        "error-state",
+        include_str!("../stdlib/error-state/error-state.sail"),
+    ),
+    (
+        "error-boundary",
+        include_str!("../stdlib/error-boundary/error-boundary.sail"),
+    ),
+    (
+        "code-block",
+        include_str!("../stdlib/code-block/code-block.sail"),
+    ),
+    ("chip", include_str!("../stdlib/chip/chip.sail")),
+    ("field", include_str!("../stdlib/field/field.sail")),
+    ("slider", include_str!("../stdlib/slider/slider.sail")),
+    ("radio", include_str!("../stdlib/radio-group/radio.sail")),
+    (
+        "radio-group",
+        include_str!("../stdlib/radio-group/radio-group.sail"),
+    ),
+    ("tabs", include_str!("../stdlib/tabs/tabs.sail")),
+    ("tab-list", include_str!("../stdlib/tabs/tab-list.sail")),
+    ("tab", include_str!("../stdlib/tabs/tab.sail")),
+    ("tab-panel", include_str!("../stdlib/tabs/tab-panel.sail")),
+    (
+        "toggle-group",
+        include_str!("../stdlib/toggle-group/toggle-group.sail"),
+    ),
+    ("toggle", include_str!("../stdlib/toggle-group/toggle.sail")),
+    (
+        "scroll-area",
+        include_str!("../stdlib/scroll-area/scroll-area.sail"),
+    ),
+    (
+        "resizable",
+        include_str!("../stdlib/resizable/resizable.sail"),
+    ),
+    ("ticker", include_str!("../stdlib/ticker/ticker.sail")),
+    (
+        "theme-picker",
+        include_str!("../stdlib/theme-picker/theme-picker.sail"),
+    ),
+    ("navbar", include_str!("../stdlib/navbar/navbar.sail")),
+    (
+        "pagination",
+        include_str!("../stdlib/pagination/pagination.sail"),
+    ),
+    (
+        "page-item",
+        include_str!("../stdlib/pagination/page-item.sail"),
+    ),
+    ("page", include_str!("../stdlib/page/page.sail")),
+    (
+        "breadcrumb",
+        include_str!("../stdlib/breadcrumb/breadcrumb.sail"),
+    ),
+    ("popover", include_str!("../stdlib/popover/popover.sail")),
+    ("prose", include_str!("../stdlib/prose/prose.sail")),
+    ("combobox", include_str!("../stdlib/combobox/combobox.sail")),
+    ("dropdown", include_str!("../stdlib/dropdown/dropdown.sail")),
+    (
+        "menu-item",
+        include_str!("../stdlib/menu-item/menu-item.sail"),
+    ),
+    (
+        "context-menu",
+        include_str!("../stdlib/context-menu/context-menu.sail"),
+    ),
+    (
+        "hover-card",
+        include_str!("../stdlib/hover-card/hover-card.sail"),
+    ),
+    (
+        "toast-region",
+        include_str!("../stdlib/toast/toast-region.sail"),
+    ),
+    ("toast", include_str!("../stdlib/toast/toast.sail")),
+    ("form", include_str!("../stdlib/form/form.sail")),
+];
+
+/// Compiled stdlib elements, memoized for the process lifetime. A stdlib
+/// source that fails to compile is a TOOLCHAIN bug — panic with the error
+/// (the element_mode integration tests catch it long before a user can).
+/// The raw (tag, source) pairs — the prop-registry generator re-parses these
+/// to emit the typed-props registry the lint validates against.
+pub fn sources() -> &'static [(&'static str, &'static str)] {
+    SOURCES
+}
+
+/// Family id for a stdlib tag. A directory **is** the family and the docs
+/// hub host. Parts (`tab` in `tabs/`, `toast-region` in `toast/`) map to
+/// the host directory, not their file stem.
+pub fn family_of(tag: &str) -> &'static str {
+    match tag {
+        "tab" | "tab-list" | "tab-panel" => "tabs",
+        "legend" => "fieldset",
+        "toast-region" => "toast",
+        "page-item" => "pagination",
+        "toggle" => "toggle-group",
+        "radio" => "radio-group",
+        "th" | "td" | "caption" => "table",
+        other => SOURCES
+            .iter()
+            .map(|(t, _)| *t)
+            .find(|t| *t == other)
+            .unwrap_or("unknown"),
+    }
+}
+
+/// True when `tag` is the family host (directory name / hub tile).
+pub fn is_family_host(tag: &str) -> bool {
+    family_of(tag) == tag
+}
+
+/// Virtual source id for a stdlib tag (`stdlib/tabs/tab.sail`). No
+/// filesystem — logical id, host maps to disk if needed.
+pub fn virtual_source_id(tag: &str) -> String {
+    let family = family_of(tag);
+    let stem = match tag {
+        "a" => "anchor",
+        t => t,
+    };
+    format!("stdlib/{family}/{stem}.sail")
+}
+
+/// On-disk `.sail` for a stdlib tag. Prefer [`virtual_source_id`] for
+/// pure paths; this is build/test helper only.
+pub fn source_file(tag: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(virtual_source_id(tag))
+}
+
+/// Tags in `family`, host first, then parts by name.
+pub fn family_tags(family: &str) -> Vec<&'static str> {
+    let mut tags: Vec<&'static str> = SOURCES
+        .iter()
+        .map(|(t, _)| *t)
+        .filter(|t| family_of(t) == family)
+        .collect();
+    tags.sort_by(|a, b| {
+        let ha = u8::from(*a == family);
+        let hb = u8::from(*b == family);
+        hb.cmp(&ha).then_with(|| a.cmp(b))
+    });
+    tags
+}
+
+/// Distinct family ids, sorted.
+pub fn families() -> Vec<&'static str> {
+    let mut out: Vec<&'static str> = SOURCES.iter().map(|(t, _)| family_of(t)).collect();
+    out.sort_unstable();
+    out.dedup();
+    out
+}
+
+pub fn elements() -> &'static [StdlibElement] {
+    static REG: LazyLock<Vec<StdlibElement>> = LazyLock::new(|| {
+        SOURCES
+            .iter()
+            .map(|(tag, src)| StdlibElement {
+                tag,
+                out: crate::compile_element(src, tag)
+                    .unwrap_or_else(|e| panic!("stdlib element `{tag}` failed to compile: {e:?}")),
+            })
+            .collect()
+    });
+    &REG
+}
+
+/// Lookup by tag.
+pub fn element(tag: &str) -> Option<&'static StdlibElement> {
+    elements().iter().find(|e| e.tag == tag)
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn every_stdlib_element_compiles() {
+        let mut fails = Vec::new();
+        for (tag, src) in super::SOURCES {
+            if let Err(e) = crate::compile_element(src, tag) {
+                fails.push(format!("{tag}: {}", e.message));
+            }
+        }
+        assert!(
+            fails.is_empty(),
+            "stdlib elements failed to compile ({}):\n{}",
+            fails.len(),
+            fails.join("\n")
+        );
+    }
+}
+
+/// Platform adaptor CSS — vendor/UA/native plumbing the vocabulary cannot
+/// yet express. Authored as files under `stdlib/platform/`; never Rust strings.
+const PLATFORM: &[(&str, &str)] = &[
+    (
+        "accordion",
+        include_str!("../stdlib/platform/accordion.css"),
+    ),
+    ("avatar", include_str!("../stdlib/platform/avatar.css")),
+    (
+        "breadcrumb",
+        include_str!("../stdlib/platform/breadcrumb.css"),
+    ),
+    ("checkbox", include_str!("../stdlib/platform/checkbox.css")),
+    ("chip", include_str!("../stdlib/platform/chip.css")),
+    (
+        "code-block",
+        include_str!("../stdlib/platform/code-block.css"),
+    ),
+    ("color", include_str!("../stdlib/platform/color.css")),
+    ("dialog", include_str!("../stdlib/platform/dialog.css")),
+    ("drawer", include_str!("../stdlib/platform/dialog.css")),
+    ("file", include_str!("../stdlib/platform/file.css")),
+    ("icon", include_str!("../stdlib/platform/icon.css")),
+    ("meter", include_str!("../stdlib/platform/meter.css")),
+    ("progress", include_str!("../stdlib/platform/progress.css")),
+    ("prose", include_str!("../stdlib/platform/prose.css")),
+    ("radio", include_str!("../stdlib/platform/radio.css")),
+    ("select", include_str!("../stdlib/platform/select.css")),
+    ("skeleton", include_str!("../stdlib/platform/skeleton.css")),
+    ("slider", include_str!("../stdlib/platform/slider.css")),
+    ("table", include_str!("../stdlib/platform/table.css")),
+    (
+        "tooltip",
+        include_str!("../stdlib/platform/tooltip.css"),
+    ),
+];
+
+fn platform_css(tag: &str) -> Option<&'static str> {
+    PLATFORM
+        .iter()
+        .find(|(t, _)| *t == tag)
+        .map(|(_, css)| *css)
+}
+
+/// The concatenated stdlib element skins — the compiler's half of the
+/// framework stylesheet (hand-authored `packages/sail/tokens/src/sail-base.css`
+/// is the document floor). This is the SSOT for element skins: the served
+/// `sail.css` and the materialized `packages/sail/tokens/src/element-skins.css`
+/// both derive from here, and a drift test re-derives and compares. Each
+/// element contributes lowered host Style, then any platform adaptor file,
+/// under structured provenance headers.
+pub fn skins_css() -> String {
+    skins_css_for(elements().iter().map(|el| el.tag))
+}
+
+/// Framework skins + platform adaptor sheets for the used L1 tags only.
+/// A button page does not download `prose.css`.
+pub fn skins_css_for<I, S>(tags: I) -> String
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
+{
+    let want: std::collections::BTreeSet<String> =
+        tags.into_iter().map(|t| t.as_ref().to_string()).collect();
+    let mut out = String::new();
+    for el in elements() {
+        if !want.contains(el.tag) {
+            continue;
+        }
+        let style = el.out.skin_css.trim_end();
+        let platform = platform_css(el.tag)
+            .map(str::trim_end)
+            .filter(|s| !s.is_empty());
+        if style.is_empty() && platform.is_none() {
+            continue;
+        }
+        out.push_str("/* @element ");
+        out.push_str(el.tag);
+        out.push_str(" */\n");
+        if !style.is_empty() {
+            out.push_str(style);
+            out.push('\n');
+        }
+        if let Some(css) = platform {
+            out.push_str("/* @provenance platform/");
+            out.push_str(el.tag);
+            out.push_str(".css */\n");
+            out.push_str(css);
+            out.push('\n');
+        }
+        out.push('\n');
+    }
+    if out.is_empty() {
+        return out;
+    }
+    out.truncate(out.trim_end().len());
+    out.push('\n');
+    out
+}

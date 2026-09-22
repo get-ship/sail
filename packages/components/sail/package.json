@@ -1,0 +1,293 @@
+{
+  "name": "@ship/sail-components",
+  "version": "0.3.0",
+  "description": "Ship SAIL components \u2014 single tree-shaken package (primitives, charts, media, chat, canvas, code, viewers, mermaid). Sail consumers: domain subpaths (source .ts barrels). Non-sail / single-tag: domain/tag \u2192 precompiled .compiled.js. One canonical path per surface; no short aliases.",
+  "type": "module",
+  "license": "MIT",
+  "files": [
+    "dist/**",
+    "src/**",
+    "canvas/src/**",
+    "charts/src/**",
+    "chat-elements/src/**",
+    "chat-elements/dist/**",
+    "code-editor/src/**",
+    "code-editor/types/**",
+    "media/src/**",
+    "mermaid/src/**",
+    "primitives/src/**",
+    "primitives/dist/**",
+    "viewer/src/**",
+    "viewer/dist/**",
+    "README.md",
+    "package.json"
+  ],
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json",
+    "./primitives": {
+      "types": "./primitives/dist/index.d.ts",
+      "default": "./primitives/src/index.ts"
+    },
+    "./charts": "./charts/src/index.ts",
+    "./code": {
+      "types": "./code-editor/types/index.d.ts",
+      "default": "./code-editor/src/index.ts"
+    },
+    "./viewers": {
+      "types": "./viewer/dist/index.d.ts",
+      "default": "./src/viewers.ts"
+    },
+    "./media": "./media/src/index.ts",
+    "./chat": {
+      "types": "./chat-elements/dist/index.d.ts",
+      "default": "./chat-elements/src/index.ts"
+    },
+    "./canvas": "./canvas/src/index.ts",
+    "./mermaid": "./mermaid/src/index.ts",
+    "./media/engine": "./media/src/engine/index.ts",
+    "./viewers/wasm-bootstrap": {
+      "types": "./viewer/dist/wasm-bootstrap.d.ts",
+      "default": "./viewer/src/wasm-bootstrap.ts"
+    },
+    "./viewers/same-doc-mount": {
+      "types": "./viewer/dist/same-doc-mount.d.ts",
+      "default": "./viewer/src/same-doc-mount.ts"
+    },
+    "./primitives/sail-calendar": {
+      "types": "./primitives/src/sail-calendar/sail-calendar.sail.d.ts",
+      "default": "./primitives/src/sail-calendar/sail-calendar.compiled.js"
+    },
+    "./primitives/sail-cmdk": {
+      "types": "./primitives/src/sail-cmdk/sail-cmdk.sail.d.ts",
+      "default": "./primitives/src/sail-cmdk/sail-cmdk.compiled.js"
+    },
+    "./primitives/sail-color-picker": {
+      "types": "./primitives/src/sail-color-picker/sail-color-picker.sail.d.ts",
+      "default": "./primitives/src/sail-color-picker/sail-color-picker.compiled.js"
+    },
+    "./primitives/sail-date-picker": {
+      "types": "./primitives/src/sail-date-picker/sail-date-picker.sail.d.ts",
+      "default": "./primitives/src/sail-date-picker/sail-date-picker.compiled.js"
+    },
+    "./primitives/sail-diff": {
+      "types": "./primitives/src/sail-diff/sail-diff.sail.d.ts",
+      "default": "./primitives/src/sail-diff/sail-diff.compiled.js"
+    },
+    "./primitives/sail-error-boundary": {
+      "types": "./primitives/src/sail-error-boundary/sail-error-boundary.sail.d.ts",
+      "default": "./primitives/src/sail-error-boundary/sail-error-boundary.compiled.js"
+    },
+    "./primitives/sail-file-upload": {
+      "types": "./primitives/src/sail-file-upload/sail-file-upload.sail.d.ts",
+      "default": "./primitives/src/sail-file-upload/sail-file-upload.compiled.js"
+    },
+    "./primitives/sail-json-view": {
+      "types": "./primitives/src/sail-json-view/sail-json-view.sail.d.ts",
+      "default": "./primitives/src/sail-json-view/sail-json-view.compiled.js"
+    },
+    "./primitives/sail-markdown": {
+      "types": "./primitives/src/sail-markdown/sail-markdown.sail.d.ts",
+      "default": "./primitives/src/sail-markdown/sail-markdown.compiled.js"
+    },
+    "./primitives/sail-timeline-item": {
+      "types": "./primitives/src/sail-timeline/sail-timeline-item.sail.d.ts",
+      "default": "./primitives/src/sail-timeline/sail-timeline-item.compiled.js"
+    },
+    "./primitives/sail-timeline": {
+      "types": "./primitives/src/sail-timeline/sail-timeline.sail.d.ts",
+      "default": "./primitives/src/sail-timeline/sail-timeline.compiled.js"
+    },
+    "./primitives/sail-tree": {
+      "types": "./primitives/src/sail-tree/sail-tree.sail.d.ts",
+      "default": "./primitives/src/sail-tree/sail-tree.compiled.js"
+    },
+    "./primitives/sail-tree-grid": {
+      "types": "./primitives/src/sail-tree-grid/sail-tree-grid.sail.d.ts",
+      "default": "./primitives/src/sail-tree-grid/sail-tree-grid.compiled.js"
+    },
+    "./charts/sail-area-chart": {
+      "types": "./charts/src/sail-area-chart/sail-area-chart.sail.d.ts",
+      "default": "./charts/src/sail-area-chart/sail-area-chart.compiled.js"
+    },
+    "./charts/sail-bar-chart": {
+      "types": "./charts/src/sail-bar-chart/sail-bar-chart.sail.d.ts",
+      "default": "./charts/src/sail-bar-chart/sail-bar-chart.compiled.js"
+    },
+    "./charts/sail-donut": {
+      "types": "./charts/src/sail-donut/sail-donut.sail.d.ts",
+      "default": "./charts/src/sail-donut/sail-donut.compiled.js"
+    },
+    "./charts/sail-gauge": {
+      "types": "./charts/src/sail-gauge/sail-gauge.sail.d.ts",
+      "default": "./charts/src/sail-gauge/sail-gauge.compiled.js"
+    },
+    "./charts/sail-heatmap": {
+      "types": "./charts/src/sail-heatmap/sail-heatmap.sail.d.ts",
+      "default": "./charts/src/sail-heatmap/sail-heatmap.compiled.js"
+    },
+    "./charts/sail-line-chart": {
+      "types": "./charts/src/sail-line-chart/sail-line-chart.sail.d.ts",
+      "default": "./charts/src/sail-line-chart/sail-line-chart.compiled.js"
+    },
+    "./charts/sail-sparkline": {
+      "types": "./charts/src/sail-sparkline/sail-sparkline.sail.d.ts",
+      "default": "./charts/src/sail-sparkline/sail-sparkline.compiled.js"
+    },
+    "./code/sail-code-editor": {
+      "types": "./code-editor/src/sail-code-editor/sail-code-editor.sail.d.ts",
+      "default": "./code-editor/src/sail-code-editor/sail-code-editor.compiled.js"
+    },
+    "./viewers/sail-component-viewer": {
+      "types": "./viewer/src/sail-component-viewer/sail-component-viewer.sail.d.ts",
+      "default": "./viewer/src/sail-component-viewer/sail-component-viewer.compiled.js"
+    },
+    "./viewers/sail-render": {
+      "types": "./viewer/src/sail-render/sail-render.sail.d.ts",
+      "default": "./viewer/src/sail-render/sail-render.compiled.js"
+    },
+    "./media/sail-media-av": {
+      "types": "./media/src/sail-media-av/sail-media-av.sail.d.ts",
+      "default": "./media/src/sail-media-av/sail-media-av.compiled.js"
+    },
+    "./media/sail-media-csv": {
+      "types": "./media/src/sail-media-csv/sail-media-csv.sail.d.ts",
+      "default": "./media/src/sail-media-csv/sail-media-csv.compiled.js"
+    },
+    "./media/sail-media-image": {
+      "types": "./media/src/sail-media-image/sail-media-image.sail.d.ts",
+      "default": "./media/src/sail-media-image/sail-media-image.compiled.js"
+    },
+    "./chat/sail-citation": {
+      "types": "./chat-elements/src/sail-citation/sail-citation.sail.d.ts",
+      "default": "./chat-elements/src/sail-citation/sail-citation.compiled.js"
+    },
+    "./chat/sail-composer": {
+      "types": "./chat-elements/src/sail-composer/sail-composer.sail.d.ts",
+      "default": "./chat-elements/src/sail-composer/sail-composer.compiled.js"
+    },
+    "./chat/sail-message": {
+      "types": "./chat-elements/src/sail-message/sail-message.sail.d.ts",
+      "default": "./chat-elements/src/sail-message/sail-message.compiled.js"
+    },
+    "./chat/sail-message-list": {
+      "types": "./chat-elements/src/sail-message-list/sail-message-list.sail.d.ts",
+      "default": "./chat-elements/src/sail-message-list/sail-message-list.compiled.js"
+    },
+    "./chat/sail-thinking-dots": {
+      "types": "./chat-elements/src/sail-thinking-dots/sail-thinking-dots.sail.d.ts",
+      "default": "./chat-elements/src/sail-thinking-dots/sail-thinking-dots.compiled.js"
+    },
+    "./chat/sail-tool-call": {
+      "types": "./chat-elements/src/sail-tool-call/sail-tool-call.sail.d.ts",
+      "default": "./chat-elements/src/sail-tool-call/sail-tool-call.compiled.js"
+    },
+    "./canvas/sail-annotation-layer": {
+      "types": "./canvas/src/sail-annotation/sail-annotation-layer.sail.d.ts",
+      "default": "./canvas/src/sail-annotation/sail-annotation-layer.compiled.js"
+    },
+    "./canvas/sail-annotation-list": {
+      "types": "./canvas/src/sail-annotation/sail-annotation-list.sail.d.ts",
+      "default": "./canvas/src/sail-annotation/sail-annotation-list.compiled.js"
+    },
+    "./canvas/sail-annotation-marker": {
+      "types": "./canvas/src/sail-annotation/sail-annotation-marker.sail.d.ts",
+      "default": "./canvas/src/sail-annotation/sail-annotation-marker.compiled.js"
+    },
+    "./canvas/sail-board": {
+      "types": "./canvas/src/sail-board/sail-board.sail.d.ts",
+      "default": "./canvas/src/sail-board/sail-board.compiled.js"
+    },
+    "./canvas/sail-canvas": {
+      "types": "./canvas/src/sail-canvas/sail-canvas.sail.d.ts",
+      "default": "./canvas/src/sail-canvas/sail-canvas.compiled.js"
+    },
+    "./canvas/sail-draw": {
+      "types": "./canvas/src/sail-draw/sail-draw.sail.d.ts",
+      "default": "./canvas/src/sail-draw/sail-draw.compiled.js"
+    },
+    "./canvas/sail-graph-canvas": {
+      "types": "./canvas/src/sail-graph-canvas/sail-graph-canvas.sail.d.ts",
+      "default": "./canvas/src/sail-graph-canvas/sail-graph-canvas.compiled.js"
+    },
+    "./mermaid/sail-mermaid": {
+      "types": "./mermaid/src/sail-mermaid/sail-mermaid.sail.d.ts",
+      "default": "./mermaid/src/sail-mermaid/sail-mermaid.compiled.js"
+    }
+  },
+  "sideEffects": [
+    "**/*.compiled.js",
+    "src/index.ts",
+    "src/viewers.ts",
+    "primitives/src/index.ts",
+    "charts/src/index.ts",
+    "code-editor/src/index.ts",
+    "media/src/index.ts",
+    "chat-elements/src/index.ts",
+    "canvas/src/index.ts",
+    "mermaid/src/index.ts",
+    "viewer/src/index.ts"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@codemirror/autocomplete": "^6",
+    "@codemirror/commands": "^6",
+    "@codemirror/lang-css": "^6",
+    "@codemirror/lang-html": "^6",
+    "@codemirror/lang-javascript": "^6",
+    "@codemirror/lang-json": "^6",
+    "@codemirror/lang-markdown": "^6",
+    "@codemirror/lang-python": "^6",
+    "@codemirror/lang-rust": "^6",
+    "@codemirror/lang-yaml": "^6",
+    "@codemirror/language": "^6",
+    "@codemirror/lint": "^6",
+    "@codemirror/search": "^6",
+    "@codemirror/state": "^6",
+    "@codemirror/view": "^6",
+    "@lezer/highlight": "^1",
+    "@ship/sail-highlight": "workspace:*",
+    "mermaid": "^11.4.0"
+  },
+  "devDependencies": {
+    "@ship/test-setup": "workspace:*",
+    "@types/node": "24.12.4",
+    "fast-formula-parser": "1.0.19",
+    "vitest": "^4.1.5",
+    "happy-dom": "^20.9.0",
+    "@dagrejs/dagre": "^3.0.0",
+    "perfect-freehand": "^1.2.3",
+    "roughjs": "^4.6.6"
+  },
+  "peerDependencies": {
+    "@ship/sail-runtime": ">=0.3.0",
+    "@ship/sail-dom": ">=0.3.0",
+    "@ship/tokens": ">=0.3.0",
+    "@ship/sail-compiler-wasm": ">=0.3.0",
+    "@ship/sail-lsp-browser": ">=0.3.0"
+  },
+  "peerDependenciesMeta": {
+    "@ship/sail-runtime": {
+      "optional": false
+    },
+    "@ship/sail-dom": {
+      "optional": false
+    },
+    "@ship/tokens": {
+      "optional": false
+    },
+    "@ship/sail-compiler-wasm": {
+      "optional": true
+    },
+    "@ship/sail-lsp-browser": {
+      "optional": true
+    }
+  },
+  "customElements": "dist/custom-elements.json",
+  "sailComponents": true
+}

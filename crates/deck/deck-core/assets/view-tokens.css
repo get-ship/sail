@@ -2,14 +2,13 @@
  * Daemon-view base styles.
  *
  * Design tokens themselves come from the single canonical source
- * `packages/sui/tokens/src/{tokens,themes}.css`, which
+ * `packages/sail/tokens/src/{tokens,themes}.css`, which
  * `deck-core/src/view_tokens.rs` include_str!s and concatenates in front of
  * this file at compile time. Only view-container-scoped resets + defaults here.
  */
 
-/* Universal box-sizing — safe everywhere, including across shadow DOM
-   boundaries. Applies to every element so custom components built with
-   `box-sizing: border-box` internally stay in sync with their host. */
+/* Universal box-sizing — applies to every element so custom components built
+   with `box-sizing: border-box` internally stay in sync with their host. */
 .ship-view,
 .ship-view *,
 .ship-view *::before,
@@ -18,10 +17,8 @@
 }
 
 /* Browser-default margin/padding reset — scoped to elements that actually
-   have user-agent styles, NOT a `*` blast. A universal padding:0 reset
-   beats `:host { padding: … }` inside custom components (same specificity
-   rank, outer wins per cascade), which silently flattened every
-   ship-card, ship-button, ship-dialog etc. */
+   have user-agent styles, NOT a `*` blast. A universal padding:0 reset would
+   flatten component padding at the same specificity rank. */
 .ship-view h1, .ship-view h2, .ship-view h3,
 .ship-view h4, .ship-view h5, .ship-view h6,
 .ship-view p, .ship-view blockquote,

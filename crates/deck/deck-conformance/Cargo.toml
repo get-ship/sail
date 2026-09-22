@@ -9,10 +9,19 @@ description = "deck's own conformance + reliability harness — mounts deck on a
 name = "deck-conformance"
 path = "src/main.rs"
 
+[lib]
+name = "deck_conformance"
+path = "src/lib.rs"
+# Work around the Cargo cdylib/rlib filename collision described in
+# crates/deck/deck/Cargo.toml. deck-conformance has no doctests, so disabling
+# the doctest harness avoids the E0463/E0460 collision without losing coverage.
+# See claim c-2026-07-19T18-12-45-685Z-f499ce4b.
+doctest = false
+
 [dependencies]
 deck = { path = "../deck" }
 deck-core = { path = "../deck-core" }
-sui-compiler = { path = "../../sui/compiler" }
+sail-compiler = { path = "../../sail/compiler" }
 axum = { workspace = true, features = ["http1", "tokio"] }
 tokio = { workspace = true, features = ["full"] }
 tokio-util = { workspace = true, features = ["full"] }

@@ -1,0 +1,260 @@
+==================
+if / else if / else
+==================
+
+<if cond={a > 0}><p>pos</p><else-if cond={a == 0}><p>zero</p></else-if><else><p>neg</p></else></if>
+
+---
+
+(source_file
+  (if_block
+    (control_open)
+    (dynamic_attr
+      name: (attr_name)
+      value: (brace_expression
+        (identifier)))
+    (element
+      tag: (tag_name)
+      (text)
+      close_tag: (tag_name))
+    (element
+      tag: (tag_name)
+      (dynamic_attr
+        name: (attr_name)
+        value: (brace_expression
+          (identifier)))
+      (element
+        tag: (tag_name)
+        (text)
+        close_tag: (tag_name))
+      close_tag: (tag_name))
+    (element
+      tag: (tag_name)
+      (element
+        tag: (tag_name)
+        (text)
+        close_tag: (tag_name))
+      close_tag: (tag_name))
+    (control_close)))
+
+==================
+for / key / else
+==================
+
+<for as="item" of={items()} key={item.id}><li>{item.name}</li><else><em>empty</em></else></for>
+
+---
+
+(source_file
+  (for_block
+    (control_open)
+    (static_attr
+      name: (attr_name)
+      value: (string_literal))
+    (dynamic_attr
+      name: (attr_name)
+      value: (brace_expression
+        (identifier)))
+    (dynamic_attr
+      name: (attr_name)
+      value: (brace_expression
+        (identifier)))
+    (element
+      tag: (tag_name)
+      (interpolation
+        (identifier))
+      close_tag: (tag_name))
+    (element
+      tag: (tag_name)
+      (element
+        tag: (tag_name)
+        (text)
+        close_tag: (tag_name))
+      close_tag: (tag_name))
+    (control_close)))
+
+==================
+for / index binding
+==================
+
+<for as="item" index="idx" of={items()} key={item.id}><li>{idx}: {item.name}</li></for>
+
+---
+
+(source_file
+  (for_block
+    (control_open)
+    (static_attr
+      name: (attr_name)
+      value: (string_literal))
+    (static_attr
+      name: (attr_name)
+      value: (string_literal))
+    (dynamic_attr
+      name: (attr_name)
+      value: (brace_expression
+        (identifier)))
+    (dynamic_attr
+      name: (attr_name)
+      value: (brace_expression
+        (identifier)))
+    (element
+      tag: (tag_name)
+      (interpolation
+        (identifier))
+      (text)
+      (interpolation
+        (identifier))
+      close_tag: (tag_name))
+    (control_close)))
+
+==================
+match / case / default
+==================
+
+<match on={status}><case of={'ok'}><p>ok</p></case><case of={'err'}><p>err</p></case><default><p>x</p></default></match>
+
+---
+
+(source_file
+  (match_block
+    (control_open)
+    (dynamic_attr
+      name: (attr_name)
+      value: (brace_expression
+        (identifier)))
+    (element
+      tag: (tag_name)
+      (dynamic_attr
+        name: (attr_name)
+        value: (brace_expression))
+      (element
+        tag: (tag_name)
+        (text)
+        close_tag: (tag_name))
+      close_tag: (tag_name))
+    (element
+      tag: (tag_name)
+      (dynamic_attr
+        name: (attr_name)
+        value: (brace_expression))
+      (element
+        tag: (tag_name)
+        (text)
+        close_tag: (tag_name))
+      close_tag: (tag_name))
+    (element
+      tag: (tag_name)
+      (element
+        tag: (tag_name)
+        (text)
+        close_tag: (tag_name))
+      close_tag: (tag_name))
+    (control_close)))
+
+==================
+when / else
+==================
+
+<when bp={tablet}><row>wide</row><else><column>narrow</column></else></when>
+
+---
+
+(source_file
+  (when_block
+    (control_open)
+    (dynamic_attr
+      name: (attr_name)
+      value: (brace_expression
+        (identifier)))
+    (element
+      tag: (tag_name)
+      (text)
+      close_tag: (tag_name))
+    (element
+      tag: (tag_name)
+      (element
+        tag: (tag_name)
+        (text)
+        close_tag: (tag_name))
+      close_tag: (tag_name))
+    (control_close)))
+
+==================
+nested for inside if
+==================
+
+<if cond={items}><for as="x" of={items}><p>{x}</p></for></if>
+
+---
+
+(source_file
+  (if_block
+    (control_open)
+    (dynamic_attr
+      name: (attr_name)
+      value: (brace_expression
+        (identifier)))
+    (for_block
+      (control_open)
+      (static_attr
+        name: (attr_name)
+        value: (string_literal))
+      (dynamic_attr
+        name: (attr_name)
+        value: (brace_expression
+          (identifier)))
+      (element
+        tag: (tag_name)
+        (interpolation
+          (identifier))
+        close_tag: (tag_name))
+      (control_close))
+    (control_close)))
+
+==================
+match LiveState arms (loading / error / ok)
+==================
+
+<match on={agents}>
+  {loading => <p data-test="loading">Loading agents&hellip;</p>}
+  {error as err => <p data-test="error">Error: {err.message}</p>}
+  {ok as value => <p data-test="ok">{value}</p>}
+</match>
+
+---
+
+(source_file
+  (match_block
+    (control_open)
+    (dynamic_attr
+      name: (attr_name)
+      value: (brace_expression
+        (identifier)))
+    (interpolation
+      (identifier)
+      (identifier)
+      (identifier)
+      (identifier)
+      (identifier)
+      (identifier)
+      (identifier)
+      (identifier))
+    (interpolation
+      (identifier)
+      (identifier)
+      (identifier)
+      (identifier)
+      (identifier)
+      (identifier)
+      (identifier)
+      (identifier))
+    (interpolation
+      (identifier)
+      (identifier)
+      (identifier)
+      (identifier)
+      (identifier)
+      (identifier)
+      (identifier))
+    (control_close)))

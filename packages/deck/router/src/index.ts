@@ -16,20 +16,34 @@
 // Single source of truth for navigation: `navigate(path)` calls
 // `history.pushState` (or `replaceState`) and triggers a global
 // `__shipSetRouteUpdate` callback. Every `route()` instance registers
-// itself with that updater on construction so all attached views see
+// itself with that updater on construction so all attached routes see
 // the same URL state.
 //
 // Hosts (deck shell, spaces scaffold, view-host) own the *policy* —
-// history, path→view matching, mounting. The runtime owns the
+// history, path→route matching, mounting. The runtime owns the
 // *mechanism* (reactive signals + popstate listener). The
 // `setRouterPort` plug-in keeps the runtime host-agnostic.
 
-import { signal, type Signal } from '@ship/sui-runtime'
+import { signal, type Signal } from '@ship/sail-runtime'
+import {
+  installScrollRestoration,
+  onNavigate,
+  onPopState,
+  applyScroll,
+} from './scroll-restoration'
 
 // Layout-chain resolution + the router live in their own modules (this file
 // is at the size cap). Re-exported so `@ship/deck-router` is one import site.
 export { resolveLayoutChain, type LayoutShape } from './layouts'
 export { mountRouter, type MountRouterOptions, type RouterHandle } from './mount-router'
+export {
+  applyDocumentHead,
+  applySailHead,
+  type SailHead,
+  type SailHeadLink,
+  type SailHeadMeta,
+} from './document-head'
+export { setRouteSignals } from './route-port'
 export {
   installRouteBoundary,
   isDevMode,
@@ -55,7 +69,7 @@ interface RouteInstance {
 }
 
 // Module-level registry of route shapes. Shared across every
-// `route()` instance so a `defineRoutes` call from one view's setup
+// `route()` instance so a `defineRoutes` call from one route's setup
 // affects param matching for any subsequently constructed route.
 const SHAPES: CompiledShape[] = []
 
@@ -73,7 +87,7 @@ let updaterInstalled = false
 // calls' sorted-join must START WITH the baseline string (so
 // additions are allowed; removals and reorderings are not). When
 // `EDIT_MODE` is `true`, anything goes — runtime route additions
-// from downloaded views or hot-reload are accepted without
+// from downloaded routes or hot-reload are accepted without
 // enforcement.
 //
 // `mergeRoutes` is the supported way to bring a runtime half into a
@@ -113,7 +127,7 @@ export function isEditMode(): boolean {
  * what was registered. In edit mode (`setEditMode(true)`) the gate
  * is skipped and any pattern set is accepted.
  *
- * Per-view convention: call `defineRoutes` from the view's `view.ts`
+ * Per-route convention: call `defineRoutes` from the route's `view.ts`
  * (or controller setup) before reading any params. The compiler may
  * lift this to a `<route pattern="..." />` directive in a follow-up;
  * for now it's an imperative call.
@@ -128,7 +142,7 @@ export function defineRoutes(shapes: RouteShape[]): void {
     const incoming = shapes.map((s) => s.pattern).sort().join('|')
     if (!incoming.startsWith(STATIC_HASH)) {
       throw new Error(
-        '[ship-set] defineRoutes: runtime route additions are forbidden outside edit mode. ' +
+        '[sail] defineRoutes: runtime route additions are forbidden outside edit mode. ' +
           'Call setEditMode(true) at boot to allow dynamic patterns.',
       )
     }
@@ -203,15 +217,15 @@ export function route(opts?: { url?: URL; routes?: RouteShape[] }): RouteSignals
 /**
  * A host-supplied router. The runtime owns the *mechanism* (the reactive
  * `route.*` signals); the host (Deck shell, Tauri shell, view-host) owns
- * the *policy* — history, path→view matching, and mounting. `navigate()`
+ * the *policy* — history, path→route matching, and mounting. `navigate()`
  * delegates here so a single call from any bundle actually navigates.
  *
- * Registered via {@link setRouterPort}. Mirrors `SuiLoader` / `ShipHost`:
+ * Registered via {@link setRouterPort}. Mirrors `SailLoader`:
  * the runtime names no host concept, the host plugs one in.
  */
 export interface RouterPort {
   /** Navigate to `to` (a path). The host matches, updates history, and
-   *  mounts or updates the view as appropriate. */
+   *  mounts or updates the route as appropriate. */
   navigate(to: string, opts?: { replace?: boolean }): void
   /** Go back one history entry. */
   back(): void
@@ -229,17 +243,20 @@ export function setRouterPort(port: RouterPort): void {
 /**
  * SPA-aware navigation. Delegates to the host {@link RouterPort} when one
  * is registered — the host owns matching + mounting, so this actually
- * switches views.
+ * switches routes.
  *
- * When no port is registered (a single-view host like the view-host, or
+ * When no port is registered (a single-route host like the view-host, or
  * tests), it falls back to updating the URL + reactive `route.*` signals
- * in place. Cross-view mounting requires a host router.
+ * in place. Cross-route mounting requires a host router.
  *
  * ```ts
  * navigate('/agents/42')
  * navigate('/login', { replace: true })
  * ```
  */
+/** Host navigate (scroll restoration). Author ambient inject uses
+ * `packages/sail/runtime` `navigate` — both call `__shipRouterPort` when set
+ * (SSOT). No-port fallback: runtime updates history+signals; deck also scrolls. */
 export function navigate(path: string, opts: { replace?: boolean } = {}): void {
   const port = globalThis.__shipRouterPort
   if (port) {
@@ -247,12 +264,17 @@ export function navigate(path: string, opts: { replace?: boolean } = {}): void {
     return
   }
   if (typeof window === 'undefined' || !window.history) return
+  // Save the outgoing scroll offset and get the history state (carrying this
+  // entry's scroll key) before we change the URL.
+  const state = onNavigate(opts.replace ?? false)
   if (opts.replace) {
-    window.history.replaceState({}, '', path)
+    window.history.replaceState(state, '', path)
   } else {
-    window.history.pushState({}, '', path)
+    window.history.pushState(state, '', path)
   }
   globalThis.__shipSetRouteUpdate?.()
+  // A fresh push scrolls to the top once the new route has rendered.
+  applyScroll()
 }
 
 /**
@@ -260,7 +282,7 @@ export function navigate(path: string, opts: { replace?: boolean } = {}): void {
  * table (codegen'd from the file tree) AND a runtime route table
  * (fetched from the daemon) call `mergeRoutes` to combine them.
  *
- * The static half always wins on collision — a downloaded view that
+ * The static half always wins on collision — a downloaded route that
  * declares `/agents/:id` cannot shadow the first-party shell's
  * `/agents/:id` route.
  */
@@ -323,13 +345,13 @@ export function mergeRoutes(
     if (staticPatterns.has(r.pattern)) {
       if (onCollision === 'error') {
         throw new Error(
-          `[ship-set] mergeRoutes: runtime pattern '${r.pattern}' collides with a static pattern`,
+          `[sail] mergeRoutes: runtime pattern '${r.pattern}' collides with a static pattern`,
         )
       }
       if (onCollision === 'log') {
         collisions.push(r.pattern)
         console.warn(
-          `[ship-set] mergeRoutes: dropped runtime pattern '${r.pattern}' (collides with a static pattern)`,
+          `[sail] mergeRoutes: dropped runtime pattern '${r.pattern}' (collides with a static pattern)`,
         )
       }
       continue
@@ -352,17 +374,13 @@ export function mergeRoutes(
 
 /**
  * Find the registered route shape whose pattern matches `pathname` (or
- * `undefined`). The router uses this to pick the view module for a
+ * `undefined`). The router uses this to pick the route module for a
  * navigation — modules are keyed by pattern. Reuses the same compiled
  * regexes as `route.params` matching, so there is one matcher, not two.
  */
 export function matchRoute(pathname: string): RouteShape | undefined {
   for (const shape of SHAPES) {
-    if (shape.regex.test(pathname)) {
-      return shape.name === undefined
-        ? { pattern: shape.pattern }
-        : { pattern: shape.pattern, name: shape.name }
-    }
+    if (shape.regex.test(pathname)) return shape
   }
   return undefined
 }
@@ -446,12 +464,12 @@ function makeProxy(
     },
     set(_t, key) {
       throw new Error(
-        `[ship-set] route.${label}.${String(key)} is read-only — call navigate(path) to change the URL`,
+        `[sail] route.${label}.${String(key)} is read-only — call navigate(path) to change the URL`,
       )
     },
     deleteProperty(_t, key) {
       throw new Error(
-        `[ship-set] cannot delete route.${label}.${String(key)} — call navigate(path) to change the URL`,
+        `[sail] cannot delete route.${label}.${String(key)} — call navigate(path) to change the URL`,
       )
     },
     has(_t, key) {
@@ -481,8 +499,13 @@ function ensurePopstateListener(): void {
   if (popstateBound) return
   if (typeof window === 'undefined' || !window.addEventListener) return
   popstateBound = true
+  installScrollRestoration()
   window.addEventListener('popstate', () => {
+    // Record the destination entry's restore intent, apply the route update,
+    // then restore that entry's saved scroll offset once it has rendered.
+    onPopState()
     globalThis.__shipSetRouteUpdate?.()
+    applyScroll()
   })
 }
 
@@ -491,4 +514,6 @@ declare global {
   var __shipSetRouteUpdate: (() => void) | undefined
   // eslint-disable-next-line no-var
   var __shipRouterPort: RouterPort | undefined
+  // eslint-disable-next-line no-var
+  var __shipRouteSignals: RouteSignals | undefined
 }

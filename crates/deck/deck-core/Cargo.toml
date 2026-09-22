@@ -3,20 +3,32 @@ name = "deck-core"
 version = "0.1.0"
 edition = "2024"
 publish = false
-description = "SUI framework hosting logic — transport-agnostic. Produces DeckResponse; adapters (deck-axum, …) bind it to a server."
+description = "SAIL framework hosting logic — transport-agnostic. Produces DeckResponse; adapters (deck-axum, …) bind it to a server."
 
 [lib]
 name = "deck_core"
 path = "src/lib.rs"
+# Work around the Cargo cdylib/rlib filename collision described in
+# crates/deck/deck/Cargo.toml. deck-core has no doctests, so disabling the
+# doctest harness avoids the E0463/E0460 collision without losing coverage.
+# See claim c-2026-07-19T18-12-45-685Z-f499ce4b.
+doctest = false
 
 [features]
 default = []
 specta = ["dep:specta", "deck-host/specta"]
 
+[build-dependencies]
+# The build script stages `<repo>/.sail/framework/*.js` → `assets/` for
+# `include_str!`; it resolves that generate dir through the SAME single constant
+# the runtime/bundler use, so the staging path can never drift from the writer.
+deck-config = { path = "../deck-config" }
+
 [dependencies]
 deck-config = { path = "../deck-config" }
 deck-host = { path = "../deck-host" }
-sui-compiler = { path = "../../sui/compiler" }
+sail-compiler = { path = "../../sail/compiler" }
+sail-lint = { path = "../../sail/lint" }
 
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -28,6 +40,10 @@ anyhow = { workspace = true }
 tracing = { workspace = true }
 notify = { workspace = true }
 tempfile = "3"
+# Production CSS minify for sail.css (sail-base + element-skins) and shared
+# by deck-bundler's ShipAssetCssPlugin. default-features off: no bundler/
+# nodejs/sourcemap extras — we only parse + minify + print.
+lightningcss = { version = "1.0.0-alpha.72", default-features = false }
 
 [dev-dependencies]
 deck-bundler = { path = "../deck-bundler" }

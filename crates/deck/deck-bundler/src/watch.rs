@@ -13,7 +13,7 @@
 //!
 //! Watch seed is GRAPH-DRIVEN (#deck-hmr-graph-watch): the watcher watches
 //! exactly the parent directories of resolved module-graph paths (non-recursive),
-//! plus `cfg.view_dirs` recursively for new view-leaf discovery. No hardcoded
+//! plus `cfg.route_dirs` recursively for new route-leaf discovery. No hardcoded
 //! monorepo dir names.
 
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -34,16 +34,38 @@ const WATCH_CHANNEL_CAP: usize = 1024;
 
 /// Directory names that are never watched — vendored/build trees whose churn
 /// notify would otherwise retain a PathBuf per descendant for (#193).
-const PRUNE: &[&str] = &["node_modules", ".git", "target", "dist", ".deck", ".sui-out", "sui-out"];
+const PRUNE: &[&str] = &[
+    "node_modules",
+    ".git",
+    "target",
+    "dist",
+    deck_config::DECK_OUT_DIRNAME,
+    deck_config::SAIL_GENERATE_DIRNAME,
+    ".sail-out",
+    "sail-out",
+];
+
+/// True when `name` is a pruned tree: an exact PRUNE entry OR an atomic-publish
+/// stage sibling (`<out>.stage` / `<out>.stage.<suffix>` — `stage_dir_for`).
+/// Stage dirs are create/remove-churned by every rebuild; watching one (or
+/// walking into it) self-triggers the rebuild loop fixed in deck-cli.
+fn is_pruned_dir_name(name: &str) -> bool {
+    PRUNE.contains(&name)
+        || name.starts_with(".sail.stage")
+        || name.starts_with(".deck.stage")
+        || name.starts_with("dist.stage")
+        || name.starts_with(".sail-out.stage")
+        || name.starts_with("sail-out.stage")
+}
 
 /// Re-bundle affected targets on filesystem change. Returns when the bundler's
 /// `watching` flag is cleared by `Bundler::shutdown` (#256) or the watcher dies.
-/// Watch seed: module graph parent-dirs (non-recursive) + view_dirs (recursive
+/// Watch seed: module graph parent-dirs (non-recursive) + route_dirs (recursive
 /// for new-leaf discovery). No hardcoded monorepo dirs.
 pub(crate) async fn run(b: &Bundler) {
-    let view_dirs = b.view_bucket_dirs_for_watch();
+    let route_dirs = b.route_bucket_dirs_for_watch();
     let mut seed_dirs: Vec<PathBuf> = b.module_dirs_for_watch();
-    seed_dirs.extend(view_dirs.iter().cloned());
+    seed_dirs.extend(route_dirs.iter().cloned());
     seed_dirs.retain(|p| p.exists());
     if seed_dirs.is_empty() {
         return;
@@ -59,48 +81,51 @@ pub(crate) async fn run(b: &Bundler) {
     // runtime-created vendored subtrees.
     let queue: Arc<WatchQueue> = Arc::new(WatchQueue::default());
     let producer = queue.clone();
-    let mut watcher = match notify::recommended_watcher(move |res: notify::Result<notify::Event>| {
-        if let Ok(ev) = res {
-            use notify::EventKind;
-            use notify::event::ModifyKind;
-            // SELF-TRIGGER GUARD: the bundler READS source files to compile them.
-            // notify's inotify mask surfaces those reads as `Access` events and
-            // the resulting atime bump as `Modify(Metadata)` (IN_ATTRIB) — neither
-            // is a source EDIT. Reacting to them is a read → rebuild → read loop:
-            // every target re-bundles ~1/s with no edits, emitting `module-changed`,
-            // and the live-reload client full-reloads on each → the page resets
-            // multiple times per second. Only real content/structural changes
-            // (Create / Remove / Modify::Data / Modify::Name) drive a rebuild.
-            if matches!(
-                ev.kind,
-                EventKind::Access(_) | EventKind::Modify(ModifyKind::Metadata(_))
-            ) {
+    let mut watcher =
+        match notify::recommended_watcher(move |res: notify::Result<notify::Event>| {
+            if let Ok(ev) = res {
+                use notify::EventKind;
+                use notify::event::ModifyKind;
+                // SELF-TRIGGER GUARD: the bundler READS source files to compile them.
+                // notify's inotify mask surfaces those reads as `Access` events and
+                // the resulting atime bump as `Modify(Metadata)` (IN_ATTRIB) — neither
+                // is a source EDIT. Reacting to them is a read → rebuild → read loop:
+                // every target re-bundles ~1/s with no edits, emitting `module-changed`,
+                // and the live-reload client remounts the SPA (or full-reloads a
+                // named-view host) on each → the page resets many times per second.
+                // Only real content/structural changes (Create / Remove /
+                // Modify::Data / Modify::Name) drive a rebuild.
+                if matches!(
+                    ev.kind,
+                    EventKind::Access(_) | EventKind::Modify(ModifyKind::Metadata(_))
+                ) {
+                    return;
+                }
+                let is_create = matches!(ev.kind, EventKind::Create(_));
+                for p in ev.paths {
+                    producer.push(WatchSignal { path: p, is_create });
+                }
+            }
+        }) {
+            Ok(w) => w,
+            Err(e) => {
+                warn!(error = %e, "bundler: watcher init failed");
                 return;
             }
-            let is_create = matches!(ev.kind, EventKind::Create(_));
-            for p in ev.paths {
-                producer.push(WatchSignal { path: p, is_create });
-            }
-        }
-    }) {
-        Ok(w) => w,
-        Err(e) => {
-            warn!(error = %e, "bundler: watcher init failed");
-            return;
-        }
-    };
+        };
 
-    // Boot: view_dirs watched recursively (new-leaf discovery); module-graph
+    // Boot: route_dirs watched recursively (new-leaf discovery); module-graph
     // dirs watched non-recursively (exact source coverage, no vendored subtrees).
     // #193: NON-recursive watches only — `watch_subtree` walks explicitly, pruning
     // vendored/build trees so notify never retains a PathBuf per descendant.
     let mut watched_dirs: HashSet<PathBuf> = HashSet::new();
-    let view_dirs_existing: Vec<PathBuf> = view_dirs.into_iter().filter(|d| d.exists()).collect();
-    let graph_dirs_existing: Vec<PathBuf> = b.module_dirs_for_watch()
+    let route_dirs_existing: Vec<PathBuf> = route_dirs.into_iter().filter(|d| d.exists()).collect();
+    let graph_dirs_existing: Vec<PathBuf> = b
+        .module_dirs_for_watch()
         .into_iter()
-        .filter(|d| d.exists() && !view_dirs_existing.contains(d))
+        .filter(|d| d.exists() && !route_dirs_existing.contains(d))
         .collect();
-    let mut watched = watch_subtree(&mut watcher, &view_dirs_existing, &mut watched_dirs);
+    let mut watched = watch_subtree(&mut watcher, &route_dirs_existing, &mut watched_dirs);
     {
         use notify::{RecursiveMode, Watcher};
         for dir in &graph_dirs_existing {
@@ -112,7 +137,10 @@ pub(crate) async fn run(b: &Bundler) {
             }
         }
     }
-    info!(dirs = watched, "bundler: watching (graph-driven, view dirs pruned-recursive)");
+    info!(
+        dirs = watched,
+        "bundler: watching (graph-driven, view dirs pruned-recursive)"
+    );
 
     loop {
         // Block until at least one signal is queued (or shutdown). The ring's
@@ -149,17 +177,22 @@ pub(crate) async fn run(b: &Bundler) {
             match classify(&sig) {
                 // #193/#256: a dir created after boot is membership-checked
                 // (skip pruned trees, watch the survivor) and invalidates the
-                // snapshot (a view may appear under it).
+                // snapshot (a route may appear under it).
                 SignalAction::NewDir => {
                     let name = sig.path.file_name().and_then(|s| s.to_str()).unwrap_or("");
-                    if !PRUNE.contains(&name) {
-                        watch_subtree(&mut watcher, std::slice::from_ref(&sig.path), &mut watched_dirs);
+                    if !is_pruned_dir_name(name) {
+                        watch_subtree(
+                            &mut watcher,
+                            std::slice::from_ref(&sig.path),
+                            &mut watched_dirs,
+                        );
                     }
                     b.invalidate_targets_for_watch();
                 }
                 SignalAction::Ignore => {}
                 SignalAction::Rebuild { invalidate } => {
-                    // P0-1: a `.sui` written into an already-watched bucket
+                    info!(path = %sig.path.display(), "watch: rebuild trigger");
+                    // P0-1: a `.sail` written into an already-watched bucket
                     // creates no directory, so dir-create invalidation misses it
                     // — refresh the snapshot the moment the leaf lands.
                     if invalidate {
@@ -167,7 +200,7 @@ pub(crate) async fn run(b: &Bundler) {
                     }
                     // Graph-driven reverse-map: which targets own this changed file?
                     let mut graph_targets = b.targets_for_module_for_watch(&sig.path);
-                    // New-view-leaf bootstrap: not in graph yet (first time seen),
+                    // New-route-leaf bootstrap: not in graph yet (first time seen),
                     // but the entry path matches after snapshot invalidation.
                     if graph_targets.is_empty() && invalidate {
                         if let Some(t) = b.target_for_entry_path_for_watch(&sig.path) {
@@ -184,14 +217,16 @@ pub(crate) async fn run(b: &Bundler) {
                             Ok(m) => {
                                 // Update graph + expand watch set with newly-revealed dirs.
                                 b.update_module_graph(&t.name, m.modules.iter().cloned().collect());
-                                let new_dirs: Vec<PathBuf> = b.module_dirs_for_watch()
+                                let new_dirs: Vec<PathBuf> = b
+                                    .module_dirs_for_watch()
                                     .into_iter()
                                     .filter(|d| !watched_dirs.contains(d) && d.exists())
                                     .collect();
                                 {
                                     use notify::{RecursiveMode, Watcher};
                                     for dir in new_dirs {
-                                        if watcher.watch(&dir, RecursiveMode::NonRecursive).is_ok() {
+                                        if watcher.watch(&dir, RecursiveMode::NonRecursive).is_ok()
+                                        {
                                             watched_dirs.insert(dir);
                                         }
                                     }
@@ -248,7 +283,7 @@ pub(crate) fn module_parent_dirs(graph: &HashMap<String, HashSet<PathBuf>>) -> H
 
 /// One FS signal from the notify callback: the changed path plus whether the
 /// originating event was a CREATE (a new directory to re-prune, #193 completion,
-/// or a new `.sui` view leaf to discover, P0-1). Modify/remove events carry
+/// or a new `.sail` route leaf to discover, P0-1). Modify/remove events carry
 /// `is_create = false`.
 struct WatchSignal {
     path: PathBuf,
@@ -263,8 +298,8 @@ enum SignalAction {
     /// invalidate the target snapshot.
     NewDir,
     /// A source file that may rebuild targets. `invalidate` is true only when the
-    /// event CREATED a `.sui` leaf — a new view target the snapshot predates, so
-    /// it must be re-walked (P0-1). A `.sui` edit / `.ts` change leaves the
+    /// event CREATED a `.sail` leaf — a new route target the snapshot predates, so
+    /// it must be re-walked (P0-1). A `.sail` edit / `.ts` change leaves the
     /// target set unchanged.
     Rebuild { invalidate: bool },
     /// Generated build output or an unrelated extension — nothing to do.
@@ -277,18 +312,20 @@ fn classify(sig: &WatchSignal) -> SignalAction {
         return SignalAction::NewDir;
     }
     let ext = sig.path.extension().and_then(|e| e.to_str()).unwrap_or("");
-    if !matches!(ext, "ts" | "tsx" | "js" | "sui") {
+    if !matches!(ext, "ts" | "tsx" | "js" | "sail") {
         return SignalAction::Ignore;
     }
     // Generated build OUTPUTS (routes.gen.ts, packages/.../generated/*.ts) are a
     // rebuild RESULT, not a source change — reacting self-triggers an endless
     // rebuild loop (shipd CPU spin). A real route change still fires via the
-    // `[param]` dir / `.sui`.
+    // `[param]` dir / `.sail`.
     let s = sig.path.to_string_lossy();
     if s.ends_with(".gen.ts") || s.contains("/generated/") {
         return SignalAction::Ignore;
     }
-    SignalAction::Rebuild { invalidate: sig.is_create && ext == "sui" }
+    SignalAction::Rebuild {
+        invalidate: sig.is_create && ext == "sail",
+    }
 }
 
 /// Bounded, drop-oldest, coalescing watch ring shared between the sync notify
@@ -350,7 +387,12 @@ impl WatchQueue {
             if !watching.load(Ordering::SeqCst) {
                 return false;
             }
-            if !self.buf.lock().unwrap_or_else(|e| e.into_inner()).is_empty() {
+            if !self
+                .buf
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .is_empty()
+            {
                 return true;
             }
             // Wake on the next push OR after a short timeout so a cleared watch
@@ -383,12 +425,14 @@ fn watch_subtree(
             watched_dirs.insert(dir.clone());
             watched += 1;
         }
-        let Ok(rd) = std::fs::read_dir(&dir) else { continue };
+        let Ok(rd) = std::fs::read_dir(&dir) else {
+            continue;
+        };
         for entry in rd.flatten() {
             // `file_type()` does not follow symlinks, so symlinked dirs are
             // skipped here (no cycles) and only real subdirectories recurse.
             if matches!(entry.file_type(), Ok(ft) if ft.is_dir())
-                && !PRUNE.contains(&entry.file_name().to_string_lossy().as_ref())
+                && !is_pruned_dir_name(entry.file_name().to_string_lossy().as_ref())
             {
                 stack.push(entry.path());
             }

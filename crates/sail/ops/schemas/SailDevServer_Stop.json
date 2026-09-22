@@ -1,0 +1,42 @@
+{
+  "service": "SailDevServer",
+  "method": "Stop",
+  "mcp_tool": "sail_dev_server_stop",
+  "inputSchema": {
+    "type": "object",
+    "properties": {}
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "DevServerStopRet",
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "pid": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "format": "uint32",
+        "minimum": 0.0
+      },
+      "running": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "stopped": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      }
+    }
+  }
+}

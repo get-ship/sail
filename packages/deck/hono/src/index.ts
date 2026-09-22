@@ -3,7 +3,8 @@
 // The serve core is framework-agnostic: `createDeckRouter(config)` returns a
 // `(Request) => Promise<Response | null>` handler. Use it directly with
 // `Bun.serve`, or use the Hono binding (`@ship/deck-hono/hono`) to mount it as
-// middleware alongside an existing Hono app (ship-ops's /api, /mcp, /events).
+// middleware alongside any existing Hono app. Live-data SSE is host-owned
+// (`config.live`).
 
 export { createDeckRouter, type DeckAdaptorConfig } from "./router";
 export {
@@ -11,9 +12,9 @@ export {
   type CachePolicy,
   type DeckResponse,
   intoResponse,
-  htmlView,
+  html_route,
   jsAsset,
-  jsView,
+  js_route,
   cssAsset,
   cssNoCache,
   svgAsset,

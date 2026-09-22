@@ -1,0 +1,15 @@
+[package]
+name = "generate-metrics"
+version = "0.1.0"
+edition = "2024"
+
+# This crate is intentionally NOT a member of the parent workspace; it
+# depends on the woff2 C++ bridge (via woofwoof) and fontdue, which are only
+# needed for regenerating the embedded metrics table. Keep it out of the
+# spinnaker dependency graph.
+[workspace]
+resolver = "2"
+
+[dependencies]
+fontdue = "0.9"
+woofwoof = "1.0"

@@ -1,0 +1,19 @@
+rescript = 1
+rule astj
+  command = /home/madvib/dev/Ship/worktrees/bakeoff-rescript/tests/bakeoff/rescript/node_modules/rescript/linux/bsc.exe  -warn-error +101 -bs-v 11.1.4 -uncurried  -absname -bs-ast -o $out $i
+o src/Setup.ast : astj ../../src/Setup.res
+rule deps
+  command = /home/madvib/dev/Ship/worktrees/bakeoff-rescript/tests/bakeoff/rescript/node_modules/rescript/linux/bsb_helper.exe -hash 10941c8548195c1e098e42cef1ed5564 $in
+  restat = 1
+o src/Setup.d : deps src/Setup.ast
+rule mij
+  command = /home/madvib/dev/Ship/worktrees/bakeoff-rescript/tests/bakeoff/rescript/node_modules/rescript/linux/bsc.exe -I src   -warn-error +101 -uncurried -bs-package-name bakeoff-rescript -bs-package-output esmodule:lib/es6/$in_d:.js $i
+  dyndep = 1
+  restat = 1
+o src/Setup.cmj src/Setup.cmi ../es6/src/Setup.js : mij src/Setup.ast
+o src/Table.ast : astj ../../src/Table.res
+o src/Table.d : deps src/Table.ast
+o src/Table.cmj src/Table.cmi ../es6/src/Table.js : mij src/Table.ast
+o src/SailSignal.ast : astj ../../src/SailSignal.res
+o src/SailSignal.d : deps src/SailSignal.ast
+o src/SailSignal.cmj src/SailSignal.cmi ../es6/src/SailSignal.js : mij src/SailSignal.ast

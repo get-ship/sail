@@ -1,16 +1,22 @@
 [workspace]
 # All carved Rust crates. deck-ssr is included so it is part of the workspace +
-# lockfile, but excluded from default-members below (it links V8 via ship-js and
-# is heavy; ship excludes ship-host for the same reason).
+# lockfile, but excluded from default-members below (it links V8 via ship-js (git dep on ship-exec) and
+# is heavy; excluded from default-members).
 members = [
     # Per-repo build-time identity (git sha/dirty/timestamp). A copy of Ship's
-    # build-info under a distinct package name (sui-build-info) so there is no
-    # build-info package collision when sui crates are pulled into Ship's lockfile.
+    # build-info under a distinct package name (sail-build-info) so there is no
+    # build-info package collision when sail crates are pulled into Ship's lockfile.
     "crates/build-info",
-    "crates/sui/compiler",
-    "crates/sui/compiler-napi",
-    "crates/sui/lint",
-    "crates/sui/lsp",    "crates/deck/deck-config",
+    "crates/sail/compiler",
+    "crates/sail/compiler-napi",
+    "crates/sail/lint",
+    "crates/sail/spinnaker",
+    "crates/sail/spinnaker-css",
+    "crates/sail/spinnaker-tokens",
+    "crates/sail/lsp",
+    "crates/sail/mcp",
+    "crates/sail/ops",
+    "crates/sail/render",
     "crates/deck/deck-host",
     "crates/deck/deck-bundler",
     "crates/deck/deck-cli",
@@ -19,19 +25,24 @@ members = [
     "crates/deck/deck",
     "crates/deck/deck-conformance",
     "crates/deck/deck-ssr",
-    "packages/sui/grammar",
-    "xtask-deck",
+    "packages/sail/grammar",
 ]
 # A bare `cargo build` (no -p) builds this subset, which EXCLUDES deck-ssr.
-# deck-ssr links V8 (via ship-js); `cargo test` of it fails to link as `-shared`
+# deck-ssr links V8 (via ship-js git dep); `cargo test` of it fails to link as `-shared`
 # (a known V8/deno quirk). `cargo build -p deck-ssr` builds the lib fine; it just
 # must be opt-in. `members` above stays complete so the crate is still part of
 # the workspace (path deps, `cargo build -p deck-ssr`, lockfile).
 default-members = [
-    "crates/sui/compiler",
-    "crates/sui/compiler-napi",
-    "crates/sui/lint",
-    "crates/sui/lsp",    "crates/deck/deck-config",
+    "crates/sail/compiler",
+    "crates/sail/compiler-napi",
+    "crates/sail/lint",
+    "crates/sail/spinnaker",
+    "crates/sail/spinnaker-css",
+    "crates/sail/spinnaker-tokens",
+    "crates/sail/lsp",
+    "crates/sail/mcp",
+    "crates/sail/ops",
+    "crates/sail/render",
     "crates/deck/deck-host",
     "crates/deck/deck-bundler",
     "crates/deck/deck-cli",
@@ -39,12 +50,16 @@ default-members = [
     "crates/deck/deck-axum",
     "crates/deck/deck",
     "crates/deck/deck-conformance",
-    "packages/sui/grammar",
+    "packages/sail/grammar",
 ]
-# `crates/sui/compiler/fuzz` declares its own [workspace] (cargo-fuzz drives it
+# `crates/sail/compiler/fuzz` declares its own [workspace] (cargo-fuzz drives it
 # directly under nightly) and `.artifacts` holds build scratch — both excluded.
-exclude = [".artifacts", "crates/sui/compiler/fuzz"]
+exclude = [".artifacts", "crates/sail/compiler/fuzz"]
 resolver = "2"
+
+# Shared package metadata. Member crates opt in via `license.workspace = true`.
+[workspace.package]
+license = "MIT"
 
 # Hoisted dependency versions. Member crates inherit via `{ workspace = true, features = [...] }`.
 # Ported from the ship monorepo root Cargo.toml — only the deps the carved
@@ -85,9 +100,16 @@ libc = "0.2"
 # Misc
 ulid = "1"
 regex = "1"
+takumi = { version = "=2.5.11", features = ["raster-backend", "woff2"] }
+# 0.4.12+ pull a takumi-core that cannot share the path-patched 0.16.0 identity.
+takumi-raster = "=0.4.11"
 
 # Type-bridging (RC pin shared by every consumer)
 specta = { version = "=2.0.0-rc.22", features = ["derive"] }
+
+# deno_core / V8 isolate (used by ship-js; optional, heavy, off by default)
+deno_core = "0.403.0"
+deno_error = "0.7"
 
 # Workspace-wide lint posture. Member crates opt in via `[lints] workspace = true`.
 [workspace.lints.rust]
@@ -127,3 +149,12 @@ debug = "line-tables-only"
 lto = "thin"
 codegen-units = 1
 strip = "debuginfo"
+
+# RENDER-0: path-patch of crates.io takumi-core 0.16.0 (not the old 0.6.2 vendor).
+# Sail semantics: drop viewport-as-text-max_height unless clamp_lines; clamp
+# layout_max/line_max advances so parley 0.11 BreakLines cannot assert.
+# Upstream takumi 2.9.0 / core 0.23.0 still lack the fix (probed 2026-08-14).
+# Remove when upstream ships an equivalent fix (see third_party/takumi-core/SAIL_PATCH.md).
+[patch.crates-io]
+takumi-core = { path = "third_party/takumi-core" }
+

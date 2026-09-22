@@ -1,0 +1,128 @@
+{
+  "service": "SailTheme",
+  "method": "FontSearch",
+  "mcp_tool": "sail_theme_font_search",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "category": {
+        "description": "Optional category filter (e.g. `serif`, `sans-serif`, `display`, `mono`). `all` / empty is ignored. Backend normalizes case.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "limit": {
+        "description": "Max hits to return (clamped 1..=80 server-side; default 40).",
+        "type": [
+          "integer",
+          "null"
+        ],
+        "format": "uint32",
+        "minimum": 0.0
+      },
+      "query": {
+        "description": "Family substring filter (case-insensitive). Empty → popularity order.",
+        "default": "",
+        "type": "string"
+      }
+    }
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ThemeFontSearchRet",
+    "type": "object",
+    "required": [
+      "ok"
+    ],
+    "properties": {
+      "catalogSize": {
+        "description": "Full catalog size before limit/filter (discoverer honesty).",
+        "type": [
+          "integer",
+          "null"
+        ],
+        "format": "uint",
+        "minimum": 0.0
+      },
+      "category": {
+        "description": "Echo of applied category filter when present.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "count": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "format": "uint",
+        "minimum": 0.0
+      },
+      "families": {
+        "default": [],
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "hits": {
+        "description": "Structured hits (family + category + popularity + mono). Preferred over families-only.",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/ThemeFontSearchHit"
+        }
+      },
+      "ok": {
+        "type": "boolean"
+      },
+      "query": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "source": {
+        "description": "Provenance label e.g. `bundled-google-fonts`.",
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "definitions": {
+      "ThemeFontSearchHit": {
+        "type": "object",
+        "required": [
+          "family"
+        ],
+        "properties": {
+          "category": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "family": {
+            "type": "string"
+          },
+          "mono": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "popularity": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "uint32",
+            "minimum": 0.0
+          }
+        }
+      }
+    }
+  }
+}

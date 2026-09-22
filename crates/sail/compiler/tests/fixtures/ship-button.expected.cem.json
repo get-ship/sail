@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "1.0.0",
+  "readme": "",
+  "modules": [
+    {
+      "kind": "javascript-module",
+      "path": "ship-button.sail",
+      "declarations": [
+        {
+          "kind": "class",
+          "name": "ShipButtonTest",
+          "tagName": "ship-button-test",
+          "customElement": true,
+          "superclass": {
+            "name": "HTMLElement",
+            "package": "global"
+          },
+          "attributes": [
+            {
+              "name": "disabled",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false"
+            },
+            {
+              "name": "loading",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false"
+            },
+            {
+              "name": "label",
+              "type": {
+                "text": "string"
+              },
+              "default": ""
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "tone",
+              "type": {
+                "text": "'primary'"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "disabled",
+              "type": {
+                "text": "boolean"
+              },
+              "attribute": "disabled",
+              "default": "false",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "loading",
+              "type": {
+                "text": "boolean"
+              },
+              "attribute": "loading",
+              "default": "false",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "label",
+              "type": {
+                "text": "string"
+              },
+              "attribute": "label",
+              "default": ""
+            }
+          ],
+          "anatomy": {
+            "dom": "light",
+            "classes": [],
+            "slots": []
+          }
+        }
+      ],
+      "exports": [
+        {
+          "kind": "custom-element-definition",
+          "name": "ship-button-test",
+          "declaration": {
+            "name": "ShipButtonTest",
+            "module": "ship-button.sail"
+          }
+        }
+      ]
+    }
+  ]
+}

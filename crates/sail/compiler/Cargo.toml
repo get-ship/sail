@@ -1,0 +1,92 @@
+[package]
+name = "sail-compiler"
+version = "0.1.0"
+edition = "2024"
+license.workspace = true
+publish = false
+build = "build.rs"
+description = "Ahead-of-time compiler for `.sail` source files. Emits ESM JS that hydrates against `@ship/sail-runtime` without re-parsing at load time."
+
+[lib]
+name = "sail_compiler"
+crate-type = ["lib", "cdylib"]
+path = "src/lib.rs"
+
+[build-dependencies]
+# Per-repo build-time identity. sail owns its copy (package `sail-build-info`,
+# referenced in code as `build_info`) so there is no absolute back-edge to the
+# Ship repo and no build-info package collision in Ship's lockfile.
+build-info = { package = "sail-build-info", path = "../../build-info" }
+sha2 = "0.10"
+base64 = "0.22"
+flate2 = "1"
+tar = "0.4"
+
+[[bin]]
+name = "sail-compiler"
+path = "src/bin/sail-compiler.rs"
+
+[features]
+default = []
+# Build a wasm-bindgen-shaped public surface so `compile()` is callable
+# from JS in a browser. Enabled implicitly by wasm-pack via --features.
+# Off for native builds so the host crate doesn't pull in the bindgen
+# generators when running tests / building the CLI.
+wasm = ["dep:wasm-bindgen", "dep:serde-wasm-bindgen", "dep:console_error_panic_hook"]
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true, features = ["preserve_order"] }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# CLI-only deps. Excluded from the wasm build so we don't drag in
+# argument parsing / native syscalls. The lib doesn't touch either.
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+clap = { workspace = true }
+libc = { workspace = true }
+sha2 = "0.10"
+base64 = "0.22"
+flate2 = "1"
+tar = "0.4"
+
+[dependencies.wasm-bindgen]
+version = "0.2"
+optional = true
+
+[dependencies.serde-wasm-bindgen]
+version = "0.6"
+optional = true
+
+[dependencies.console_error_panic_hook]
+version = "0.1"
+optional = true
+
+# SAIL lint substrate — controller-purity rule and (Phase 2+) other
+# authoring-discipline rules. Compile-time hard wall: any finding
+# becomes a CompileError. Same rule definition consumed by crates/lsp
+# at edit-time.
+[dependencies.spinnaker]
+path = "../spinnaker"
+
+[dependencies.spinnaker-tokens]
+path = "../spinnaker-tokens"
+
+[dependencies.spinnaker-css]
+path = "../spinnaker-css"
+
+[dependencies.sail-lint]
+path = "../lint"
+
+[dependencies.build-info]
+# Per-repo build-time identity. sail owns its copy (package `sail-build-info`,
+# referenced in code as `build_info`) so there is no absolute back-edge to the
+# Ship repo and no build-info package collision in Ship's lockfile.
+package = "sail-build-info"
+path = "../../build-info"
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[lints]
+workspace = true

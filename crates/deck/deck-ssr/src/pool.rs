@@ -8,12 +8,12 @@
 //! ([`crate::serve`]) drives the pool so concurrent requests don't serialize
 //! on one isolate.
 
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use serde_json::Value;
-use ship_js::deno::ScriptExecutor;
 use ship_js::Dispatch;
+use ship_js::deno::ScriptExecutor;
 
 /// A fixed set of VM threads; jobs are dispatched round-robin. Cheap to clone
 /// the inner executors are channel senders.
@@ -27,13 +27,18 @@ impl ScriptPool {
     pub fn new(size: usize) -> Self {
         let size = size.max(1);
         let execs = (0..size).map(|_| ScriptExecutor::spawn()).collect();
-        Self { execs, next: AtomicUsize::new(0) }
+        Self {
+            execs,
+            next: AtomicUsize::new(0),
+        }
     }
 
     /// A pool sized to the host: one VM thread per core, less headroom for the
     /// async runtime + request threads (mirrors the executor's own cap).
     pub fn for_host() -> Self {
-        let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
+        let cores = std::thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4);
         Self::new(cores.saturating_sub(2).max(1))
     }
 

@@ -1,0 +1,272 @@
+/* sail-base — document floor. Fonts: url('./fonts/…') (deck rewrites). */
+@font-face {
+  font-family: "DM Sans Variable";
+  font-style: normal;
+  font-weight: 100 1000;
+  font-display: swap;
+  src: url('./fonts/dm-sans-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Syne Variable";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('./fonts/syne-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "JetBrains Mono Variable";
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url('./fonts/jetbrains-mono-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Press Start 2P";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/press-start-2p-latin-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@layer sail {
+@keyframes sail-spin { to { transform: rotate(360deg); } }
+@keyframes sail-skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+@keyframes sail-progress-indeterminate { 0% { background-position: -40% 0; } 100% { background-position: 140% 0; } }
+:root { --animate-spin: sail-spin 0.7s linear infinite; --animate-shimmer: sail-skeleton-shimmer 1.5s ease-in-out infinite; --animate-progress-indeterminate: sail-progress-indeterminate 1.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { :root { --animate-spin: sail-spin 1.5s linear infinite; } }
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; font-family: var(--font-body); color: var(--foreground); background: var(--background); }
+body { margin: 0; min-height: 100%; font-size: var(--text-base); font-weight: var(--body-weight); line-height: var(--leading-normal, 1.5); }
+/* Page mount is a block hug. Make it a viewport flex column so L2 size(grow)
+   on the site shell can take leftover (navbar hug + main grow). Substrate,
+   not paint — Identities cannot spell size({ h: fill }). */
+body > div:first-child { display: flex; flex-direction: column; min-height: 100%; }
+/*
+ * Field captions (label for=…) keep --label-transform (often uppercase).
+ * Checkbox/radio *captions* are sentence-case — never scream "I AGREE".
+ * .sail-radio is itself a <label> host, so it must opt out explicitly.
+ */
+label:has(> input[type="checkbox"], > input[type="radio"]),
+.sail-label:has(> input[type="checkbox"], > input[type="radio"]),
+.sail-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--body-weight, 400);
+  color: var(--foreground);
+  text-transform: none;
+  letter-spacing: normal;
+}
+label:has(> input[type="checkbox"], > input[type="radio"]) > input,
+.sail-label:has(> input[type="checkbox"], > input[type="radio"]) > input,
+.sail-radio > input {
+  margin: 0;
+  flex-shrink: 0;
+}
+/* appearance:none kills UA border-style; dual-gate width/color alone paint nothing.
+ * Host classes are .sail-checkbox / .sail-radio (> input), not only .sail-input. */
+:where(input[type="checkbox"], input[type="radio"]).sail-input,
+:where(.sail-input[type="checkbox"], .sail-input[type="radio"]),
+:where(input.sail-checkbox, .sail-checkbox),
+:where(.sail-radio > input) {
+  border-style: solid;
+  box-sizing: border-box;
+}
+h1,h2,h3,h4,h5,h6 { margin: 0; font-family: var(--heading-font, inherit); font-weight: var(--heading-weight, 700); line-height: var(--leading-tight, 1.15); color: var(--foreground); text-transform: var(--heading-transform); }
+label, .sail-label { text-transform: var(--label-transform); }
+/* Re-assert after the general label rule (cascade: same specificity, later wins for shared props). */
+label:has(> input[type="checkbox"], > input[type="radio"]),
+.sail-label:has(> input[type="checkbox"], > input[type="radio"]),
+.sail-radio {
+  text-transform: none;
+  font-weight: var(--body-weight, 400);
+  letter-spacing: normal;
+}
+h1 { font-size: var(--text-4xl); }
+h2 { font-size: var(--text-2xl); }
+h3 { font-size: var(--text-xl); }
+h4 { font-size: var(--text-lg); }
+h5 { font-size: var(--text-md); }
+h6 { font-size: var(--text-sm); }
+p  { margin: 0; font-size: var(--text-md); line-height: 1.55; }
+/* Docs/article flow: zeroed heading/paragraph margins read as a wall of text.
+   Adjacent-sibling rhythm restores breathing room without per-page gap trees. */
+article > * + * { margin-top: var(--space-4); }
+article > h1 { margin-top: 0; }
+article > h2, article > h3 { margin-top: var(--space-8); }
+article > h1 + p, article > h2 + p, article > h3 + p { margin-top: var(--space-3); }
+article > p + p { margin-top: var(--space-3); }
+article > pre, article > .sail-code-block { margin-top: var(--space-4); }
+article > alert, article > .sail-alert, article > [data-sail-host='alert'] { margin-top: var(--space-5); }
+small { font-size: var(--text-sm); color: var(--muted-foreground); }
+a:not([variant]) { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+strong { font-weight: var(--heading-weight, 700); }
+code { font-family: var(--mono-font, monospace); font-size: 0.9em; }
+:not(pre) > code { padding: 0.15em 0.35em; background: var(--muted); border-radius: var(--radius-sm); }
+img, video, canvas, svg { max-width: 100%; }
+img, video { height: auto; }
+figure { margin: 0; }
+figcaption { margin-top: var(--space-2); font-size: var(--text-sm); color: var(--muted-foreground); }
+ul, ol { margin: 0; padding-left: var(--space-6); }
+li { margin: var(--space-1) 0; }
+dl { margin: 0; }
+dt { font-weight: var(--font-weight-semibold, 600); color: var(--foreground); }
+dd { margin: 0 0 var(--space-2) 0; color: var(--muted-foreground); }
+blockquote { margin: 0; padding-left: var(--space-4); border-left: 2px solid var(--border-strong); color: var(--muted-foreground); }
+mark { background: var(--hover-bg, var(--hover-bg)); color: inherit; padding: 0 0.2em; border-radius: var(--radius-sm); }
+abbr[title] { text-decoration: underline dotted; cursor: help; }
+sub, sup { font-size: 0.75em; line-height: 0; }
+pre { margin: 0; padding: var(--space-4); overflow-x: auto; background: var(--muted); border-radius: var(--radius-md); font-family: var(--mono-font, monospace); font-size: var(--text-sm); line-height: 1.5; }
+pre code { font-size: inherit; }
+iframe { max-width: 100%; border: 0; }
+:where(button, input, textarea, select) { font: inherit; font-family: var(--font-body); letter-spacing: inherit; color: inherit; }
+/* Button + button-link floor. NOT :where — zero-specificity loses to any
+ * stamped display:block / dual-gate class and leaves label text uncentered. */
+button:not([anatomy]),
+a[variant] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  line-height: 1;
+  vertical-align: middle;
+  user-select: none;
+  white-space: nowrap;
+  cursor: pointer;
+  box-sizing: border-box;
+  text-decoration: none;
+  text-align: center;
+}
+/* Pill / toolbar links that set display:inline-flex via Style without [variant].
+ * Class stamp is `s-display*` (Style atom prefix). */
+a.sail-a.s-displayinlineflex {
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  vertical-align: middle;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+/* Bare text links — inline, not a flex control. */
+a.sail-a:not([variant]):not(.s-displayinlineflex):not(.s-displayblock) {
+  display: inline;
+  line-height: inherit;
+  vertical-align: baseline;
+}
+/* Badge + chip: host is the paint surface — center label/chrome. */
+:where(.sail-badge, [data-sail-host='badge'], .sail-chip, [data-sail-host='chip']) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  line-height: 1;
+  vertical-align: middle;
+}
+/* Dropzone — attribute floor for freeform `<div dropzone>`. Centered label,
+ * dashed frame, real min-height so preview tiles don't look top-left smashed. */
+:where([dropzone], .sail-dropzone) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--space-11, 2.75rem);
+  padding: var(--space-4) var(--space-5);
+  border: var(--border-width) dashed var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+:where([dropzone]:hover, .sail-dropzone:hover),
+:where([dropzone][data-over], .sail-dropzone[data-over]) {
+  border-color: var(--primary);
+  background: color-mix(in oklch, var(--primary) 10%, var(--muted));
+  color: var(--foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(.sail-skeleton) { animation: none !important; }
+}
+:where(input, textarea, select) { appearance: none; }
+/* Native <textarea> keeps a UA Field fill that ignores theme color-scheme
+ * on several product themes (too dark on light, too light on dark). Same
+ * input / foreground spend as <input> / <select> — not a second mud well. */
+:where(textarea) { background-color: var(--input); color: var(--foreground); box-sizing: border-box; }
+/* Listbox floor: ul reset + option anatomy for role='listbox' popovers
+   (combobox dropdown). Dropped in a rewrite once — every option rendered
+   unstyled; the sx-host-paint probe guards this block. */
+:where(ul[role='listbox']) { list-style: none; margin: 0; padding: 0; }
+:where([popover][role='listbox'] option) { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-1_5) var(--space-2); border-radius: var(--radius-sm); font-size: var(--text-sm); color: inherit; cursor: pointer; }
+:where([popover][role='listbox'] option[data-active]), :where([popover][role='listbox'] option:hover:not([disabled])) { background: var(--hover-bg); }
+:where([popover][role='listbox'] option[disabled]) { opacity: 0.5; cursor: not-allowed; }
+:where(button, input, textarea, select, a, [tabindex]):focus-visible { outline: var(--ring-width, 2px) solid var(--ring); outline-offset: var(--ring-offset, 2px); }
+@media (forced-colors: active) { :where(button, input, textarea, select, a, [tabindex]):focus-visible { outline: 2px solid CanvasText; } }
+:where(button, input, textarea, select):disabled { cursor: not-allowed; opacity: 0.5; }
+:where(button, input, textarea, select, a, [tabindex]) { transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
+[data-component] { color: var(--foreground); position: relative; isolation: isolate; }
+[data-component][hidden], [hidden] { display: none !important; }
+[data-component] slot { display: contents; }
+@media (prefers-reduced-motion: reduce) { :where([data-component], [data-component] *, button, input, textarea, select, a, [tabindex]) { transition: none !important; animation: none; } }
+}
+
+/* use:autosize — content-fit controls (JS only writes custom props / data attrs). */
+:where(textarea[data-autosize]) {
+  height: var(--autosize-h, auto);
+  overflow-x: hidden;
+  overflow-y: hidden;
+  resize: none;
+  box-sizing: border-box;
+}
+/* Single-line inputs: field-sizing grows width to the value (Chrome 123+). */
+:where(input[data-autosize]:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='range']):not([type='file'])) {
+  field-sizing: content;
+  width: auto;
+  min-width: 3ch;
+  box-sizing: border-box;
+}
+
+/*
+  Dropdown menus hug the longest label — ONLY when open.
+  Never set display on closed [popover] (overrides UA display:none → all menus open).
+  - Panel: max-content width (not containing-block %)
+  - flex column so items stack (inline-flex laid out in a row under max-content)
+  - items: stretch full panel width for hover hit targets
+*/
+.sail-dropdown[popover]:popover-open,
+[data-sail-host='dropdown'][popover]:popover-open {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: max-content;
+  max-width: min(16rem, calc(100vw - 2rem));
+  box-sizing: border-box;
+}
+.sail-dropdown[popover]:popover-open .sail-menu-item,
+.sail-dropdown[popover]:popover-open [role='menuitem'],
+[data-sail-host='dropdown'][popover]:popover-open .sail-menu-item,
+[data-sail-host='dropdown'][popover]:popover-open [role='menuitem'] {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  /* Beat button floor gap(space-2): menu wants icon↔label breath (2_5). */
+  gap: var(--space-2_5);
+  width: 100%;
+  box-sizing: border-box;
+}

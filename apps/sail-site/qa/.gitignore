@@ -1,0 +1,4 @@
+qa-shots/
+*.png
+report.json
+behavior-report.json

@@ -1,0 +1,86 @@
+==================
+self-closing element with a boolean attribute
+==================
+
+<video poster="/agents.png" src="/agents.mp4" autoplay/>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (static_attr
+      name: (attr_name)
+      value: (string_literal))
+    (static_attr
+      name: (attr_name)
+      value: (string_literal))
+    (boolean_attr
+      (attr_name))))
+
+==================
+scope directive with declared props
+==================
+
+<scope>
+  props: {
+    data = ''
+    diameter = 120
+  }
+</scope>
+
+---
+
+(source_file
+  (scope
+    (control_open)
+    (props_block
+      (props_kw)
+      body: (brace_expression
+        (identifier)
+        (identifier)))
+    (control_close)))
+
+==================
+scope with first-class style name = declaration (opaque body text)
+==================
+
+<scope>
+  style host = base
+  props: {
+    data = ''
+  }
+</scope>
+
+---
+
+(source_file
+  (scope
+    (control_open)
+    (style_decl
+      name: (identifier)
+      value: (identifier))
+    (props_block
+      (props_kw)
+      body: (brace_expression
+        (identifier)))
+    (control_close)))
+
+==================
+style: attribute is refused syntax — must NOT parse as a directive
+==================
+
+<div style:color={c}></div>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (dynamic_attr
+      name: (attr_name)
+      (ERROR
+        (tag_name))
+      value: (brace_expression
+        (identifier)))
+    close_tag: (tag_name)))

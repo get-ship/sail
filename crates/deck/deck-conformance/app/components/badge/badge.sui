@@ -1,3 +1,0 @@
-<span class="badge">
-  <button on:click={() => bump()}>{count()}</button>
-</span>

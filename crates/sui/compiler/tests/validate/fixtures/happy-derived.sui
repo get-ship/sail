@@ -1,5 +1,0 @@
-<div>
-  <p>{label()}</p>
-  <p>doubled: {doubled()}</p>
-  <button on:click={inc}>+</button>
-</div>

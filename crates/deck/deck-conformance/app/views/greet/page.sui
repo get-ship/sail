@@ -1,9 +1,0 @@
-<div class="greet-index">
-  <h1>Greet</h1>
-  <p>Pick a name to greet:</p>
-  <ul>
-    <li><a href="/_deck/view/greet/zelda">greet/zelda</a></li>
-    <li><a href="/_deck/view/greet/link">greet/link</a></li>
-    <li><a href="/_deck/view/greet/ganon">greet/ganon</a></li>
-  </ul>
-</div>

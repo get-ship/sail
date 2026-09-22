@@ -1,0 +1,49 @@
+version = "7.0.2"
+
+[[target]]
+os = "linux"
+arch = "x64"
+npm_package = "@typescript/typescript-linux-x64"
+sha1 = "73269cb0baba50aea0ca060445a6b88e583f1ce2"
+ssri = "sha512-EYdf2cNg7rgCWJnxCdJ+F3V39O8ihb37eHAu1LK8oAFizgTQbPOK7zHHXbPt8rX24COqODXeI3sIf0fCXG7H/A=="
+sha256 = "7ecad6f67377e831856367ab062ef394f21506a611405bf8ac0ff039348637d3"
+
+[[target]]
+os = "linux"
+arch = "arm64"
+npm_package = "@typescript/typescript-linux-arm64"
+sha1 = "d9334d96d6dac6ff85da9c865588948de939e91f"
+ssri = "sha512-Qh4eU4/y3yDjnfjjyPYihMj5/ODIlmt+Bzu17OI+fiSRDW57QmU5SiN63exPRNJPKUzcc1INa1NXdrJ+MqHjUQ=="
+sha256 = "c83d931ac9dd7549cde6e71246aa9d6a9812843023df3e277fe3b5dcf41dd0ea"
+
+[[target]]
+os = "darwin"
+arch = "arm64"
+npm_package = "@typescript/typescript-darwin-arm64"
+sha1 = "a55fdfcfa58df58d27db2237cde6a5c1e35a7235"
+ssri = "sha512-gowzar9MwS/aRWp6f3a4KUqzRjAZjOsmGNCM6LcTgXum+dBfgsBVMN+AgvOCCbguXyick6LJhpBszxMebJ8syA=="
+sha256 = "902e2fe1cf0799198ef902c6b8c310a450fef629a6baba41d45641ef75c04ebd"
+
+[[target]]
+os = "darwin"
+arch = "x64"
+npm_package = "@typescript/typescript-darwin-x64"
+sha1 = "38d1c9172800a91d707bec64d2a370a016634db4"
+ssri = "sha512-SZ9xZInqApNlNGc9s0W1VSsktYSOe9cFqNOIqmN1Gs8SmkjKZYFt017G4VwPxASInODuAdbTW7sXiFUf893RgA=="
+sha256 = "eba158cb54050f723d5ff781438f33de5640054440bb4f2bd170cfe9bc2eb551"
+
+[[target]]
+os = "win32"
+arch = "x64"
+npm_package = "@typescript/typescript-win32-x64"
+sha1 = "cf3b7b0d6ce5635daca4c8e01c189cdcde47ec3c"
+ssri = "sha512-0BQ3HkAHHlKLSp1qRvf3SUhGpGsDuhB/jgFw75guyqbxJqEaS0Cw/VFO8i2nHglJUzQCRtMMR/IBAKE3ETMC4g=="
+sha256 = "61fc4e141d2bc687db580e71bbfa63b9c209f0310645d82ca1b457eb3a24fd19"
+
+[[target]]
+os = "win32"
+arch = "arm64"
+npm_package = "@typescript/typescript-win32-arm64"
+sha1 = "b9de50a17196383f62620b5f9d0a2f34ad3b60d7"
+ssri = "sha512-Gyl1Vy6OsWesLzmq+EP0Fb7b4Nid5232AvcA2SFcdYreldpNtYFFofPjnt62y9hQy7VTaZp65ICJjuAQRaVcIQ=="
+sha256 = "0a73534e6ee50cdbb2a29ac48657ca0ad13cf0f424cf63808e4df7baeb87b8be"

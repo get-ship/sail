@@ -1,8 +1,0 @@
-{
-  "id": "form-submit",
-  "difficulty": "medium",
-  "description": "Build a form view that captures a name and submits it via the SDK.\n\nState:\n  - <state name=\"name\" value=\"''\" />\n  - <state name=\"submitted\" value=\"null\" />  // set to the trimmed name after submit.\n\nLayout:\n  - A <ship-input data-test=\"input\" bind:value={name} placeholder=\"your name\" />.\n  - A <ship-button data-test=\"submit\"> labelled \"submit\". On click, call ship.users.create({ name: name() }) and on success set submitted to name().trim(). Disable the button while name() is empty.\n  - A <p data-test=\"greeting\"> rendered only when submitted() is non-null, reading \"Hello, {submitted()}\".\n\nDo NOT use <data> — the submit is an explicit user action.",
-  "fixtures": { "template": "" },
-  "expectedBindings": ["name", "submitted"],
-  "behavioralTests": "const input = container.querySelector('[data-test=\"input\"]');\nexpect(input, 'input present');\nconst inner = input.querySelector('input') || input;\ninner.value = 'Ada';\ninner.dispatchEvent(new Event('input', { bubbles: true }));\nawait tick();\ncontainer.querySelector('[data-test=\"submit\"]').click();\nawait tick();\nawait tick();\nconst greet = container.querySelector('[data-test=\"greeting\"]');\nexpect(greet, 'greeting rendered after submit');\nexpect(greet.textContent.includes('Ada'), 'greeting mentions Ada: ' + greet.textContent);"
-}

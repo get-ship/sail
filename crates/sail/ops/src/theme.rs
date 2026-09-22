@@ -1,0 +1,1851 @@
+//! `SailTheme` RPCs — List, Read, Write, Fork, Generate, Graph.
+//!
+//! Writes confined to project themes: `themes/**/*.json`. Paths are workspace-relative and work
+//! for external apps (project root = workspace) and monorepo apps
+//! (`apps/<app>/…`) alike — never hard-coded to a named monorepo app.
+
+use std::collections::{BTreeMap, BTreeSet};
+use std::path::{Path, PathBuf};
+
+use serde_json::{Value, json};
+
+use crate::ctx::Ctx;
+use crate::error::OpError;
+
+const CATALOG_THEMES: &str = "packages/sail/tokens/model/themes";
+const MODEL_ROOT: &str = "packages/sail/tokens/model";
+const MODEL_COMPONENTS: &str = "packages/sail/tokens/model/components";
+
+// ── path policy ─────────────────────────────────────────────────────────────
+
+/// Refuse empty, traversal, and package-noise paths.
+fn sanitize_rel(rel: &str) -> Option<String> {
+    let norm = rel.replace('\\', "/");
+    if norm.is_empty() || norm.contains("..") || norm.contains("node_modules") {
+        return None;
+    }
+    Some(norm)
+}
+
+/// Project theme JSON under `themes/**`.
+///
+/// Accepts workspace-relative forms used by external apps and monorepo apps:
+/// - `themes/custom.json`
+/// - `apps/<app>/themes/custom.json`
+///
+/// Catalog model under `packages/sail/tokens/model/**` is never a project write.
+fn is_project_theme_json_path(norm: &str) -> bool {
+    if !norm.ends_with(".json") {
+        return false;
+    }
+    if norm.contains("packages/sail/tokens/model") {
+        return false;
+    }
+    if norm.contains("/tokens/themes/") || norm.starts_with("tokens/themes/") {
+        return false;
+    }
+    if norm.starts_with("themes/") || norm.contains("/themes/") {
+        return true;
+    }
+    false
+}
+
+/// Project theme directory (listable) under `themes/`.
+fn is_project_theme_dir_path(norm: &str) -> bool {
+    let n = norm.trim_end_matches('/');
+    if n.is_empty() || n.contains("packages/sail/tokens/model") {
+        return false;
+    }
+    if n.contains("tokens/themes") {
+        return false;
+    }
+    if n == "themes" {
+        return true;
+    }
+    if n.ends_with("/themes") || n.starts_with("themes/") || n.contains("/themes/") {
+        return true;
+    }
+    false
+}
+
+/// Writable project themes: `themes/**/*.json`.
+pub fn is_write_theme_path(rel: &str) -> bool {
+    let Some(norm) = sanitize_rel(rel) else {
+        return false;
+    };
+    is_project_theme_json_path(&norm)
+}
+
+/// Readable: project themes, catalog themes, or package model schema JSON
+/// (`base.json` + `components/*.json`). Never density or theme CSS.
+pub fn is_read_theme_path(rel: &str) -> bool {
+    let Some(norm) = sanitize_rel(rel) else {
+        return false;
+    };
+    if is_model_schema_file_path(&norm) {
+        return true;
+    }
+    if is_catalog_theme_file_path(&norm) {
+        return true;
+    }
+    is_project_theme_json_path(&norm)
+}
+
+fn is_catalog_theme_file_path(norm: &str) -> bool {
+    norm.starts_with("packages/sail/tokens/model/themes/") && norm.ends_with(".json")
+}
+
+fn is_catalog_theme_dir_path(norm: &str) -> bool {
+    let n = norm.trim_end_matches('/');
+    n == "packages/sail/tokens/model/themes"
+}
+
+/// Package DTCG schema sources the studio merges into a full token surface.
+fn is_model_schema_file_path(norm: &str) -> bool {
+    if norm == format!("{MODEL_ROOT}/base.json") {
+        return true;
+    }
+    norm.starts_with(&format!("{MODEL_COMPONENTS}/"))
+        && norm.ends_with(".json")
+        && !norm[MODEL_COMPONENTS.len() + 1..].contains('/')
+}
+
+fn is_model_components_dir_path(norm: &str) -> bool {
+    let n = norm.trim_end_matches('/');
+    n == MODEL_COMPONENTS
+}
+
+/// Directory listable: project themes, catalog themes, or model/components.
+pub fn is_list_theme_dir(rel: &str) -> bool {
+    let Some(norm) = sanitize_rel(rel) else {
+        return false;
+    };
+    let norm = norm.trim_end_matches('/').to_string();
+    if is_catalog_theme_dir_path(&norm) || is_model_components_dir_path(&norm) {
+        return true;
+    }
+    is_project_theme_dir_path(&norm)
+}
+
+fn ensure_under_workspace(root: &Path, target: &Path) -> Result<PathBuf, OpError> {
+    let canon_root = root
+        .canonicalize()
+        .map_err(|e| OpError::Internal(format!("workspace root {}: {e}", root.display())))?;
+    if target.exists() {
+        let canon = target
+            .canonicalize()
+            .map_err(|e| OpError::NotFound(format!("canonicalize {}: {e}", target.display())))?;
+        if !canon.starts_with(&canon_root) {
+            return Err(OpError::PermissionDenied("path escapes workspace".into()));
+        }
+        return Ok(canon);
+    }
+    // Parent must exist under workspace for create-on-write.
+    let parent = target.parent().unwrap_or(root);
+    if !parent.exists() {
+        std::fs::create_dir_all(parent)
+            .map_err(|e| OpError::Internal(format!("mkdir {}: {e}", parent.display())))?;
+    }
+    let canon_parent = parent
+        .canonicalize()
+        .map_err(|e| OpError::InvalidArgument(format!("parent path invalid: {e}")))?;
+    if !canon_parent.starts_with(&canon_root) {
+        return Err(OpError::PermissionDenied("path escapes workspace".into()));
+    }
+    Ok(canon_parent.join(target.file_name().unwrap_or_default()))
+}
+
+// ── RPCs ────────────────────────────────────────────────────────────────────
+
+/// List theme JSON basenames under a directory path (workspace-relative).
+pub fn list(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let rel = args
+        .get("path")
+        .and_then(|v| v.as_str())
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .ok_or_else(|| OpError::InvalidArgument("List requires non-empty `path`".into()))?;
+
+    if !is_list_theme_dir(rel) {
+        return Err(OpError::PermissionDenied(format!(
+            "path not listable (themes/**, {CATALOG_THEMES}, or {MODEL_COMPONENTS}): {rel}"
+        )));
+    }
+
+    let dir = ctx.workspace_root.join(rel);
+    let canon_root = ctx
+        .workspace_root
+        .canonicalize()
+        .map_err(|e| OpError::Internal(format!("workspace root missing: {e}")))?;
+
+    if !dir.is_dir() {
+        return Ok(json!({ "ok": true, "path": rel, "files": [] }));
+    }
+    let canon_dir = dir
+        .canonicalize()
+        .map_err(|e| OpError::InvalidArgument(format!("path invalid: {e}")))?;
+    if !canon_dir.starts_with(&canon_root) {
+        return Err(OpError::PermissionDenied("path escapes workspace".into()));
+    }
+
+    let mut files: Vec<String> = Vec::new();
+    if let Ok(rd) = std::fs::read_dir(&canon_dir) {
+        for ent in rd.flatten() {
+            let name = ent.file_name().to_string_lossy().into_owned();
+            if name.ends_with(".json") && !name.starts_with('.') {
+                files.push(name);
+            }
+        }
+    }
+    files.sort();
+    Ok(json!({ "ok": true, "path": rel, "files": files }))
+}
+
+/// Read a theme JSON file (project or catalog).
+pub fn read(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let rel = args
+        .get("path")
+        .and_then(|v| v.as_str())
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .ok_or_else(|| OpError::InvalidArgument("Read requires non-empty `path`".into()))?;
+
+    if !is_read_theme_path(rel) {
+        return Err(OpError::PermissionDenied(format!(
+            "path not readable (project themes, catalog themes, or package model schema JSON): {rel}"
+        )));
+    }
+
+    let target = ctx.workspace_root.join(rel);
+    let canon = ensure_under_workspace(&ctx.workspace_root, &target)?;
+    let content = std::fs::read_to_string(&canon)
+        .map_err(|e| OpError::NotFound(format!("read {rel}: {e}")))?;
+    Ok(json!({ "ok": true, "path": rel, "content": content }))
+}
+
+/// Write project theme JSON only.
+///
+/// Enforces `$extensions.ordered` scale monotonicity before disk write
+/// (named `NonMonotonicScale` — same refusal for MCP + GUI).
+pub fn write(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let rel = args
+        .get("path")
+        .and_then(|v| v.as_str())
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .ok_or_else(|| OpError::InvalidArgument("Write requires non-empty `path`".into()))?;
+    let content = args
+        .get("content")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| OpError::InvalidArgument("Write requires string `content`".into()))?;
+
+    if !is_write_theme_path(rel) {
+        return Err(OpError::PermissionDenied(format!(
+            "path not writable (themes/**/*.json only): {rel}"
+        )));
+    }
+
+    // Parse + derive + THEMES-1 document gate + ordered-scale gate (refuse
+    // before write). Authored JSON stays decisions-only; the gate inspects
+    // the engine-derived clone so contrast floors cannot be skipped.
+    let doc: Value = serde_json::from_str(content)
+        .map_err(|e| OpError::InvalidArgument(format!("theme schema invalid (JSON): {e}")))?;
+    gate_theme_doc(&doc, rel)?;
+    validate_ordered_scales(&doc)?;
+
+    let target = ctx.workspace_root.join(rel);
+    let resolved = ensure_under_workspace(&ctx.workspace_root, &target)?;
+    if let Some(parent) = resolved.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|e| OpError::Internal(format!("mkdir {}: {e}", parent.display())))?;
+    }
+    std::fs::write(&resolved, content)
+        .map_err(|e| OpError::Internal(format!("write {rel}: {e}")))?;
+    Ok(json!({
+        "ok": true,
+        "path": rel,
+        "bytes": content.len(),
+    }))
+}
+
+/// Default ordered steps for the radius family when `$extensions.ordered` is absent
+/// but a `radius` object with step keys is present (design surface + catalog parity).
+const DEFAULT_RADIUS_ORDERED: &[&str] = &["sm", "md", "lg", "xl"];
+
+/// Walk DTCG JSON and refuse non-monotonic ordered scale families.
+///
+/// `$extensions.ordered` is an array of sibling step keys (e.g. `["sm","md","lg","xl"]`).
+/// Each step's `$value` must parse as a dimension and be non-decreasing vs the previous.
+/// Sentinel steps like `full` (9999px) are excluded by not listing them in `ordered`.
+pub fn validate_ordered_scales(doc: &Value) -> Result<(), OpError> {
+    walk_ordered_scales(doc, "")
+}
+
+fn walk_ordered_scales(node: &Value, path: &str) -> Result<(), OpError> {
+    let Some(obj) = node.as_object() else {
+        return Ok(());
+    };
+
+    // Explicit `$extensions.ordered` on this object.
+    if let Some(ordered) = ordered_keys(obj) {
+        check_monotonic_steps(obj, &ordered, path)?;
+    } else if path == "radius" || path.ends_with(".radius") {
+        // Implicit radius family (base model / theme radius overrides).
+        let keys: Vec<String> = DEFAULT_RADIUS_ORDERED
+            .iter()
+            .filter(|k| obj.contains_key(**k))
+            .map(|s| (*s).to_string())
+            .collect();
+        if keys.len() >= 2 {
+            check_monotonic_steps(obj, &keys, path)?;
+        }
+    }
+
+    for (k, child) in obj {
+        if k.starts_with('$') {
+            continue;
+        }
+        let next = if path.is_empty() {
+            k.clone()
+        } else {
+            format!("{path}.{k}")
+        };
+        walk_ordered_scales(child, &next)?;
+    }
+    // Also walk modes.* theme branches (modes.light.radius …).
+    Ok(())
+}
+
+fn ordered_keys(obj: &serde_json::Map<String, Value>) -> Option<Vec<String>> {
+    let ext = obj.get("$extensions")?.as_object()?;
+    let arr = ext
+        .get("ordered")
+        .or_else(|| {
+            ext.get("sail")
+                .and_then(|s| s.as_object())
+                .and_then(|s| s.get("ordered"))
+        })?
+        .as_array()?;
+    let keys: Vec<String> = arr
+        .iter()
+        .filter_map(|v| v.as_str().map(|s| s.to_string()))
+        .collect();
+    if keys.len() >= 2 { Some(keys) } else { None }
+}
+
+fn check_monotonic_steps(
+    obj: &serde_json::Map<String, Value>,
+    keys: &[String],
+    path: &str,
+) -> Result<(), OpError> {
+    let mut prev: Option<(String, f64, String)> = None;
+    for key in keys {
+        let Some(step) = obj.get(key) else {
+            continue;
+        };
+        let Some(raw) = step_value_str(step) else {
+            continue;
+        };
+        let Some(px) = parse_dimension_px(&raw) else {
+            // Non-dimension / alias — skip numeric check for that step.
+            continue;
+        };
+        if let Some((prev_key, prev_px, prev_raw)) = &prev {
+            if px + f64::EPSILON < *prev_px {
+                return Err(OpError::InvalidArgument(format!(
+                    "NonMonotonicScale: {path} step {key}={raw} is less than {prev_key}={prev_raw} (ordered requires non-decreasing)"
+                )));
+            }
+        }
+        prev = Some((key.clone(), px, raw));
+    }
+    Ok(())
+}
+
+fn step_value_str(step: &Value) -> Option<String> {
+    let obj = step.as_object()?;
+    let v = obj.get("$value")?;
+    match v {
+        Value::String(s) => Some(s.clone()),
+        Value::Number(n) => Some(n.to_string()),
+        _ => None,
+    }
+}
+
+/// Parse dimension-like `$value` to px for ordering. Supports `Npx`, bare number, `Nrem` (16×).
+fn parse_dimension_px(raw: &str) -> Option<f64> {
+    let s = raw.trim();
+    if s.starts_with('{') {
+        return None; // alias
+    }
+    if let Some(n) = s.strip_suffix("px") {
+        return n.trim().parse().ok();
+    }
+    if let Some(n) = s.strip_suffix("rem") {
+        return n.trim().parse::<f64>().ok().map(|v| v * 16.0);
+    }
+    if let Some(n) = s.strip_suffix("em") {
+        return n.trim().parse::<f64>().ok().map(|v| v * 16.0);
+    }
+    s.parse().ok()
+}
+
+/// Delete a **project** theme JSON under the write allowlist (catalog paths refused).
+pub fn delete(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let rel = args
+        .get("path")
+        .and_then(|v| v.as_str())
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .ok_or_else(|| OpError::InvalidArgument("Delete requires non-empty `path`".into()))?;
+
+    if !is_write_theme_path(rel) {
+        return Err(OpError::PermissionDenied(format!(
+            "path not deletable (themes/**/*.json only): {rel}"
+        )));
+    }
+
+    let target = ctx.workspace_root.join(rel);
+    let resolved = ensure_under_workspace(&ctx.workspace_root, &target)?;
+    if !resolved.is_file() {
+        return Err(OpError::NotFound(format!("theme not found: {rel}")));
+    }
+    std::fs::remove_file(&resolved).map_err(|e| OpError::Internal(format!("delete {rel}: {e}")))?;
+    Ok(json!({
+        "ok": true,
+        "path": rel,
+    }))
+}
+
+/// Fork a catalog (or project) theme into a new project theme file.
+///
+/// Args: `source_path`, `dest_path` (must be write-allowlisted), optional `content`
+/// override (if omitted, reads source).
+pub fn fork(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let source_path = args
+        .get("source_path")
+        .or_else(|| args.get("source"))
+        .and_then(|v| v.as_str())
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .ok_or_else(|| OpError::InvalidArgument("Fork requires non-empty `source_path`".into()))?;
+    let dest_path = args
+        .get("dest_path")
+        .or_else(|| args.get("dest"))
+        .and_then(|v| v.as_str())
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .ok_or_else(|| OpError::InvalidArgument("Fork requires non-empty `dest_path`".into()))?;
+
+    if !is_read_theme_path(source_path) {
+        return Err(OpError::PermissionDenied(format!(
+            "source not readable: {source_path}"
+        )));
+    }
+    if !is_write_theme_path(dest_path) {
+        return Err(OpError::PermissionDenied(format!(
+            "dest not writable (themes/**/*.json only): {dest_path}"
+        )));
+    }
+
+    let content = if let Some(c) = args.get("content").and_then(|v| v.as_str()) {
+        c.to_string()
+    } else {
+        let src = ctx.workspace_root.join(source_path);
+        let canon = ensure_under_workspace(&ctx.workspace_root, &src)?;
+        std::fs::read_to_string(&canon)
+            .map_err(|e| OpError::NotFound(format!("read source {source_path}: {e}")))?
+    };
+
+    // Optional themeId rewrite via `new_id` — validate shape server-side (T2 §4.4).
+    let content = if let Some(new_id) = args.get("new_id").and_then(|v| v.as_str()) {
+        sail_compiler::tokens_generate::validate_theme_id(new_id)
+            .map_err(|e| OpError::InvalidArgument(format!("Fork new_id invalid: {e}")))?;
+        rewrite_theme_id(&content, new_id).map_err(|e| {
+            OpError::InvalidArgument(format!("Fork cannot rewrite themeId to {new_id:?}: {e}"))
+        })?
+    } else {
+        content
+    };
+
+    write(&json!({ "path": dest_path, "content": content }), ctx)?;
+    Ok(json!({
+        "ok": true,
+        "source_path": source_path,
+        "dest_path": dest_path,
+        "bytes": content.len(),
+    }))
+}
+
+fn rewrite_theme_id(content: &str, new_id: &str) -> Result<String, String> {
+    let mut v: Value =
+        serde_json::from_str(content).map_err(|e| format!("source is not valid JSON: {e}"))?;
+    let obj = v
+        .as_object_mut()
+        .ok_or_else(|| "source JSON root must be an object".to_string())?;
+    let ext = obj.entry("$extensions").or_insert_with(|| json!({}));
+    let ext_obj = ext
+        .as_object_mut()
+        .ok_or_else(|| "$extensions must be an object".to_string())?;
+    let ship = ext_obj.entry("sail").or_insert_with(|| json!({}));
+    let ship_obj = ship
+        .as_object_mut()
+        .ok_or_else(|| "$extensions.sail must be an object".to_string())?;
+    ship_obj.insert("themeId".into(), json!(new_id));
+    serde_json::to_string_pretty(&v)
+        .map(|s| s + "\n")
+        .map_err(|e| format!("serialize rewritten theme: {e}"))
+}
+
+/// Generate tokens.
+///
+/// Args:
+/// - `mode`: `"package"` | `"app"` (default: infer from `out`, else package)
+/// - `project`: project root for theme merge / app emit
+/// - `out`: optional out dir override (must stay under workspace)
+/// - `workspace`, `model`: path overrides (must stay under workspace)
+///
+/// **package** — full catalog + project merge → `packages/sail/tokens/src`
+/// **app** — T0 effective set only → `<project>/.sail/themes` (B1 themes.css only)
+pub fn generate(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let workspace = resolve_under_workspace(
+        args.get("workspace").and_then(|v| v.as_str()),
+        &ctx.workspace_root,
+        /* must_exist */ true,
+    )?;
+    let model_dir = if let Some(m) = args.get("model").and_then(|v| v.as_str()) {
+        resolve_path_under(&workspace, m)?
+    } else {
+        // Baked catalog when monorepo model tree is absent (external apps).
+        sail_compiler::tokens_generate::resolve_model_dir(Some(&workspace), None)
+            .map_err(|e| OpError::Internal(format!("resolve tokens model: {e}")))?
+    };
+
+    // Project merge when `project` is set in args, else if ctx.project_root
+    // is a discovered Sail app distinct from the workspace (dev server path).
+    let project_opt = if let Some(p) = args.get("project").and_then(|v| v.as_str()) {
+        let resolved = resolve_path_under(&workspace, p)?;
+        Some(
+            sail_lint::Project::discover(&resolved)
+                .map(|proj| proj.root().to_path_buf())
+                .unwrap_or(resolved),
+        )
+    } else if let Some(proj) = sail_lint::Project::discover(&ctx.project_root)
+        .filter(|p| p.root() != ctx.workspace_root.as_path())
+    {
+        Some(confine_existing(&workspace, proj.root())?)
+    } else {
+        None
+    };
+
+    let mode = args
+        .get("mode")
+        .and_then(|v| v.as_str())
+        .unwrap_or_else(|| {
+            // Infer: explicit out under .sail/themes → app; else package.
+            if let Some(out) = args.get("out").and_then(|v| v.as_str()) {
+                let n = out.replace('\\', "/");
+                if n.contains("/.sail/themes") || n.ends_with("/.sail/themes") {
+                    return "app";
+                }
+            }
+            "package"
+        });
+
+    let report = match mode {
+        "app" => {
+            let project_dir = project_opt.ok_or_else(|| {
+                OpError::InvalidArgument(
+                    "SailTheme/Generate mode=app requires `project` (or ctx.project_root app)"
+                        .into(),
+                )
+            })?;
+            let out_dir = if let Some(o) = args.get("out").and_then(|v| v.as_str()) {
+                resolve_path_under(&workspace, o)?
+            } else {
+                sail_compiler::tokens_generate::app_themes_out_dir(&project_dir)
+            };
+            // Prefer dedicated helper (themes_only + correct out dir).
+            if args.get("out").is_none() {
+                sail_compiler::tokens_generate::generate_app_delivery(&workspace, &project_dir)
+                    .map_err(|e| OpError::Internal(format!("tokens generate (app): {e}")))?
+            } else {
+                let mut opts =
+                    sail_compiler::tokens_generate::options_for_project(&workspace, &project_dir)
+                        .map_err(|e| {
+                        OpError::FailedPrecondition(format!(
+                            "theme config for {}: {e}",
+                            project_dir.display()
+                        ))
+                    })?;
+                opts.themes_only = true;
+                sail_compiler::tokens_generate::generate_with_options(&model_dir, &out_dir, &opts)
+                    .map_err(|e| OpError::Internal(format!("tokens generate (app): {e}")))?
+            }
+        }
+        "package" => {
+            let out_dir = if let Some(o) = args.get("out").and_then(|v| v.as_str()) {
+                resolve_path_under(&workspace, o)?
+            } else {
+                workspace.join("packages/sail/tokens/src")
+            };
+            if let Some(project_dir) = project_opt {
+                let opts = sail_compiler::tokens_generate::options_for_shared_package(
+                    &workspace,
+                    &project_dir,
+                )
+                .map_err(|e| {
+                    OpError::FailedPrecondition(format!(
+                        "theme config for {}: {e}",
+                        project_dir.display()
+                    ))
+                })?;
+                sail_compiler::tokens_generate::generate_with_options(&model_dir, &out_dir, &opts)
+                    .map_err(|e| OpError::Internal(format!("tokens generate (package): {e}")))?
+            } else {
+                sail_compiler::tokens_generate::generate(&model_dir, &out_dir)
+                    .map_err(|e| OpError::Internal(format!("tokens generate: {e}")))?
+            }
+        }
+        other => {
+            return Err(OpError::InvalidArgument(format!(
+                "SailTheme/Generate mode must be \"package\" or \"app\" (got {other:?})"
+            )));
+        }
+    };
+
+    Ok(json!({
+        "ok": true,
+        "mode": mode,
+        "token_count": report.token_count,
+        "theme_count": report.theme_count,
+        "tokens_css": report.tokens_css.display().to_string(),
+        "themes_css": report.themes_css.display().to_string(),
+        "unions_ts": report.unions_ts.display().to_string(),
+    }))
+}
+
+/// DTCG graph: tiers, alias edges, per-theme values — never CSS (T-I1).
+pub fn graph(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let theme_id = args
+        .get("themeId")
+        .or_else(|| args.get("theme_id"))
+        .and_then(|v| v.as_str())
+        .map(str::trim)
+        .filter(|s| !s.is_empty());
+    graph_internal(theme_id, ctx)
+}
+
+/// Build alias graph from catalog (and optional project) theme JSON only.
+pub fn graph_internal(theme_id: Option<&str>, ctx: &Ctx) -> Result<Value, OpError> {
+    let id = theme_id.unwrap_or(sail_compiler::tokens_generate::DEFAULT_PROJECT_THEME_ID);
+    // Refuse path-like / traversal theme ids.
+    if id.contains("..")
+        || id.contains('/')
+        || id.contains('\\')
+        || id.contains('.') && id.contains('/')
+    {
+        return Err(OpError::InvalidArgument(format!("invalid themeId: {id}")));
+    }
+    if !id
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+    {
+        return Err(OpError::InvalidArgument(format!("invalid themeId: {id}")));
+    }
+
+    let catalog_rel = format!("{CATALOG_THEMES}/{id}.json");
+    let mut docs: Vec<(String, Value)> = Vec::new();
+
+    // Prefer project theme override when present.
+    let project_candidate = find_project_theme(&ctx.workspace_root, id);
+    if let Some(rel) = project_candidate {
+        if is_read_theme_path(&rel) {
+            if let Ok(v) = read_json_theme(ctx, &rel) {
+                docs.push((rel, v));
+            }
+        }
+    }
+    if is_read_theme_path(&catalog_rel) {
+        if let Ok(v) = read_json_theme(ctx, &catalog_rel) {
+            docs.push((catalog_rel.clone(), v));
+        }
+    }
+    // Always include base model for alias targets (JSON only).
+    let base_rel = format!("{MODEL_ROOT}/base.json");
+    if is_read_theme_path(&base_rel) {
+        if let Ok(v) = read_json_theme(ctx, &base_rel) {
+            docs.push((base_rel, v));
+        }
+    }
+
+    if docs.is_empty() {
+        return Err(OpError::NotFound(format!(
+            "theme JSON not found for themeId={id}"
+        )));
+    }
+
+    let mut nodes: BTreeMap<String, Value> = BTreeMap::new();
+    let mut edges: Vec<Value> = Vec::new();
+    let mut tiers: BTreeSet<String> = BTreeSet::new();
+
+    for (source_file, doc) in &docs {
+        walk_dtcg_graph(doc, "", source_file, &mut nodes, &mut edges, &mut tiers);
+    }
+
+    // Zero CSS reads: only .json paths above.
+    Ok(json!({
+        "ok": true,
+        "themeId": id,
+        "modelVersion": 1,
+        "tiers": tiers.into_iter().collect::<Vec<_>>(),
+        "nodes": nodes.into_values().collect::<Vec<_>>(),
+        "edges": edges,
+        "sources": docs.iter().map(|(p, _)| p.clone()).collect::<Vec<_>>(),
+    }))
+}
+
+/// Locate a project theme JSON by id under `themes/`,
+/// at workspace root (external app) then under each `apps/*` (monorepo).
+fn find_project_theme(workspace: &Path, theme_id: &str) -> Option<String> {
+    let file = format!("{theme_id}.json");
+    let path = workspace.join("themes").join(&file);
+    if path.is_file() {
+        return path
+            .strip_prefix(workspace)
+            .ok()
+            .map(|p| p.to_string_lossy().replace('\\', "/"));
+    }
+    let apps = workspace.join("apps");
+    let rd = std::fs::read_dir(apps).ok()?;
+    let mut apps: Vec<_> = rd.flatten().map(|e| e.path()).collect();
+    apps.sort();
+    for app in apps {
+        let path = app.join("themes").join(&file);
+        if path.is_file() {
+            return path
+                .strip_prefix(workspace)
+                .ok()
+                .map(|p| p.to_string_lossy().replace('\\', "/"));
+        }
+    }
+    None
+}
+
+fn read_json_theme(ctx: &Ctx, rel: &str) -> Result<Value, OpError> {
+    // Hard refuse CSS paths.
+    if rel.ends_with(".css") || rel.contains(".css") {
+        return Err(OpError::PermissionDenied(
+            "theme graph refuses CSS paths".into(),
+        ));
+    }
+    if !rel.ends_with(".json") {
+        return Err(OpError::PermissionDenied(
+            "theme graph reads JSON only".into(),
+        ));
+    }
+    if !is_read_theme_path(rel) {
+        return Err(OpError::PermissionDenied(format!(
+            "path not readable: {rel}"
+        )));
+    }
+    let target = ctx.workspace_root.join(rel);
+    let canon = ensure_under_workspace(&ctx.workspace_root, &target)?;
+    let text = std::fs::read_to_string(&canon)
+        .map_err(|e| OpError::NotFound(format!("read {rel}: {e}")))?;
+    serde_json::from_str(&text).map_err(|e| OpError::InvalidArgument(format!("json {rel}: {e}")))
+}
+
+fn walk_dtcg_graph(
+    node: &Value,
+    path: &str,
+    source_file: &str,
+    nodes: &mut BTreeMap<String, Value>,
+    edges: &mut Vec<Value>,
+    tiers: &mut BTreeSet<String>,
+) {
+    let Some(obj) = node.as_object() else {
+        return;
+    };
+    if let Some(ext) = obj.get("$extensions").and_then(|v| v.as_object()) {
+        if let Some(ship) = ext.get("sail").and_then(|v| v.as_object()) {
+            if let Some(layer) = ship.get("layer").and_then(|v| v.as_str()) {
+                tiers.insert(layer.to_string());
+            }
+        }
+    }
+    if obj.contains_key("$value") {
+        let value = obj.get("$value").cloned().unwrap_or(Value::Null);
+        let ty = obj
+            .get("$type")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        // Public short name is generator policy (same as tokens_generate).
+        let css_name = Some(sail_compiler::tokens_generate::public_name(path));
+        let value_str = match &value {
+            Value::String(s) => s.clone(),
+            other => other.to_string(),
+        };
+        nodes.insert(
+            path.to_string(),
+            json!({
+                "path": path,
+                "type": ty,
+                "value": value_str,
+                "cssName": css_name,
+                "source": source_file,
+            }),
+        );
+        if let Some(alias) = parse_alias_ref(&value_str) {
+            edges.push(json!({
+                "from": path,
+                "to": alias,
+                "kind": "alias",
+            }));
+        }
+        return;
+    }
+    for (k, child) in obj {
+        if k.starts_with('$') {
+            continue;
+        }
+        let next = if path.is_empty() {
+            k.clone()
+        } else {
+            format!("{path}.{k}")
+        };
+        walk_dtcg_graph(child, &next, source_file, nodes, edges, tiers);
+    }
+}
+
+fn parse_alias_ref(value: &str) -> Option<String> {
+    let s = value.trim();
+    if let Some(inner) = s.strip_prefix('{').and_then(|x| x.strip_suffix('}')) {
+        let inner = inner.trim();
+        if !inner.is_empty() && !inner.contains('{') {
+            return Some(inner.to_string());
+        }
+    }
+    None
+}
+
+/// Derive chromatic steps from anchors. No disk writes.
+pub fn derive_scale(args: &Value, _ctx: &Ctx) -> Result<Value, OpError> {
+    let mode = args
+        .get("mode")
+        .and_then(|v| v.as_str())
+        .unwrap_or("light")
+        .to_string();
+    if mode != "light" && mode != "dark" {
+        return Err(OpError::InvalidArgument(format!(
+            "derive_scale mode must be light|dark (got {mode:?})"
+        )));
+    }
+    let mut anchors = if let Some(theme) = args.get("theme") {
+        sail_compiler::tokens_generate::derive::anchors_for_mode(theme, &mode)
+    } else {
+        serde_json::Map::new()
+    };
+    if let Some(obj) = args.get("anchors").and_then(|v| v.as_object()) {
+        for (k, v) in obj {
+            if k.starts_with('$') {
+                continue;
+            }
+            anchors.insert(k.clone(), v.clone());
+        }
+    }
+    if anchors.is_empty() {
+        return Err(OpError::InvalidArgument(
+            "derive_scale requires `anchors` or a `theme` document with anchors".into(),
+        ));
+    }
+
+    let mut body = if let Some(theme) = args.get("theme") {
+        theme
+            .pointer(&format!("/modes/{mode}"))
+            .cloned()
+            .unwrap_or_else(|| json!({}))
+    } else {
+        json!({})
+    };
+    if !body.is_object() {
+        body = json!({});
+    }
+    if let Some(bg) = args.get("bg") {
+        insert_color_slot(&mut body, "background", bg)?;
+    }
+    if let Some(fg) = args.get("fg") {
+        insert_color_slot(&mut body, "foreground", fg)?;
+    }
+    if let Some(overrides) = args.get("overrides").and_then(|v| v.as_object()) {
+        merge_step_overrides(&mut body, overrides)?;
+    }
+
+    let paint = sail_compiler::tokens_generate::derive::PaintMode::parse(&mode);
+    let derived =
+        sail_compiler::tokens_generate::derive::fulfill_mode_scales(&mut body, &anchors, paint)
+            .map_err(|e| OpError::InvalidArgument(e.to_string()))?;
+
+    let mut scales = serde_json::Map::new();
+    for role in sail_compiler::tokens_generate::derive::CHROMATIC_ROLES {
+        let Some(group) = body.pointer(&format!("/color/{role}")) else {
+            continue;
+        };
+        let mut steps = serde_json::Map::new();
+        for step in sail_compiler::tokens_generate::derive::CHROMATIC_STEPS {
+            if let Some(css) = color_css_of(group.get(*step).or_else(|| legacy_step(group, step))) {
+                steps.insert((*step).to_string(), json!(css));
+            }
+        }
+        if !steps.is_empty() {
+            scales.insert((*role).to_string(), Value::Object(steps));
+        }
+    }
+
+    Ok(json!({
+        "ok": true,
+        "mode": mode,
+        "scales": scales,
+        "derived": derived,
+    }))
+}
+
+/// Contrast/contract gate on an in-memory theme. No disk writes.
+/// Floor pairs fail (`ok: false` + named errors).
+pub fn check_theme(args: &Value, _ctx: &Ctx) -> Result<Value, OpError> {
+    let mut doc = theme_doc_from_args(args)?;
+    let apply_derive = args.get("derive").and_then(|v| v.as_bool()).unwrap_or(true);
+    let label = args
+        .get("label")
+        .and_then(|v| v.as_str())
+        .unwrap_or("theme");
+    let mut derived = Vec::new();
+    if apply_derive {
+        derived = sail_compiler::tokens_generate::derive::apply_theme_derivation(&mut doc)
+            .map_err(|e| OpError::InvalidArgument(e.to_string()))?;
+    }
+    let contrast_pairs = sail_compiler::theme_gate::contrast_reports_json(&doc);
+    match sail_compiler::theme_gate::validate_theme_gate(&doc, label) {
+        Ok(()) => {
+            let floor_fail = contrast_pairs.iter().any(|p| {
+                p.get("ok").and_then(|v| v.as_bool()) == Some(false)
+                    && p.get("soft").and_then(|v| v.as_bool()) != Some(true)
+            });
+            if floor_fail {
+                return Ok(json!({
+                    "ok": false,
+                    "errors": ["contrast floor pair failed"],
+                    "contrastPairs": contrast_pairs,
+                    "derived": derived,
+                }));
+            }
+            Ok(json!({
+                "ok": true,
+                "errors": [],
+                "contrastPairs": contrast_pairs,
+                "derived": derived,
+            }))
+        }
+        Err(e) => Ok(json!({
+            "ok": false,
+            "errors": [e.to_string()],
+            "contrastPairs": contrast_pairs,
+            "derived": derived,
+        })),
+    }
+}
+
+/// Read registry v2 (+ catalog ids). No writes.
+pub fn registry(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let workspace = resolve_under_workspace(
+        args.get("workspace").and_then(|v| v.as_str()),
+        &ctx.workspace_root,
+        /* must_exist */ true,
+    )?;
+    let model_dir = if let Some(m) = args.get("model").and_then(|v| v.as_str()) {
+        resolve_path_under(&workspace, m)?
+    } else {
+        sail_compiler::tokens_generate::resolve_model_dir(Some(&workspace), None)
+            .map_err(|e| OpError::Internal(format!("resolve tokens model: {e}")))?
+    };
+    let mut registry = sail_compiler::tokens_generate::registry_v2(&model_dir)
+        .map_err(|e| OpError::Internal(format!("registry v2: {e}")))?;
+    let catalog: Vec<String> = sail_compiler::tokens_generate::catalog_theme_order()
+        .iter()
+        .map(|s| (*s).to_string())
+        .collect();
+    if let Some(obj) = registry.as_object_mut() {
+        obj.insert("catalog".into(), json!(catalog.clone()));
+    }
+    let schema = registry
+        .get("schema")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+    if schema != "spinnaker.registry.v2" {
+        return Err(OpError::Internal(format!(
+            "registry schema is {schema:?}, expected spinnaker.registry.v2"
+        )));
+    }
+    let section = args
+        .get("section")
+        .and_then(|v| v.as_str())
+        .unwrap_or("all");
+    let contrast_pairs = registry
+        .get("contrastPairs")
+        .cloned()
+        .unwrap_or_else(|| json!([]));
+    let metadata = registry
+        .get("metadata")
+        .cloned()
+        .unwrap_or_else(|| json!({}));
+    match section {
+        "catalog" => Ok(json!({
+            "ok": true,
+            "schema": schema,
+            "catalog": catalog,
+            "contrastPairs": contrast_pairs,
+            "metadata": metadata,
+        })),
+        "contrast" => Ok(json!({
+            "ok": true,
+            "schema": schema,
+            "catalog": catalog,
+            "contrastPairs": contrast_pairs,
+            "metadata": metadata,
+        })),
+        "metadata" => Ok(json!({
+            "ok": true,
+            "schema": schema,
+            "catalog": catalog,
+            "contrastPairs": contrast_pairs,
+            "metadata": metadata,
+        })),
+        _ => Ok(json!({
+            "ok": true,
+            "schema": schema,
+            "catalog": catalog,
+            "contrastPairs": contrast_pairs,
+            "metadata": metadata,
+            "registry": registry,
+        })),
+    }
+}
+
+fn gate_theme_doc(doc: &Value, label: &str) -> Result<(), OpError> {
+    let mut gated = doc.clone();
+    sail_compiler::tokens_generate::derive::apply_theme_derivation(&mut gated)
+        .map_err(|e| OpError::InvalidArgument(e.to_string()))?;
+    sail_compiler::theme_gate::validate_theme_gate(&gated, label)
+        .map_err(|e| OpError::InvalidArgument(e.to_string()))?;
+    Ok(())
+}
+
+fn theme_doc_from_args(args: &Value) -> Result<Value, OpError> {
+    if let Some(theme) = args.get("theme") {
+        if theme.is_object() {
+            return Ok(theme.clone());
+        }
+        return Err(OpError::InvalidArgument(
+            "check_theme `theme` must be an object".into(),
+        ));
+    }
+    if let Some(content) = args.get("content").and_then(|v| v.as_str()) {
+        return serde_json::from_str(content).map_err(|e| {
+            OpError::InvalidArgument(format!("check_theme content is not JSON: {e}"))
+        });
+    }
+    Err(OpError::InvalidArgument(
+        "check_theme requires `theme` or `content`".into(),
+    ))
+}
+
+fn insert_color_slot(body: &mut Value, slot: &str, color: &Value) -> Result<(), OpError> {
+    let obj = body
+        .as_object_mut()
+        .ok_or_else(|| OpError::InvalidArgument("mode body must be an object".into()))?;
+    if !obj.contains_key("color") {
+        obj.insert("color".into(), json!({}));
+    }
+    let color_obj = obj
+        .get_mut("color")
+        .and_then(|v| v.as_object_mut())
+        .ok_or_else(|| OpError::InvalidArgument("color must be an object".into()))?;
+    let leaf = match color {
+        Value::String(s) => json!({ "$value": s, "$type": "color" }),
+        other => other.clone(),
+    };
+    color_obj.insert(slot.into(), leaf);
+    Ok(())
+}
+
+fn merge_step_overrides(
+    body: &mut Value,
+    overrides: &serde_json::Map<String, Value>,
+) -> Result<(), OpError> {
+    let obj = body
+        .as_object_mut()
+        .ok_or_else(|| OpError::InvalidArgument("mode body must be an object".into()))?;
+    if !obj.contains_key("color") {
+        obj.insert("color".into(), json!({}));
+    }
+    let color = obj
+        .get_mut("color")
+        .and_then(|v| v.as_object_mut())
+        .ok_or_else(|| OpError::InvalidArgument("color must be an object".into()))?;
+    for (role, steps) in overrides {
+        if role.starts_with('$') {
+            continue;
+        }
+        if !color.contains_key(role) {
+            color.insert(role.clone(), json!({}));
+        }
+        let group = color
+            .get_mut(role)
+            .and_then(|v| v.as_object_mut())
+            .ok_or_else(|| {
+                OpError::InvalidArgument(format!("overrides.{role} must be an object"))
+            })?;
+        let Some(step_obj) = steps.as_object() else {
+            return Err(OpError::InvalidArgument(format!(
+                "overrides.{role} must be an object of steps"
+            )));
+        };
+        for (step, val) in step_obj {
+            if step.starts_with('$') {
+                continue;
+            }
+            let leaf = match val {
+                Value::String(s) => json!({ "$value": s, "$type": "color" }),
+                other => other.clone(),
+            };
+            group.insert(step.clone(), leaf);
+        }
+    }
+    Ok(())
+}
+
+fn legacy_step<'a>(group: &'a Value, step: &str) -> Option<&'a Value> {
+    match step {
+        "solid" => group.get("default"),
+        "text" => group.get("foreground"),
+        _ => None,
+    }
+}
+
+fn color_css_of(node: Option<&Value>) -> Option<String> {
+    let node = node?;
+    if let Some(s) = node.as_str() {
+        return Some(s.to_string());
+    }
+    if let Some(v) = node.get("$value") {
+        if let Some(s) = v.as_str() {
+            return Some(s.to_string());
+        }
+        if let Some(c) = sail_compiler::tokens_generate::derive::parse_anchor(v) {
+            return Some(c.to_css());
+        }
+    }
+    sail_compiler::tokens_generate::derive::parse_anchor(node).map(|c| c.to_css())
+}
+
+/// List effective theme ids for a project (`project` arg or ctx.project_root).
+pub fn effective_ids(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let workspace = resolve_under_workspace(
+        args.get("workspace").and_then(|v| v.as_str()),
+        &ctx.workspace_root,
+        /* must_exist */ true,
+    )?;
+    let project = if let Some(p) = args.get("project").and_then(|v| v.as_str()) {
+        resolve_path_under(&workspace, p)?
+    } else {
+        confine_existing(&workspace, &ctx.project_root)?
+    };
+    let ids = sail_compiler::tokens_generate::effective_theme_ids(&workspace, &project)
+        .map_err(|e| OpError::FailedPrecondition(format!("effective theme ids: {e}")))?;
+    Ok(json!({
+        "ok": true,
+        "project": ids.project,
+        "catalog": ids.catalog,
+        "all": ids.all_ids(),
+    }))
+}
+
+/// Resolve `arg` relative to `workspace`, or use `workspace` when arg is None.
+/// When `must_exist`, path must exist under workspace.
+fn resolve_under_workspace(
+    arg: Option<&str>,
+    workspace_root: &Path,
+    must_exist: bool,
+) -> Result<PathBuf, OpError> {
+    let path = match arg {
+        Some(s) if !s.trim().is_empty() => {
+            let pb = PathBuf::from(s.trim());
+            if pb.is_absolute() {
+                pb
+            } else {
+                workspace_root.join(pb)
+            }
+        }
+        _ => workspace_root.to_path_buf(),
+    };
+    if must_exist {
+        confine_existing(workspace_root, &path)
+    } else {
+        // Parent confinement for create-on-write dirs.
+        ensure_under_workspace(workspace_root, &path)
+    }
+}
+
+/// Join relative path under workspace (or accept absolute) and confine.
+fn resolve_path_under(workspace: &Path, raw: &str) -> Result<PathBuf, OpError> {
+    if raw.trim().is_empty() {
+        return Err(OpError::InvalidArgument("path must be non-empty".into()));
+    }
+    if raw.contains("..") {
+        return Err(OpError::PermissionDenied("path must not contain ..".into()));
+    }
+    let pb = PathBuf::from(raw.trim());
+    let abs = if pb.is_absolute() {
+        pb
+    } else {
+        workspace.join(pb)
+    };
+    if abs.exists() {
+        confine_existing(workspace, &abs)
+    } else {
+        ensure_under_workspace(workspace, &abs)
+    }
+}
+
+fn confine_existing(workspace: &Path, path: &Path) -> Result<PathBuf, OpError> {
+    let canon_root = workspace
+        .canonicalize()
+        .map_err(|e| OpError::Internal(format!("workspace root {}: {e}", workspace.display())))?;
+    let canon = path
+        .canonicalize()
+        .map_err(|e| OpError::InvalidArgument(format!("path invalid {}: {e}", path.display())))?;
+    if !canon.starts_with(&canon_root) {
+        return Err(OpError::PermissionDenied("path escapes workspace".into()));
+    }
+    Ok(canon)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+    use tempfile::tempdir;
+
+    const GATE_COLOR: &str = r#""color":{"background":{"$value":"oklch(0.98 0 0)","$type":"color"},"foreground":{"$value":"oklch(0.20 0 0)","$type":"color"},"primary":{"default":{"$value":"oklch(0.45 0.12 250)","$type":"color"},"foreground":{"$value":"oklch(0.98 0 0)","$type":"color"}},"muted":{"default":{"$value":"oklch(0.92 0 0)","$type":"color"},"foreground":{"$value":"oklch(0.35 0 0)","$type":"color"}},"accent":{"default":{"$value":"oklch(0.45 0.16 300)","$type":"color"},"foreground":{"$value":"oklch(0.98 0 0)","$type":"color"}}}"#;
+
+    fn gate_theme(id: &str, dual: bool) -> String {
+        if dual {
+            format!(
+                r#"{{"$extensions":{{"sail":{{"themeId":"{id}","defaultMode":"light","layer":"theme"}}}},"modes":{{"light":{{{GATE_COLOR}}},"dark":{{{GATE_COLOR}}}}}}}"#
+            )
+        } else {
+            format!(
+                r#"{{"$extensions":{{"sail":{{"themeId":"{id}","defaultMode":"light","layer":"theme"}}}},"modes":{{"light":{{{GATE_COLOR}}}}}}}"#
+            )
+        }
+    }
+
+    #[test]
+    fn graph_returns_alias_edges_and_refuses_css() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        std::fs::create_dir_all(ws.join("packages/sail/tokens/model/themes")).unwrap();
+        let theme = r#"{
+          "$extensions": { "sail": { "layer": "theme", "themeId": "toy" } },
+          "modes": {
+            "light": {
+              "color": {
+                "a": { "$value": "oklch(0.5 0 0)", "$type": "color" },
+                "b": { "$value": "{color.a}", "$type": "color" }
+              }
+            }
+          }
+        }"#;
+        std::fs::write(ws.join("packages/sail/tokens/model/themes/toy.json"), theme).unwrap();
+        // Also base for optional merge
+        std::fs::write(
+            ws.join("packages/sail/tokens/model/base.json"),
+            r#"{"x":{"$value":"1px","$type":"dimension"}}"#,
+        )
+        .unwrap();
+        let ctx = Ctx::new(ws, ws.join("apps/demo"), ws);
+        let g = graph(&json!({"themeId": "toy"}), &ctx).unwrap();
+        assert_eq!(g["ok"], true);
+        let edges = g["edges"].as_array().unwrap();
+        assert!(
+            edges
+                .iter()
+                .any(|e| e["kind"] == "alias" && e["to"] == "color.a"),
+            "{edges:?}"
+        );
+        for s in g["sources"].as_array().unwrap() {
+            let p = s.as_str().unwrap();
+            assert!(p.ends_with(".json"), "{p}");
+            assert!(!p.ends_with(".css"));
+        }
+        // Direct CSS refuse
+        let bad = read_json_theme(&ctx, "packages/sail/tokens/src/tokens.css");
+        assert!(matches!(bad, Err(OpError::PermissionDenied(_))));
+    }
+
+    #[test]
+    fn write_refuses_non_monotonic_radius_scale() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        std::fs::create_dir_all(ws.join("apps/demo/themes")).unwrap();
+        let ctx = Ctx::new(ws, ws.join("apps/demo"), ws);
+
+        // THEMES-1: radius lives under modes.*; envelope must be schema-valid.
+        let bad = format!(
+            r#"{{
+          "$extensions": {{ "sail": {{ "themeId": "bad-radius", "defaultMode": "light", "layer": "theme" }} }},
+          "modes": {{
+            "light": {{
+              {GATE_COLOR},
+              "radius": {{
+                "sm": {{ "$value": "8px", "$type": "dimension" }},
+                "md": {{ "$value": "4px", "$type": "dimension" }},
+                "lg": {{ "$value": "10px", "$type": "dimension" }},
+                "xl": {{ "$value": "14px", "$type": "dimension" }},
+                "$extensions": {{ "ordered": ["sm", "md", "lg", "xl"] }}
+              }}
+            }}
+          }}
+        }}"#
+        );
+        let err = write(
+            &json!({
+                "path": "apps/demo/themes/bad-radius.json",
+                "content": bad
+            }),
+            &ctx,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("NonMonotonicScale"),
+            "expected NonMonotonicScale, got {msg}"
+        );
+        assert!(!ws.join("apps/demo/themes/bad-radius.json").exists());
+
+        let good = format!(
+            r#"{{
+          "$extensions": {{ "sail": {{ "themeId": "good-radius", "defaultMode": "light", "layer": "theme" }} }},
+          "modes": {{
+            "light": {{
+              {GATE_COLOR},
+              "radius": {{
+                "sm": {{ "$value": "4px", "$type": "dimension" }},
+                "md": {{ "$value": "6px", "$type": "dimension" }},
+                "lg": {{ "$value": "10px", "$type": "dimension" }},
+                "xl": {{ "$value": "16px", "$type": "dimension" }},
+                "$extensions": {{ "ordered": ["sm", "md", "lg", "xl"] }}
+              }}
+            }}
+          }}
+        }}"#
+        );
+        let ok = write(
+            &json!({
+                "path": "apps/demo/themes/good-radius.json",
+                "content": good
+            }),
+            &ctx,
+        )
+        .unwrap();
+        assert_eq!(ok["ok"], true);
+    }
+
+    #[test]
+    fn validate_ordered_scales_named_error() {
+        let doc = json!({
+            "radius": {
+                "sm": { "$value": "10px" },
+                "md": { "$value": "2px" },
+                "$extensions": { "ordered": ["sm", "md"] }
+            }
+        });
+        let err = validate_ordered_scales(&doc).unwrap_err();
+        assert!(err.to_string().contains("NonMonotonicScale"));
+    }
+
+    #[test]
+    fn write_policy_project_themes_only() {
+        // E4 layout (project-relative, external or monorepo).
+        assert!(is_write_theme_path("themes/custom.json"));
+        assert!(is_write_theme_path("apps/demo/themes/custom.json"));
+        // Retired tokens/themes layout is not writable.
+        assert!(!is_write_theme_path("tokens/themes/custom.json"));
+        assert!(!is_write_theme_path(
+            "apps/sail-site/tokens/themes/custom.json"
+        ));
+        // Refusals.
+        assert!(!is_write_theme_path("apps/sail-site/tokens/base.json"));
+        assert!(!is_write_theme_path(
+            "packages/sail/tokens/model/themes/sail.json"
+        ));
+        assert!(!is_write_theme_path(
+            "apps/sail-site/tokens/themes/../secrets.json"
+        ));
+        assert!(!is_write_theme_path("apps/foo/tokens/themes/bar.txt"));
+        assert!(!is_write_theme_path("themes/notes.txt"));
+        // Catalog / model reads.
+        assert!(is_read_theme_path(
+            "packages/sail/tokens/model/themes/sail.json"
+        ));
+        assert!(is_read_theme_path("packages/sail/tokens/model/base.json"));
+        assert!(is_read_theme_path(
+            "packages/sail/tokens/model/components/card.json"
+        ));
+        assert!(!is_read_theme_path(
+            "packages/sail/tokens/model/density-compact.json"
+        ));
+        // Listable dirs.
+        assert!(is_list_theme_dir("themes"));
+        assert!(!is_list_theme_dir("tokens/themes"));
+        assert!(!is_list_theme_dir("apps/sail-site/tokens/themes"));
+        assert!(is_list_theme_dir("apps/demo/themes"));
+        assert!(is_list_theme_dir(CATALOG_THEMES));
+        assert!(is_list_theme_dir(MODEL_COMPONENTS));
+        assert!(!is_list_theme_dir("apps/sail-site/src"));
+        assert!(!is_list_theme_dir(MODEL_ROOT));
+    }
+
+    #[test]
+    fn write_refuses_catalog_and_escape() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        std::fs::create_dir_all(ws.join("apps/demo/themes")).unwrap();
+        std::fs::create_dir_all(ws.join("packages/sail/tokens/model/themes")).unwrap();
+        std::fs::write(
+            ws.join("packages/sail/tokens/model/themes/sail.json"),
+            r#"{"$extensions":{"sail":{"themeId":"sail"}}}"#,
+        )
+        .unwrap();
+
+        let ctx = Ctx::new(ws, ws.join("apps/demo"), ws);
+
+        let denied = write(
+            &json!({
+                "path": "packages/sail/tokens/model/themes/sail.json",
+                "content": "{}"
+            }),
+            &ctx,
+        );
+        assert!(matches!(denied, Err(OpError::PermissionDenied(_))));
+
+        let body = r#"{"$extensions":{"sail":{"themeId":"custom","defaultMode":"light","layer":"theme"}},"modes":{"light":{"color":{"background":{"$value":"oklch(0.98 0 0)","$type":"color"},"foreground":{"$value":"oklch(0.20 0 0)","$type":"color"},"primary":{"default":{"$value":"oklch(0.45 0.12 250)","$type":"color"},"foreground":{"$value":"oklch(0.98 0 0)","$type":"color"}},"muted":{"default":{"$value":"oklch(0.92 0 0)","$type":"color"},"foreground":{"$value":"oklch(0.35 0 0)","$type":"color"}},"accent":{"default":{"$value":"oklch(0.45 0.16 300)","$type":"color"},"foreground":{"$value":"oklch(0.98 0 0)","$type":"color"}}}}}}"#;
+        let ok = write(
+            &json!({
+                "path": "apps/demo/themes/custom.json",
+                "content": body
+            }),
+            &ctx,
+        )
+        .unwrap();
+        assert_eq!(ok["ok"], true);
+        assert_eq!(
+            std::fs::read_to_string(ws.join("apps/demo/themes/custom.json")).unwrap(),
+            body
+        );
+
+        // THEMES-1: out-of-schema root keys refused (naming valid ones).
+        let schema_err = write(
+            &json!({
+                "path": "apps/demo/themes/bad-schema.json",
+                "content": r#"{"ok":true}"#
+            }),
+            &ctx,
+        )
+        .unwrap_err();
+        let sm = schema_err.to_string();
+        assert!(
+            sm.contains("unknown root key") && sm.contains("ok"),
+            "expected schema lock error, got {sm}"
+        );
+    }
+
+    fn write_err(ctx: &Ctx, rel: &str, content: &str) -> String {
+        write(&json!({ "path": rel, "content": content }), ctx)
+            .unwrap_err()
+            .to_string()
+    }
+
+    #[test]
+    fn write_refuses_invalid_json_schema() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        std::fs::create_dir_all(ws.join("themes")).unwrap();
+        let ctx = Ctx::new(ws, ws, ws);
+        let err = write_err(&ctx, "themes/bad.json", "{not json");
+        assert!(
+            err.contains("schema invalid") || err.contains("JSON"),
+            "{err}"
+        );
+        assert!(!ws.join("themes/bad.json").exists());
+    }
+
+    #[test]
+    fn write_refuses_missing_required_slot() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        std::fs::create_dir_all(ws.join("themes")).unwrap();
+        let ctx = Ctx::new(ws, ws, ws);
+        let mut doc: Value = serde_json::from_str(&gate_theme("probe", false)).unwrap();
+        doc["modes"]["light"]["color"]
+            .as_object_mut()
+            .unwrap()
+            .remove("foreground");
+        let err = write_err(&ctx, "themes/missing-slot.json", &doc.to_string());
+        assert!(err.contains("foreground"), "{err}");
+        assert!(err.contains("missing required"), "{err}");
+        assert!(!ws.join("themes/missing-slot.json").exists());
+    }
+
+    #[test]
+    fn write_refuses_dangling_alias() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        std::fs::create_dir_all(ws.join("themes")).unwrap();
+        let ctx = Ctx::new(ws, ws, ws);
+        let mut extra = serde_json::Map::new();
+        extra.insert(
+            "secondary".into(),
+            json!({ "$value": "{no-such-token}", "$type": "color" }),
+        );
+        let mut doc: Value = serde_json::from_str(&gate_theme("probe", false)).unwrap();
+        if let Some(color) = doc["modes"]["light"]["color"].as_object_mut() {
+            color.insert("secondary".into(), extra["secondary"].clone());
+        }
+        let err = write_err(&ctx, "themes/dangling.json", &doc.to_string());
+        assert!(err.contains("dangling alias"), "{err}");
+        assert!(err.contains("no-such-token"), "{err}");
+        assert!(!ws.join("themes/dangling.json").exists());
+    }
+
+    #[test]
+    fn write_refuses_missing_supported_mode() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        std::fs::create_dir_all(ws.join("themes")).unwrap();
+        let ctx = Ctx::new(ws, ws, ws);
+        let mut doc: Value = serde_json::from_str(&gate_theme("probe", false)).unwrap();
+        doc["$extensions"]["sail"]["supportedModes"] = json!(["light", "dark"]);
+        let err = write_err(&ctx, "themes/missing-mode.json", &doc.to_string());
+        assert!(
+            err.contains("missing mode") && err.contains("dark"),
+            "{err}"
+        );
+        assert!(!ws.join("themes/missing-mode.json").exists());
+    }
+
+    #[test]
+    fn write_refuses_contrast_floor() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        std::fs::create_dir_all(ws.join("themes")).unwrap();
+        let ctx = Ctx::new(ws, ws, ws);
+        let mut doc: Value = serde_json::from_str(&gate_theme("probe", false)).unwrap();
+        doc["modes"]["light"]["color"]["muted"] = json!({
+            "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+            "foreground": { "$value": "oklch(0.85 0 0)", "$type": "color" }
+        });
+        let err = write_err(&ctx, "themes/contrast.json", &doc.to_string());
+        assert!(err.contains("muted-foreground"), "{err}");
+        assert!(err.contains("muted"), "{err}");
+        assert!(err.contains("floor 4.5:1"), "{err}");
+        assert!(!ws.join("themes/contrast.json").exists());
+    }
+
+    #[test]
+    fn list_read_roundtrip() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        let themes = ws.join("apps/demo/themes");
+        std::fs::create_dir_all(&themes).unwrap();
+        std::fs::write(themes.join("a.json"), r#"{"a":1}"#).unwrap();
+        std::fs::write(themes.join("b.json"), r#"{"b":2}"#).unwrap();
+
+        let ctx = Ctx::new(ws, ws.join("apps/demo"), ws);
+        let listed = list(&json!({"path": "apps/demo/themes"}), &ctx).unwrap();
+        assert_eq!(listed["ok"], true);
+        let files = listed["files"].as_array().unwrap();
+        assert_eq!(files.len(), 2);
+
+        let r = read(&json!({"path": "apps/demo/themes/a.json"}), &ctx).unwrap();
+        assert_eq!(r["content"], r#"{"a":1}"#);
+    }
+
+    /// EXT-1 E7: external app layout (no `apps/` prefix) — modern `themes/**`.
+    #[test]
+    fn external_app_modern_themes_list_read_write() {
+        let dir = tempdir().unwrap();
+        // Fixture IS the project root (outside monorepo apps/ layout).
+        let project = dir.path();
+        std::fs::create_dir_all(project.join("themes")).unwrap();
+        std::fs::create_dir_all(project.join("routes")).unwrap();
+        std::fs::write(project.join("package.json"), r#"{"name":"ext-app"}"#).unwrap();
+        std::fs::write(
+            project.join("themes/probe.json"),
+            r#"{"$extensions":{"sail":{"themeId":"probe"}}}"#,
+        )
+        .unwrap();
+
+        let ctx = Ctx::new(project, project, project);
+
+        let listed = list(&json!({"path": "themes"}), &ctx).unwrap();
+        assert_eq!(listed["ok"], true);
+        let files = listed["files"].as_array().unwrap();
+        assert_eq!(files.len(), 1);
+        assert_eq!(files[0], "probe.json");
+
+        let r = read(&json!({"path": "themes/probe.json"}), &ctx).unwrap();
+        assert!(r["content"].as_str().unwrap().contains("themeId"));
+
+        let w = write(
+            &json!({
+                "path": "themes/custom.json",
+                "content": gate_theme("custom", false)
+            }),
+            &ctx,
+        )
+        .unwrap();
+        assert_eq!(w["ok"], true);
+        assert!(project.join("themes/custom.json").is_file());
+
+        let found = find_project_theme(project, "custom");
+        assert_eq!(found.as_deref(), Some("themes/custom.json"));
+    }
+
+    #[test]
+    fn fork_validates_new_id_and_fails_loud_on_bad_json() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        std::fs::create_dir_all(ws.join("apps/demo/themes")).unwrap();
+        std::fs::create_dir_all(ws.join("packages/sail/tokens/model/themes")).unwrap();
+        std::fs::write(
+            ws.join("packages/sail/tokens/model/themes/sail.json"),
+            gate_theme("sail", true),
+        )
+        .unwrap();
+        let ctx = Ctx::new(ws, ws.join("apps/demo"), ws);
+
+        let bad_id = fork(
+            &json!({
+                "source_path": "packages/sail/tokens/model/themes/sail.json",
+                "dest_path": "apps/demo/themes/bad.json",
+                "new_id": "Not-Valid"
+            }),
+            &ctx,
+        );
+        assert!(matches!(bad_id, Err(OpError::InvalidArgument(_))));
+
+        let bad_json = fork(
+            &json!({
+                "source_path": "packages/sail/tokens/model/themes/sail.json",
+                "dest_path": "apps/demo/themes/x.json",
+                "new_id": "ok-id",
+                "content": "not-json"
+            }),
+            &ctx,
+        );
+        assert!(matches!(bad_json, Err(OpError::InvalidArgument(_))));
+
+        let ok = fork(
+            &json!({
+                "source_path": "packages/sail/tokens/model/themes/sail.json",
+                "dest_path": "apps/demo/themes/my-fork.json",
+                "new_id": "my-fork"
+            }),
+            &ctx,
+        )
+        .unwrap();
+        assert_eq!(ok["ok"], true);
+        let body = std::fs::read_to_string(ws.join("apps/demo/themes/my-fork.json")).unwrap();
+        assert!(
+            body.contains("\"themeId\": \"my-fork\"") || body.contains("\"themeId\":\"my-fork\"")
+        );
+    }
+
+    /// Fork into modern external `themes/` dest.
+    #[test]
+    fn fork_into_external_modern_themes() {
+        let dir = tempdir().unwrap();
+        let project = dir.path();
+        std::fs::create_dir_all(project.join("themes")).unwrap();
+        std::fs::create_dir_all(project.join("packages/sail/tokens/model/themes")).unwrap();
+        std::fs::write(
+            project.join("packages/sail/tokens/model/themes/sail.json"),
+            gate_theme("sail", true),
+        )
+        .unwrap();
+        let ctx = Ctx::new(project, project, project);
+
+        let ok = fork(
+            &json!({
+                "source_path": "packages/sail/tokens/model/themes/sail.json",
+                "dest_path": "themes/my-fork.json",
+                "new_id": "my-fork"
+            }),
+            &ctx,
+        )
+        .unwrap();
+        assert_eq!(ok["ok"], true);
+        assert!(project.join("themes/my-fork.json").is_file());
+    }
+
+    #[test]
+    fn generate_paths_confined_under_workspace() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        std::fs::create_dir_all(ws.join("apps/demo")).unwrap();
+        let ctx = Ctx::new(ws, ws.join("apps/demo"), ws);
+        let outside = tempdir().unwrap();
+        let escaped = generate(
+            &json!({
+                "mode": "package",
+                "out": outside.path().join("evil").to_string_lossy(),
+            }),
+            &ctx,
+        );
+        assert!(matches!(escaped, Err(OpError::PermissionDenied(_))));
+    }
+
+    #[test]
+    fn derive_scale_calls_engine_without_writes() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        let ctx = Ctx::new(ws, ws, ws);
+        let out = derive_scale(
+            &json!({
+                "anchors": {
+                    "primary": { "space": "oklch", "l": 0.54, "c": 0.18, "h": 245 }
+                },
+                "mode": "light"
+            }),
+            &ctx,
+        )
+        .unwrap();
+        assert_eq!(out["ok"], true);
+        let solid = out["scales"]["primary"]["solid"].as_str().unwrap();
+        let text = out["scales"]["primary"]["text"].as_str().unwrap();
+        assert!(solid.starts_with("oklch("), "{solid}");
+        assert!(text.starts_with("oklch("), "{text}");
+        assert_ne!(solid, text);
+        assert!(
+            ws.read_dir().unwrap().next().is_none(),
+            "derive_scale must not write files"
+        );
+    }
+
+    #[test]
+    fn check_theme_fails_floor_pairs_without_writes() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        let ctx = Ctx::new(ws, ws, ws);
+        let mut doc: Value = serde_json::from_str(&gate_theme("probe", false)).unwrap();
+        doc["modes"]["light"]["color"]["muted"] = json!({
+            "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+            "foreground": { "$value": "oklch(0.85 0 0)", "$type": "color" }
+        });
+        let out = check_theme(&json!({ "theme": doc, "derive": false }), &ctx).unwrap();
+        assert_eq!(out["ok"], false);
+        let err = out["errors"][0].as_str().unwrap();
+        assert!(err.contains("muted-foreground"), "{err}");
+        assert!(err.contains("floor 4.5:1"), "{err}");
+        let pairs = out["contrastPairs"].as_array().unwrap();
+        assert!(
+            pairs.iter().any(|p| {
+                p["fg"] == "muted-foreground" && p["ok"] == false && p["ratio"].as_f64().is_some()
+            }),
+            "{pairs:?}"
+        );
+        assert!(
+            ws.read_dir().unwrap().next().is_none(),
+            "check_theme must not write files"
+        );
+    }
+
+    #[test]
+    fn check_theme_accepts_engine_derived_catalog_shape() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        let ctx = Ctx::new(ws, ws, ws);
+        let doc = json!({
+            "$extensions": { "sail": { "themeId": "probe", "defaultMode": "light", "layer": "theme" } },
+            "anchors": {
+                "primary": { "space": "oklch", "l": 0.45, "c": 0.12, "h": 250 },
+                "accent": { "space": "oklch", "l": 0.45, "c": 0.16, "h": 300 },
+                "secondary": { "space": "oklch", "l": 0.92, "c": 0.02, "h": 250 },
+                "success": { "space": "oklch", "l": 0.62, "c": 0.15, "h": 150 },
+                "warning": { "space": "oklch", "l": 0.72, "c": 0.15, "h": 75 },
+                "info": { "space": "oklch", "l": 0.58, "c": 0.16, "h": 230 },
+                "danger": { "space": "oklch", "l": 0.58, "c": 0.22, "h": 27 },
+                "neutral": { "space": "oklch", "l": 0.92, "c": 0.01, "h": 250 }
+            },
+            "modes": {
+                "light": {
+                    "color": {
+                        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+                        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+                        "muted": {
+                            "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+                            "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+                        }
+                    }
+                }
+            }
+        });
+        let out = check_theme(&json!({ "theme": doc }), &ctx).unwrap();
+        assert_eq!(out["ok"], true, "{out}");
+        assert!(out["derived"].as_array().unwrap().len() >= 5, "{out}");
+        assert!(
+            out["contrastPairs"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|p| p["fg"] == "foreground" && p["ok"] == true)
+        );
+    }
+
+    #[test]
+    fn registry_read_is_v2_with_catalog() {
+        let ctx = Ctx::from_env();
+        let out = registry(&json!({ "section": "catalog" }), &ctx).unwrap();
+        assert_eq!(out["ok"], true);
+        assert_eq!(out["schema"], "spinnaker.registry.v2");
+        let catalog: Vec<&str> = out["catalog"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|v| v.as_str())
+            .collect();
+        assert_eq!(
+            catalog,
+            [
+                "sail",
+                "paper",
+                "halo",
+                "console",
+                "glass",
+                "brut",
+                "8bit",
+                "synthwave"
+            ]
+        );
+        assert!(
+            !catalog
+                .iter()
+                .any(|id| { matches!(*id, "ship" | "neutral" | "contrast" | "studio") })
+        );
+        assert!(out["contrastPairs"].as_array().unwrap().len() >= 3);
+        assert!(out.get("registry").is_none());
+    }
+}

@@ -1,6 +1,0 @@
-<!--
-  /components — the single component-library page. Renders the build-time
-  component catalog grouped by pack via <sui-component-catalog>; each cell
-  is a live preview + props/slots/events.
--->
-<sui-component-catalog></sui-component-catalog>

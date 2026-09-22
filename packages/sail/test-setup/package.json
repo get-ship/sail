@@ -1,0 +1,28 @@
+{
+  "name": "@ship/test-setup",
+  "private": false,
+  "version": "0.2.0",
+  "type": "module",
+  "license": "MIT",
+  "description": "Shared vitest/jsdom setup harness for SAIL component packs: JSDOM polyfills (ResizeObserver, matchMedia, Popover, Dialog, ToggleEvent, PointerEvent) + lucide-icon-map loader, the repo-agnostic suiComponentVitestConfig() factory, renderRoute/renderComponent, and the lightweight mount/flush/createContainerRegistry container helpers. One source of truth so consuming packs stop rolling their own test-utils.",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./vitest": "./src/vitest.ts",
+    "./assert-honesty": "./src/assert-honesty.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@ship/sail-compiler-wasm": "workspace:*",
+    "@ship/sail-dom": "workspace:*",
+    "@ship/sail-runtime": "workspace:*"
+  },
+  "devDependencies": {
+    "happy-dom": "^20.9.0",
+    "typescript": "~7.0.2",
+    "vitest": "^4.1.5"
+  }
+}

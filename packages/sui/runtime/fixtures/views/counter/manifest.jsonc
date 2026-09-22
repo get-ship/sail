@@ -1,9 +1,0 @@
-// Route metadata for views/counter/. See
-// docs/ship-adrs/references/docs/view-directory-convention.md.
-{
-  "name": "counter",
-  "path": "/counter",
-  "title": "Counter",
-  "layout": "default",
-  "auth": "public"
-}

@@ -1,0 +1,27 @@
+{
+  "service": "SailAuthoring",
+  "method": "LayoutCheck",
+  "mcp_tool": "sail_layout_check",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "source": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "LayoutCheckRet",
+    "type": "object"
+  }
+}

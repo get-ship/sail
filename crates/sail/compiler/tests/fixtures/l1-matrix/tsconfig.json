@@ -1,0 +1,8 @@
+{
+  "$comment": "Sail project solution tsconfig (G2c / TOOLING-1). GENERATED — hand edits are overwritten on build/dev. IDE entry only: references sail + action configs under .sail/. Users never edit this file. The type gate never reads it.",
+  "files": [],
+  "references": [
+    { "path": "./.sail/tsconfig.sail.json" },
+    { "path": "./.sail/tsconfig.action.json" }
+  ]
+}

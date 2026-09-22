@@ -1,0 +1,39 @@
+[package]
+name = "sail-lint"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[lib]
+name = "sail_lint"
+path = "src/lib.rs"
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+schemars = { version = "0.8", features = ["derive"] }
+
+# Style parse/IR/emit + scales/tokens (CHANNELS-1 extract).
+spinnaker = { path = "../spinnaker" }
+spinnaker-css = { path = "../spinnaker-css" }
+
+# Rust-native TS/JS parsing — Solid-shaped fine-grained AST. Walks via
+# the Visit trait. No tsc dependency.
+oxc_parser    = "0.128"
+oxc_ast       = "0.128"
+oxc_ast_visit = "0.128"
+oxc_allocator = "0.128"
+oxc_span      = "0.128"
+oxc_syntax    = "0.128"
+
+# Loading the primitive-prop registry (prop_registry.rs) from
+# crates/sail/compiler/primitives.json (compile-time `include_str!`).
+serde_json = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+# Inherit the workspace lint posture (matches every other crate). Without it the
+# workspace `doc_overindented_list_items = "allow"` doesn't reach this crate, so a
+# newer clippy fails `-D warnings` on intentional doc-comment alignment.
+[lints]
+workspace = true

@@ -1,0 +1,40 @@
+{
+  "id": "FooterLinks",
+  "title": "Footer links",
+  "intent": "Link columns and a short mark.",
+  "kind": "block",
+  "status": "authored",
+  "primitives": [
+    "a",
+    "separator"
+  ],
+  "roles": {
+    "headings": [
+      "About",
+      "Project",
+      "Community"
+    ],
+    "links": [
+      "Features",
+      "Pricing",
+      "Support",
+      "Forums",
+      "Contribute",
+      "Media assets",
+      "Changelog",
+      "Releases",
+      "Join Discord",
+      "Follow on Twitter",
+      "Email newsletter",
+      "GitHub discussions",
+      "Twitter",
+      "Youtube",
+      "Instagram"
+    ],
+    "buttons": [],
+    "text": [
+      "Build product UI with L1 defaults. If a composition needs paint on every tag, the atoms are wrong.",
+      "\u00a9 2026 Ship. All rights reserved."
+    ]
+  }
+}

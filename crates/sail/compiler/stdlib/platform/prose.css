@@ -1,0 +1,20 @@
+.sail-prose h1, .sail-prose h2, .sail-prose h3, .sail-prose h4, .sail-prose h5, .sail-prose h6 { font-family:var(--font-heading);font-weight:var(--type-heading-weight);letter-spacing:var(--type-heading-tracking);line-height:var(--leading-tight);margin-top:var(--space-5);margin-bottom:var(--space-2); }
+.sail-prose h1 { font-size:var(--text-2xl);margin-top:var(--space-6);margin-bottom:var(--space-3); }
+.sail-prose h2 { font-size:var(--text-xl);margin-top:var(--space-6);margin-bottom:var(--space-3); }
+.sail-prose h3 { font-size:var(--text-lg); }
+.sail-prose h4, .sail-prose h5, .sail-prose h6 { font-size:var(--text-md); }
+.sail-prose p { margin-block:var(--space-3); }
+.sail-prose a { color:var(--primary);text-decoration-line:underline;text-decoration-color:var(--selected-border);text-underline-offset:var(--ring-offset); }
+.sail-prose a:hover { text-decoration-color:var(--primary); }
+.sail-prose code { font-family:var(--font-mono);font-size:var(--text-sm);font-variant-numeric:tabular-nums;padding-block:var(--space-1);padding-inline:var(--space-2);border-radius:var(--radius-sm);background-color:var(--surface);border-width:1px;border-style:solid;border-color:var(--border-subtle); }
+.sail-prose pre { font-family:var(--font-mono);font-size:var(--text-sm);background-color:var(--overlay);border-width:1px;border-style:solid;border-color:var(--border-subtle);border-radius:var(--radius-md);padding-block:var(--space-3);padding-inline:var(--space-4);line-height:var(--leading-normal);white-space:pre-wrap;overflow-wrap:anywhere;word-break:anywhere; }
+.sail-prose pre code { background-color:transparent;border-width:0px;padding:0; }
+.sail-prose blockquote { margin-block:var(--space-4);padding-block:var(--space-2);padding-inline:var(--space-4);border-left-width:1px;border-left-style:solid;border-left-width:3px;border-left-color:var(--primary);color:var(--muted-foreground);background-color:var(--hover-bg);border-start-end-radius:var(--radius-sm);border-end-end-radius:var(--radius-sm); }
+.sail-prose ul, .sail-prose ol { margin-block:var(--space-3);padding-inline-start:var(--space-5); }
+.sail-prose li { margin-block:var(--space-1); }
+.sail-prose li::marker { color:var(--muted-foreground); }
+.sail-prose strong { font-weight:var(--font-weight-semibold); }
+.sail-prose table { border-collapse:collapse;width:100%;margin:var(--space-3) 0;font-size:var(--text-sm);border:1px solid var(--border-subtle);border-radius:var(--radius-md);overflow:hidden; }
+.sail-prose thead th { background-color:var(--muted);color:var(--foreground);font-weight:var(--font-weight-semibold); }
+.sail-prose th, .sail-prose td { border-bottom-width:1px;border-bottom-style:solid;border-bottom-color:var(--border-subtle);padding-block:var(--space-2);padding-inline:var(--space-3);text-align:start;font-variant-numeric:tabular-nums; }
+.sail-prose tbody tr:last-child td { border-bottom:0; }

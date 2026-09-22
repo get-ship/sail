@@ -1,0 +1,21 @@
+{
+  "service": "SailTheme",
+  "method": "Graph",
+  "mcp_tool": "sail_theme_graph",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "themeId": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ThemeGraphRet",
+    "type": "object"
+  }
+}

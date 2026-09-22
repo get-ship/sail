@@ -1,0 +1,32 @@
+{
+  "name": "@ship/sail-site",
+  "private": true,
+  "type": "module",
+  "description": "The SAIL docs site \u2014 a deck app: docs, the 9-lesson tutorial, the component library, and an interactive component playground. SAIL's own red identity, light + dark.",
+  "scripts": {
+    "wasm": "(cd ../.. && bun run wasm) && cp ../../packages/sail/compiler-wasm/pkg/sail_compiler_bg.wasm public/sail_compiler_bg.wasm",
+    "gen": "bun run wasm && (cd ../.. && cargo run -q -p sail-compiler -- prop-registry) && (cd ../../packages/sail/grammar && bun run generate) && bun scripts/gen-runtime-surface.ts && (cd ../.. && cargo run -q -p deck-cli --bin deck-bake -- build-assets) && bun scripts/gen-tutorial.ts",
+    "dev": "bun run gen && (cd ../.. && cargo run -q -p deck-cli -- dev --project apps/sail-site --addr ${SAIL_SITE_ADDR:-127.0.0.1:7890})",
+    "build": "bun run gen && bun run build:static",
+    "build:static": "bun scripts/build-static.ts",
+    "serve:static": "bun scripts/static-serve.ts dist 4173",
+    "crawl:static": "bun scripts/crawl-static.ts",
+    "deploy:pages": "npx wrangler pages deploy dist --project-name sail-site",
+    "test": "playwright test",
+    "qa": "echo 'L1 matrix is not the docs site. Use: bun crates/sail/compiler/tests/l1-matrix/probe.ts' && exit 2"
+  },
+  "dependencies": {
+    "@ship/sail-runtime": "workspace:*",
+    "@ship/sail-highlight": "workspace:*",
+    "@ship/sail-dom": "workspace:*",
+    "@ship/sail-compiler-wasm": "workspace:*",
+    "@ship/sail-l1": "workspace:*",
+    "@ship/tokens": "workspace:*",
+    "@ship/sail-lsp-browser": "workspace:*",
+    "@ship/sail-components": "workspace:*"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@typescript/typescript6": "~6.0.2"
+  }
+}

@@ -1,3 +1,0 @@
-<div>
-  <p>{scope.coun()}</p>
-</div>

@@ -1,0 +1,48 @@
+{
+  "theme": {
+    "default": "studio",
+    "defaultMode": "dark",
+    // Themes activity dogfoods the full catalog: app delivery CSS must include
+    // every id we list, or data-theme-preview paint is a no-op (all look like :root).
+    "enabled": [
+      "studio",
+      "my-ship",
+      "my-theme-vbtk",
+      "sail",
+      "paper",
+      "halo",
+      "console",
+      "contrast",
+      "glass",
+      "brut",
+      "8bit",
+      "synthwave"
+    ]
+  },
+  "icons": {
+    "pack": "lucide",
+    "version": "1.28.0"
+  },
+  "network": ["self"],
+  // Bundler injects `import './fonts/fonts.css'` when the vendor file exists.
+  // Declare it so sail-no-undeclared-stylesheet does not fire once routes
+  // are Style-free and compile proceeds past privilege.
+  "stylesheets": ["fonts/fonts.css"],
+  // Ban <div>/<span> for app-local components under src/ (routes/ has its own).
+  "raw_containers": false,
+  // Studio layout gate (Workstream A): promote main-axis overflow, collapsed
+  // boxes, and height-chain findings to Error so `sail check` / `sail dev`
+  // exit non-zero. Non-studio packages omit this key and keep soft warns.
+  "layout": "warn",
+  // Deck bundler/serve (SPEC-SAIL-CONFIG-1). Studio is CSR SPA: workbench is
+  // client-heavy (CodeMirror, canvas preview, bridge) and the SPA path gets
+  // state-preserving HMR. Server-owned state streams over the ops watch SSE —
+  // not SSR payloads. SSR dogfooding moves to content apps (sail-site).
+  "deck": {
+    "render": "csr",
+    "entry": {
+      "clientsModule": "./src/clients.ts",
+      "exposeNames": []
+    }
+  }
+}

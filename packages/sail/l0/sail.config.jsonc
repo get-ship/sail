@@ -1,0 +1,11 @@
+{
+  "theme": {
+    "default": "sail",
+    "defaultMode": "light",
+    "enabled": "all"
+  },
+  "deck": {
+    "render": "csr"
+  },
+  "style_slots": true
+}

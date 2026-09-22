@@ -1,0 +1,105 @@
+{
+  "service": "SailTask",
+  "method": "AddArtifact",
+  "mcp_tool": "sail_task_add_artifact",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "actor": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/TaskActor"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "content_base64": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "filename": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "id": {
+        "type": "string"
+      },
+      "kind": {
+        "description": "`file` (default) | `render` (region/viewport crop).",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "label": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "mime": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "path": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "project": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "region": {
+        "description": "Region metadata for `kind: \"render\"` (nodeId, rect, …).",
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Json"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "required": [
+      "id"
+    ],
+    "definitions": {
+      "Json": {},
+      "TaskActor": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "TaskAddArtifactRet",
+    "type": "object"
+  }
+}

@@ -1,9 +1,0 @@
-{
-  "name": "deck-e2e-ssr-app",
-  "private": true,
-  "type": "module",
-  "dependencies": {
-    "@ship/sui-runtime": "workspace:*",
-    "@ship/sui-dom": "workspace:*"
-  }
-}

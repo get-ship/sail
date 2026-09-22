@@ -1,7 +1,7 @@
 //! The bound's end-to-end proof: a runaway controller is terminated by the
 //! deadline and the SSR render path returns a CLEAN `Err` (not a hang, not a
 //! panic). The gate (`deck_core::synthetic_ssr`) catches that `Err` and serves
-//! CSR (an empty `#sui-root`, logged loudly) — this is the contract
+//! CSR (an empty `#sail-root`, logged loudly) — this is the contract
 //! reliability.rs already assumes ("a failure records the precise gap, never a
 //! silent exclusion").
 //!
@@ -16,8 +16,9 @@ use std::time::{Duration, Instant};
 
 use deck_ssr::host::SsrDispatch;
 use deck_ssr::run::render_with_limits;
-use serde_json::{json, Value};
-use ship_js::deno::{run_module_with_limits, RunError, RunLimits, TerminateReason};
+use serde_json::{Value, json};
+use ship_js::deno::{RunError, RunLimits, TerminateReason, run_module_with_limits};
+use ship_js::dispatch::{CancellationToken, SesPolicy};
 use ship_js::{Dispatch, DispatchError};
 
 /// A bundle that infinite-loops on a counter, allocating slightly each tick
@@ -97,7 +98,10 @@ fn runaway_heap_allocation_terminated_by_heap_cap() {
     let t0 = Instant::now();
     let r = render_with_limits(RUNAWAY_HEAP_BUNDLE, dispatch, limits);
     let dt = t0.elapsed();
-    assert!(dt < Duration::from_secs(10), "heap-cap render took too long: {dt:?}");
+    assert!(
+        dt < Duration::from_secs(10),
+        "heap-cap render took too long: {dt:?}"
+    );
     let err = r.expect_err("runaway heap render must return Err");
     let chain = format!("{err:#}");
     let kind = find_run_error_kind(&chain);
@@ -120,8 +124,13 @@ fn engine_run_module_with_limits_terminates_runaway_script() {
     let t0 = Instant::now();
     let r = rt.block_on(run_module_with_limits(
         arc_echo(),
-        None,
-        None,
+        None, // op_allow_list
+        None, // module_allow_list
+        None, // expression_policy
+        None, // compartment_id
+        None, // module_cache_key
+        CancellationToken::new(),
+        SesPolicy::Off,
         "export const noop = 1;".to_string(),
         RUNAWAY_BUNDLE.to_string(),
         RunLimits {

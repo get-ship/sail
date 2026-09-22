@@ -1,0 +1,24 @@
+<!-- Fixture for CM tokenizer + explorer (static card + signal). -->
+<controller>
+import type { ControllerScope } from '@ship/sail-runtime'
+export default controller((_ctx: ControllerScope<any>) => {
+  const ticks = signal(0)
+  return { ticks }
+})
+</controller>
+
+<scope>
+  style sampleCard = { pad(6).radius(lg) }
+</scope>
+
+<column gap="4">
+  <card tone="primary" style(sampleCard)>
+    <h3>Static, by default</h3>
+    <p>Every route renders without JavaScript.</p>
+    <row gap="2">
+      <button type="button" tone="primary">Get started</button>
+      <button type="button" tone="muted">Read the docs</button>
+    </row>
+    {ticks().toFixed(0)}
+  </card>
+</column>

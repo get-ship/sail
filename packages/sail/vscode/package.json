@@ -1,0 +1,61 @@
+{
+  "name": "sail",
+  "displayName": "Sail",
+  "description": "Sail language support for VS Code and Cursor. Highlighting, diagnostics, complete, hover, and format. Requires the sail CLI pair on PATH (`sail` and `sail-ts-native/`).",
+  "version": "0.1.0",
+  "publisher": "ship",
+  "private": true,
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "activationEvents": [
+    "onLanguage:sail"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "sail",
+        "aliases": [
+          "Sail",
+          "sail"
+        ],
+        "extensions": [
+          ".sail"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "configuration": {
+      "title": "Sail",
+      "properties": {
+        "sail.lsp.path": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Absolute path to the `sail` executable. The client always starts **`sail lsp`** over stdio (`<path> lsp` when set). Empty = `sail` on PATH. Never `cargo run`."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vendor": "bun scripts/vendor-highlight.ts",
+    "compile": "bun run vendor && bun build src/extension.ts --outdir=out --target=node --format=cjs --external=vscode",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "pretest": "bun run vendor",
+    "test": "bun test",
+    "package": "bun run compile && bunx @vscode/vsce package --no-dependencies --allow-missing-repository --skip-license"
+  },
+  "dependencies": {
+    "@ship/sail-highlight": "file:../highlight",
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "~7.0.2"
+  }
+}

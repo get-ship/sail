@@ -1,0 +1,124 @@
+{
+  "name": "@ship/sail-runtime",
+  "version": "0.3.0",
+  "description": "SAIL runtime \u2014 fine-grained signals, custom-element wrapper, patch protocol applicator. The reactive engine that templates and components share.",
+  "type": "module",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "bun": "./src/index.ts",
+      "development": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "bun": "./src/server.ts",
+      "development": "./src/server.ts",
+      "default": "./dist/server.js"
+    },
+    "./template-hooks": {
+      "types": "./dist/template-hooks/index.d.ts",
+      "bun": "./src/template-hooks/index.ts",
+      "development": "./src/template-hooks/index.ts",
+      "default": "./dist/template-hooks/index.js"
+    },
+    "./dev": {
+      "types": "./dist/dev.d.ts",
+      "bun": "./src/dev.ts",
+      "development": "./src/dev.ts",
+      "default": "./dist/dev.js"
+    },
+    "./route": {
+      "types": "./dist/route/index.d.ts",
+      "bun": "./src/route/index.ts",
+      "development": "./src/route/index.ts",
+      "default": "./dist/route/index.js"
+    },
+    "./patch": {
+      "types": "./dist/patch.d.ts",
+      "bun": "./src/patch.ts",
+      "development": "./src/patch.ts",
+      "default": "./dist/patch.js"
+    },
+    "./virtual": {
+      "types": "./dist/virtual.d.ts",
+      "bun": "./src/virtual.ts",
+      "development": "./src/virtual.ts",
+      "default": "./dist/virtual.js"
+    },
+    "./motion": {
+      "types": "./dist/motion-bundle.d.ts",
+      "bun": "./src/motion-bundle.ts",
+      "development": "./src/motion-bundle.ts",
+      "default": "./dist/motion-bundle.js"
+    },
+    "./query": {
+      "types": "./dist/query.d.ts",
+      "bun": "./src/query.ts",
+      "development": "./src/query.ts",
+      "default": "./dist/query.js"
+    },
+    "./internal": {
+      "types": "./dist/internal.d.ts",
+      "bun": "./src/internal.ts",
+      "development": "./src/internal.ts",
+      "default": "./dist/internal.js"
+    },
+    "./contracts": {
+      "types": "./dist/contracts.d.ts",
+      "bun": "./src/contracts.ts",
+      "development": "./src/contracts.ts",
+      "default": "./dist/contracts.js"
+    },
+    "./actions": {
+      "types": "./dist/actions/index.d.ts",
+      "bun": "./src/actions/index.ts",
+      "development": "./src/actions/index.ts",
+      "default": "./dist/actions/index.js"
+    },
+    "./query-mock": {
+      "types": "./dist/query-mock.d.ts",
+      "bun": "./src/query-mock.ts",
+      "development": "./src/query-mock.ts",
+      "default": "./dist/query-mock.js"
+    },
+    "./framework": {
+      "types": "./dist/framework-bundle.d.ts",
+      "bun": "./src/framework-bundle.ts",
+      "development": "./src/framework-bundle.ts",
+      "default": "./dist/framework-bundle.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "bench": "vitest bench --run",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@ship/tokens": "workspace:*",
+    "motion": "^12.42.2",
+    "motion-dom": "^12.42.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@ship/test-setup": "workspace:*",
+    "@tanstack/virtual-core": "^3.16.1",
+    "@vitest/browser": "^4.1.5",
+    "axe-core": "^4.11.4",
+    "jsdom": "^25.0.0",
+    "typescript": "~7.0.2",
+    "vitest": "^4.1.5"
+  },
+  "sideEffects": [
+    "./dist/boundary-elements.js"
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "faces": [
+    {
+      "family": "DM Sans Variable",
+      "role": "body",
+      "style": "normal",
+      "weight": "100 1000",
+      "file": "dm-sans-latin-wght-normal.woff2",
+      "format": "woff2-variations",
+      "packageId": "@fontsource-variable/dm-sans",
+      "version": "5.3.0",
+      "license": "OFL-1.1",
+      "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "Syne Variable",
+      "role": "heading",
+      "style": "normal",
+      "weight": "400 800",
+      "file": "syne-latin-wght-normal.woff2",
+      "format": "woff2-variations",
+      "packageId": "@fontsource-variable/syne",
+      "version": "5.3.0",
+      "license": "OFL-1.1",
+      "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "JetBrains Mono Variable",
+      "role": "mono",
+      "style": "normal",
+      "weight": "100 800",
+      "file": "jetbrains-mono-latin-wght-normal.woff2",
+      "format": "woff2-variations",
+      "packageId": "@fontsource-variable/jetbrains-mono",
+      "version": "5.3.0",
+      "license": "OFL-1.1",
+      "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "Press Start 2P",
+      "role": "press-start",
+      "style": "normal",
+      "weight": "400",
+      "file": "press-start-2p-latin-normal.woff2",
+      "format": "woff2",
+      "packageId": "@fontsource/press-start-2p",
+      "version": "5.3.0",
+      "license": "OFL-1.1",
+      "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    }
+  ]
+}

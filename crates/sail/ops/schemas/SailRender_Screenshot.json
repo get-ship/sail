@@ -1,0 +1,89 @@
+{
+  "service": "SailRender",
+  "method": "Screenshot",
+  "mcp_tool": "sail_render",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "description": "`light` | `dark` (data-mode).",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "path": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "source": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "theme": {
+        "description": "Theme id (e.g. `ship`). Mode may be folded as `ship-dark`.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "viewport": {
+        "description": "`WxH` string or `{width,height}` object."
+      }
+    }
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "RenderScreenshotRet",
+    "type": "object",
+    "required": [
+      "dynamics",
+      "imagePng",
+      "ms",
+      "regions",
+      "theme",
+      "viewport"
+    ],
+    "properties": {
+      "dynamics": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Json"
+        }
+      },
+      "file": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "imagePng": {
+        "type": "string"
+      },
+      "ms": {
+        "type": "integer",
+        "format": "uint64",
+        "minimum": 0.0
+      },
+      "regions": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Json"
+        }
+      },
+      "theme": {
+        "type": "string"
+      },
+      "viewport": {
+        "$ref": "#/definitions/Json"
+      }
+    },
+    "definitions": {
+      "Json": {}
+    }
+  }
+}

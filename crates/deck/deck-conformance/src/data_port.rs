@@ -1,7 +1,7 @@
 //! Ship-free in-memory data port for the deck-conformance live-data showcases.
 //!
-//! Provides the two live `/_deck/` endpoints the SUI wire protocol requires:
-//! - `GET /_deck/views/{name}/sse`         — per-view live-data SSE channel
+//! Provides the two live `/_deck/` endpoints the SAIL wire protocol requires:
+//! - `GET /_deck/views/{name}/sse`         — per-route live-data SSE channel
 //! - `GET /_deck/data?expr=`               — single-expression SSE stream
 //!
 //! (`POST /_deck/mutation/{name}` is NOT wired here: deck's own router
@@ -12,8 +12,8 @@
 //! removed. All SSE encoding comes from `deck_core::live_wire` — no copies.
 //!
 //! The data vocabulary is `<root>.demo.*` where `<root>` is the client key
-//! the view chose: `ship` for legacy (undeclared) views, `api` for the
-//! `<client name="api" />` exemplar (views/clock). The root is the view's
+//! the route chose: `ship` for legacy (undeclared) routes, `api` for the
+//! `<client name="api" />` exemplar (routes/clock). The root is the route's
 //! alias into the host-supplied clients map — proving the wire vocabulary
 //! is a contract, not a Ship coupling.
 
@@ -33,13 +33,13 @@ use axum::{
 };
 use serde::Deserialize;
 use serde_json::{Value, json};
-use tokio::sync::{Mutex, broadcast};
 use tokio::sync::mpsc;
+use tokio::sync::{Mutex, broadcast};
 use tokio_stream::wrappers::ReceiverStream;
 use tokio_util::sync::CancellationToken;
 
 use deck_core::live_wire::{format_keepalive, format_patch_set, format_patch_signals};
-use deck_core::render_helpers::is_valid_view_name;
+use deck_core::render_helpers::is_valid_route_name;
 use futures_util::StreamExt as _;
 
 // ── store ─────────────────────────────────────────────────────────────────────
@@ -51,11 +51,24 @@ pub struct TodoItem {
     pub done: bool,
 }
 
-/// Shared in-memory state for the demo views.
+/// One CRM deal — the query()/mutation() derived-identity proof fixture's
+/// backing row (see `app/clients/crm-demo.ts`). Plain one-shot JSON, NOT
+/// SSE — `query()`'s fetcher contract is Promise-returning, unlike the
+/// `<client>`-injected `LiveSource<T>` demo clients this store already
+/// serves via `resolve_demo`/SSE.
+#[derive(Debug, Clone)]
+pub struct Deal {
+    pub id: String,
+    pub stage: String,
+    pub amount: u64,
+}
+
+/// Shared in-memory state for the demo routes.
 /// The background ticker advances `tick` every second and sends a `bump`
 /// so every open SSE connection re-resolves and emits a fresh patch.
 pub struct DemoStore {
     pub todos: Mutex<Vec<TodoItem>>,
+    pub deals: Mutex<Vec<Deal>>,
     pub tick: AtomicU64,
     /// Broadcast channel: any send wakes all SSE loops.
     /// Capacity 16 — bursts are coalesced before re-resolve anyway.
@@ -70,6 +83,23 @@ impl DemoStore {
         let cancel = CancellationToken::new();
         let store = Arc::new(Self {
             todos: Mutex::new(Vec::new()),
+            deals: Mutex::new(vec![
+                Deal {
+                    id: "d1".to_string(),
+                    stage: "open".to_string(),
+                    amount: 4200,
+                },
+                Deal {
+                    id: "d2".to_string(),
+                    stage: "open".to_string(),
+                    amount: 9100,
+                },
+                Deal {
+                    id: "d3".to_string(),
+                    stage: "closed".to_string(),
+                    amount: 1500,
+                },
+            ]),
             tick: AtomicU64::new(0),
             bump,
             cancel,
@@ -150,20 +180,24 @@ pub async fn resolve_demo(chain: &str, args: &Value, store: &DemoStore) -> Resul
             item.done = !item.done;
             Ok(json!({ "done": item.done }))
         }
-        // `demo.boom` always returns an error — used by views/boom to exercise
-        // the {#while-error} error-recovery branch without white-screening.
-        "demo.boom" => Err("demo.boom: intentional error for the error-boundary showcase".to_string()),
-        _ => Err(format!("unknown_service: demo resolver has no op `{chain}`")),
+        // `demo.boom` always returns an error — used by routes/boom to exercise
+        // the <match> {error} arm without white-screening.
+        "demo.boom" => {
+            Err("demo.boom: intentional error for the error-boundary showcase".to_string())
+        }
+        _ => Err(format!(
+            "unknown_service: demo resolver has no op `{chain}`"
+        )),
     }
 }
 
 /// Strip the leading client root and parse args from a `*.demo.*()`
 /// expression. Returns `(chain_without_root, args_json)`.
 ///
-/// The root segment is the view's `<client name="…" />` alias for this
-/// host's data surface — `ship` for legacy (undeclared) views, `api` for
-/// the declared-client exemplar (views/clock). The server resolves the
-/// chain regardless of the alias: the name is the view's key into the
+/// The root segment is the route's `<client name="…" />` alias for this
+/// host's data surface — `ship` for legacy (undeclared) routes, `api` for
+/// the declared-client exemplar (routes/clock). The server resolves the
+/// chain regardless of the alias: the name is the route's key into the
 /// host-supplied clients map, not part of the data vocabulary.
 fn parse_demo_expr(expr: &str) -> Option<(String, Value)> {
     let (head, tail) = expr.split_once('(')?;
@@ -184,7 +218,10 @@ fn parse_demo_expr(expr: &str) -> Option<(String, Value)> {
 
 const KEEPALIVE_SECS: u64 = 20;
 
-async fn keepalive_loop(tx: mpsc::Sender<Result<String, std::io::Error>>, cancel: CancellationToken) {
+async fn keepalive_loop(
+    tx: mpsc::Sender<Result<String, std::io::Error>>,
+    cancel: CancellationToken,
+) {
     let mut ticker = tokio::time::interval(Duration::from_secs(KEEPALIVE_SECS));
     ticker.tick().await; // skip immediate
     loop {
@@ -199,42 +236,47 @@ async fn keepalive_loop(tx: mpsc::Sender<Result<String, std::io::Error>>, cancel
     }
 }
 
-// ── SSE per-view handler ──────────────────────────────────────────────────────
+// ── SSE per-route handler ──────────────────────────────────────────────────────
 
 /// `GET /_deck/views/{name}/sse`
-/// Mirror: `apps/shipd/src/views/sui_sse.rs` (kernel removed).
+/// Mirror: `apps/shipd/src/views/sail_sse.rs` (kernel removed).
 async fn serve_sse(
     Path(name): Path<String>,
     State(store): State<Arc<DemoStore>>,
+    resolution: Option<axum::Extension<Arc<deck_core::Resolution>>>,
 ) -> Response {
-    serve_sse_inner(name, store).await
+    // Mount-scoped project root (the conformance app dir), carried by the
+    // host's `Resolution` Extension — not a process global.
+    let root = resolution.and_then(|e| e.0.project_root().map(|p| p.to_path_buf()));
+    serve_sse_inner(name, store, root).await
 }
 
-async fn serve_sse_inner(name: String, store: Arc<DemoStore>) -> Response {
-    if !is_valid_view_name(&name) {
+async fn serve_sse_inner(
+    name: String,
+    store: Arc<DemoStore>,
+    root: Option<std::path::PathBuf>,
+) -> Response {
+    if !is_valid_route_name(&name) {
         return sse_error(StatusCode::BAD_REQUEST, "invalid view name");
     }
-    let source = match deck_core::render_helpers::render_view_source(&name) {
-        Some(s) => s,
-        None => return sse_error(StatusCode::NOT_FOUND, "view not found"),
+    let Some(root) = root else {
+        return sse_error(StatusCode::NOT_FOUND, "no project root");
     };
+    if deck_core::render_helpers::render_route_source(&root, &name).is_none() {
+        return sse_error(StatusCode::NOT_FOUND, "view not found");
+    }
 
-    let program = match sui_compiler::parse::parse(&source) {
-        Ok(p) => p,
-        Err(e) => {
-            let msg = e.render(&source);
-            tracing::warn!(view = %name, error = %msg, "data_port: parse error");
-            return sse_error(StatusCode::INTERNAL_SERVER_ERROR, "view parse error");
-        }
-    };
-
-    // Collect live <data> declarations.
-    let live_data: Vec<(String, String)> = program
-        .data
-        .iter()
-        .filter(|d| d.live)
-        .map(|d| (d.name.clone(), d.source.source.clone()))
-        .collect();
+    // Existence is enough. Full `parse()` is compile's job — leftover
+    // channel-form Style in this app must not 500 a keepalive SSE.
+    // Live-data discovery: the retired <data live> directive used to be
+    // parsed straight out of the `.sail` to find sources to stream. That
+    // authoring surface is gone (compiler-side) and its replacement — how a
+    // controller's own `live(() => …)` sources get discovered for a
+    // server-push SSE channel — is a redesign owned elsewhere. Until that
+    // lands, every route's SSE channel is keepalive-only; a first-paint /
+    // hydrate read still resolves data correctly via host-dispatch (see
+    // `deck-ssr`), this channel just doesn't yet re-push updates.
+    let live_data: Vec<(String, String)> = Vec::new();
 
     let (tx, rx) = mpsc::channel::<Result<String, std::io::Error>>(64);
     let cancel = CancellationToken::new();
@@ -336,11 +378,8 @@ struct DataQuery {
 }
 
 /// `GET /_deck/data?expr=` — single-expression SSE stream.
-/// Mirror: `apps/shipd/src/views/sui_data.rs` (kernel removed).
-async fn serve_data(
-    Query(q): Query<DataQuery>,
-    State(store): State<Arc<DemoStore>>,
-) -> Response {
+/// Mirror: `apps/shipd/src/views/sail_data.rs` (kernel removed).
+async fn serve_data(Query(q): Query<DataQuery>, State(store): State<Arc<DemoStore>>) -> Response {
     let expr = q.expr.trim().to_string();
     if !is_valid_expr(&expr) {
         return Response::builder()
@@ -355,8 +394,9 @@ async fn serve_data(
         None => {
             // Fallback: emit null patch and hold open.
             let frame = format_patch_set(&Value::Null, &expr);
-            let stream = futures_util::stream::once(async move { Ok::<String, std::io::Error>(frame) })
-                .chain(futures_util::stream::pending());
+            let stream =
+                futures_util::stream::once(async move { Ok::<String, std::io::Error>(frame) })
+                    .chain(futures_util::stream::pending());
             return sse_stream(stream);
         }
     };
@@ -370,7 +410,11 @@ async fn serve_data(
             Ok(v) => v,
             Err(_) => Value::Null,
         };
-        if tx.send(Ok(format_patch_set(&initial, &expr))).await.is_err() {
+        if tx
+            .send(Ok(format_patch_set(&initial, &expr)))
+            .await
+            .is_err()
+        {
             return;
         }
 
@@ -405,6 +449,66 @@ async fn serve_data(
         .unwrap_or_else(|_| Response::new(Body::from("sse stream init failed")))
 }
 
+// ── query()/mutation() one-shot JSON fixture ─────────────────────────────────
+//
+// `crm-demo.ts` calls these two plain REST-ish endpoints (not SSE) — the
+// derived-identity proof needs a Promise-returning fetch, which the
+// existing `<client>`-injected demo clients (LiveSource-returning, over
+// SSE) don't provide. Kept deliberately tiny: no auth, no pagination,
+// in-memory only, exactly enough to prove `query()`/`mutation()`/
+// `invalidate()` round-trip through a real browser fetch.
+
+#[derive(Debug, Deserialize)]
+struct DealsListQuery {
+    stage: Option<String>,
+}
+
+fn deal_json(d: &Deal) -> Value {
+    json!({ "id": d.id, "stage": d.stage, "amount": d.amount })
+}
+
+/// `GET /_deck/api/demo/deals?stage=open`
+async fn get_deals_list(
+    Query(q): Query<DealsListQuery>,
+    State(store): State<Arc<DemoStore>>,
+) -> axum::Json<Value> {
+    let deals = store.deals.lock().await;
+    let items: Vec<Value> = deals
+        .iter()
+        .filter(|d| q.stage.as_deref().is_none_or(|s| s == d.stage))
+        .map(deal_json)
+        .collect();
+    axum::Json(json!({ "items": items }))
+}
+
+#[derive(Debug, Deserialize)]
+struct DealsUpdateBody {
+    id: String,
+    stage: String,
+}
+
+/// `POST /_deck/api/demo/deals/update` — updates a deal's stage, bumps the
+/// store's broadcast channel (so any push-based observers stay honest,
+/// though `query()`'s pull-based cache doesn't rely on it — invalidation is
+/// the client-side job of `mutation()`'s auto-invalidate + `NativeCache`).
+async fn post_deals_update(
+    State(store): State<Arc<DemoStore>>,
+    axum::Json(body): axum::Json<DealsUpdateBody>,
+) -> Result<axum::Json<Value>, (StatusCode, String)> {
+    let mut deals = store.deals.lock().await;
+    let deal = deals.iter_mut().find(|d| d.id == body.id).ok_or_else(|| {
+        (
+            StatusCode::NOT_FOUND,
+            format!("no deal with id {}", body.id),
+        )
+    })?;
+    deal.stage = body.stage;
+    let out = deal_json(deal);
+    drop(deals);
+    let _ = store.bump.send(());
+    Ok(axum::Json(out))
+}
+
 fn is_valid_expr(expr: &str) -> bool {
     if expr.is_empty() || expr.len() > 1024 {
         return false;
@@ -424,6 +528,11 @@ pub fn router(store: Arc<DemoStore>) -> Router {
     Router::new()
         .route("/_deck/views/{name}/sse", get(serve_sse))
         .route("/_deck/data", get(serve_data))
+        .route("/_deck/api/demo/deals", get(get_deals_list))
+        .route(
+            "/_deck/api/demo/deals/update",
+            axum::routing::post(post_deals_update),
+        )
         .with_state(store)
 }
 
@@ -476,8 +585,8 @@ mod tests {
 
     #[test]
     fn parse_demo_expr_accepts_declared_client_root() {
-        // views/clock declares `<client name="api" />` — the root is the
-        // view's alias for this host's data surface, not a fixed `ship`.
+        // routes/clock declares `<client name="api" />` — the root is the
+        // route's alias for this host's data surface, not a fixed `ship`.
         let (chain, _) = parse_demo_expr("api.demo.clock()").unwrap();
         assert_eq!(chain, "demo.clock");
     }
@@ -491,14 +600,18 @@ mod tests {
     async fn resolve_demo_clock_returns_now() {
         let store = DemoStore::new();
         store.tick.store(42, Ordering::Relaxed);
-        let v = resolve_demo("demo.clock", &json!({}), &store).await.unwrap();
+        let v = resolve_demo("demo.clock", &json!({}), &store)
+            .await
+            .unwrap();
         assert_eq!(v["now"], 42u64);
     }
 
     #[tokio::test]
     async fn resolve_demo_todos_empty() {
         let store = DemoStore::new();
-        let v = resolve_demo("demo.todos", &json!({}), &store).await.unwrap();
+        let v = resolve_demo("demo.todos", &json!({}), &store)
+            .await
+            .unwrap();
         assert_eq!(v["items"].as_array().unwrap().len(), 0);
     }
 
@@ -508,7 +621,9 @@ mod tests {
         resolve_demo("demo.addTodo", &json!({"text": "hello"}), &store)
             .await
             .unwrap();
-        let v = resolve_demo("demo.todos", &json!({}), &store).await.unwrap();
+        let v = resolve_demo("demo.todos", &json!({}), &store)
+            .await
+            .unwrap();
         let items = v["items"].as_array().unwrap();
         assert_eq!(items.len(), 1);
         assert_eq!(items[0]["text"], "hello");
@@ -538,5 +653,4 @@ mod tests {
         assert!(r.is_err());
         assert!(r.unwrap_err().contains("unknown_service"));
     }
-
 }
