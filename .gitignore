@@ -101,6 +101,10 @@ GEMINI.md
 .grok/
 .agents/
 skills-lock.json
+.kilo/
+.omo/
+/MERGE-PREP.md
+**/test-results/
 
 # Local worktree junk / cost benches — not product
 scratch/
