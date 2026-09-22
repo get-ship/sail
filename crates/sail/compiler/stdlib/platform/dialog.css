@@ -13,10 +13,15 @@
 .sail-dialog > header { flex:0 0 auto;padding:var(--space-5) var(--space-6);border-bottom:1px solid var(--border-subtle);font-size:var(--text-lg);font-weight:var(--font-weight-semibold);color:var(--foreground); }
 .sail-dialog > section { flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:var(--space-4) var(--space-6);font-size:var(--text-base);line-height:var(--leading-normal);color:var(--muted-foreground); }
 .sail-dialog > footer { flex:0 0 auto;display:flex;gap:var(--space-2);align-items:center;justify-content:flex-end;padding:var(--space-4) var(--space-6);border-top:1px solid var(--border-subtle);background:var(--muted); }
-.sail-dialog:not([open]) { display: none; }
-.sail-drawer:not([open]) { display: none; }
-.sail-drawer:not([open]) { display: none; }
-.sail-drawer[open] { display: flex; flex-direction: column; }
-.sail-dialog[open] { display: flex; flex-direction: column; }
-dialog.sail-dialog:not([open]) { display: none !important; }
-dialog.sail-drawer:not([open]) { display: none !important; }
+/* Closed-state collapse. Two DOM shapes exist: inline roots carry
+   .sail-<tag> + [open] on the same <dialog>; wrapper roots are a
+   div.sail-<tag> around an inner <dialog> — [open] never lands on the
+   wrapper, so wrapper rules must key off :has(> dialog[open]). */
+dialog.sail-dialog:not([open]) { display:none; }
+dialog.sail-drawer:not([open]) { display:none; }
+.sail-dialog:not(dialog):not(:has(> dialog[open])) { display:none; }
+.sail-drawer:not(dialog):not(:has(> dialog[open])) { display:none; }
+/* Open wrappers must not intercept layout: the inner dialog is
+   position:fixed and owns its own sizing/flex-column classes. */
+.sail-dialog:not(dialog):has(> dialog[open]) { display:block; }
+.sail-drawer:not(dialog):has(> dialog[open]) { display:block; }

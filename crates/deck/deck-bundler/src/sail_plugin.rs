@@ -230,6 +230,33 @@ impl Plugin for SailPlugin {
                 ..Default::default()
             }));
         }
+        // `@sail/element/<tag>` — L1 stdlib controller import. The compiler
+        // emits it for every used controller-bearing stdlib tag
+        // (emit/js/imports.rs → l1_controller_specifier). Maps to the stdlib
+        // source `.sail`; the `load` hook compiles it like any other `.sail`.
+        if let Some(tag) = spec.strip_prefix("@sail/element/") {
+            let stdlib = self.repo_root.join("crates/sail/compiler/stdlib");
+            // Direct home (`slider/slider.sail`), then family homes —
+            // sub-element tags live in their family's directory
+            // (`radio-group/radio.sail`, `tabs/tab.sail`,
+            // `toggle-group/toggle.sail`, `pagination/page-item.sail`).
+            let direct = stdlib.join(tag).join(format!("{tag}.sail"));
+            if direct.is_file() {
+                return Ok(Some(HookResolveIdOutput::from_id(
+                    normalize(&direct).to_string_lossy().to_string(),
+                )));
+            }
+            if let Ok(entries) = std::fs::read_dir(&stdlib) {
+                for entry in entries.flatten() {
+                    let candidate = entry.path().join(format!("{tag}.sail"));
+                    if candidate.is_file() {
+                        return Ok(Some(HookResolveIdOutput::from_id(
+                            normalize(&candidate).to_string_lossy().to_string(),
+                        )));
+                    }
+                }
+            }
+        }
         // `@sail-tag/<tag>` — the per-view resolver. Map to the component's
         // source `.sail` (so it compiles into the view bundle); an unknown tag
         // (view-private, or no CEM yet) → virtual no-op. Emitted only under
@@ -392,6 +419,17 @@ impl Plugin for SailPlugin {
 
     async fn load(&self, _ctx: SharedLoadPluginContext, args: &HookLoadArgs<'_>) -> HookLoadReturn {
         let id = args.id;
+        // Node-builtin stub from AppPlugin (`\0sail-node-stub:<name>`):
+        // empty module — the browser never executes the guarded branches
+        // that import these.
+        if let Some(name) = id.strip_prefix("\0sail-node-stub:") {
+            let _ = name;
+            return Ok(Some(HookLoadOutput {
+                code: String::new().into(),
+                module_type: Some(ModuleType::Js),
+                ..Default::default()
+            }));
+        }
         if id == SAIL_TAG_NOOP {
             // Empty no-op for an unresolved component tag. Tree-shaken away
             // if nothing keeps it.

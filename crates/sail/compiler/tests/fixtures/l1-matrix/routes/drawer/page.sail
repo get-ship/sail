@@ -15,8 +15,8 @@
 
   <column gap="2">
     <h2>drawer rest</h2>
-    <button command="show" commandfor="drawer-rest">Open drawer rest</button>
-    <drawer dismissible label="drawer rest" id="drawer-rest">
+    <button command="show-modal" commandfor="drawer-rest">Open drawer rest</button>
+    <drawer dismissible label="drawer rest" panel-id="drawer-rest">
       <header>drawer rest</header>
       <section>Drawer body.</section>
       <footer>
@@ -27,8 +27,8 @@
 
   <column gap="2">
     <h2>drawer dismissible false</h2>
-    <button command="show" commandfor="drawer-dismissible-false">Open drawer dismissible false</button>
-    <drawer label="drawer dismissible false" id="drawer-dismissible-false">
+    <button command="show-modal" commandfor="drawer-dismissible-false">Open drawer dismissible false</button>
+    <drawer label="drawer dismissible false" panel-id="drawer-dismissible-false">
       <header>drawer dismissible false</header>
       <section>Drawer body.</section>
       <footer>
@@ -39,8 +39,8 @@
 
   <column gap="2">
     <h2>drawer dismissible true</h2>
-    <button command="show" commandfor="drawer-dismissible-true">Open drawer dismissible true</button>
-    <drawer dismissible label="drawer dismissible true" id="drawer-dismissible-true">
+    <button command="show-modal" commandfor="drawer-dismissible-true">Open drawer dismissible true</button>
+    <drawer dismissible label="drawer dismissible true" panel-id="drawer-dismissible-true">
       <header>drawer dismissible true</header>
       <section>Drawer body.</section>
       <footer>
@@ -51,8 +51,8 @@
 
   <column gap="2">
     <h2>drawer side start</h2>
-    <button command="show" commandfor="drawer-side-start">Open drawer side start</button>
-    <drawer side="start" dismissible label="drawer side start" id="drawer-side-start">
+    <button command="show-modal" commandfor="drawer-side-start">Open drawer side start</button>
+    <drawer side="start" dismissible label="drawer side start" panel-id="drawer-side-start">
       <header>drawer side start</header>
       <section>Drawer body.</section>
       <footer>
@@ -63,8 +63,8 @@
 
   <column gap="2">
     <h2>drawer side end</h2>
-    <button command="show" commandfor="drawer-side-end">Open drawer side end</button>
-    <drawer dismissible label="drawer side end" id="drawer-side-end">
+    <button command="show-modal" commandfor="drawer-side-end">Open drawer side end</button>
+    <drawer dismissible label="drawer side end" panel-id="drawer-side-end">
       <header>drawer side end</header>
       <section>Drawer body.</section>
       <footer>
@@ -75,8 +75,8 @@
 
   <column gap="2">
     <h2>drawer side top</h2>
-    <button command="show" commandfor="drawer-side-top">Open drawer side top</button>
-    <drawer side="top" dismissible label="drawer side top" id="drawer-side-top">
+    <button command="show-modal" commandfor="drawer-side-top">Open drawer side top</button>
+    <drawer side="top" dismissible label="drawer side top" panel-id="drawer-side-top">
       <header>drawer side top</header>
       <section>Drawer body.</section>
       <footer>
@@ -87,8 +87,8 @@
 
   <column gap="2">
     <h2>drawer side bottom</h2>
-    <button command="show" commandfor="drawer-side-bottom">Open drawer side bottom</button>
-    <drawer side="bottom" dismissible label="drawer side bottom" id="drawer-side-bottom">
+    <button command="show-modal" commandfor="drawer-side-bottom">Open drawer side bottom</button>
+    <drawer side="bottom" dismissible label="drawer side bottom" panel-id="drawer-side-bottom">
       <header>drawer side bottom</header>
       <section>Drawer body.</section>
       <footer>
@@ -99,8 +99,8 @@
 
   <column gap="2">
     <h2>drawer size sm</h2>
-    <button command="show" commandfor="drawer-size-sm">Open drawer size sm</button>
-    <drawer size="sm" dismissible label="drawer size sm" id="drawer-size-sm">
+    <button command="show-modal" commandfor="drawer-size-sm">Open drawer size sm</button>
+    <drawer size="sm" dismissible label="drawer size sm" panel-id="drawer-size-sm">
       <header>drawer size sm</header>
       <section>Drawer body.</section>
       <footer>
@@ -111,8 +111,8 @@
 
   <column gap="2">
     <h2>drawer size md</h2>
-    <button command="show" commandfor="drawer-size-md">Open drawer size md</button>
-    <drawer dismissible label="drawer size md" id="drawer-size-md">
+    <button command="show-modal" commandfor="drawer-size-md">Open drawer size md</button>
+    <drawer dismissible label="drawer size md" panel-id="drawer-size-md">
       <header>drawer size md</header>
       <section>Drawer body.</section>
       <footer>
@@ -123,8 +123,8 @@
 
   <column gap="2">
     <h2>drawer size lg</h2>
-    <button command="show" commandfor="drawer-size-lg">Open drawer size lg</button>
-    <drawer size="lg" dismissible label="drawer size lg" id="drawer-size-lg">
+    <button command="show-modal" commandfor="drawer-size-lg">Open drawer size lg</button>
+    <drawer size="lg" dismissible label="drawer size lg" panel-id="drawer-size-lg">
       <header>drawer size lg</header>
       <section>Drawer body.</section>
       <footer>

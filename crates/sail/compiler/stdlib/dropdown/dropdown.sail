@@ -17,6 +17,8 @@
 <scope>
   props: {
     placement = ''
+    /** Authored panel id — external triggers wire `popovertarget` to it. */
+    panelId = ''
     onSelect: (detail: { value: string }) => void
   }
 
@@ -29,9 +31,12 @@ export default controller((init) => {
   function read(v) {
     return typeof v === 'function' ? v() : v
   }
-  const nid = `sail-dd-${Math.random().toString(36).slice(2, 10)}`
+  // Authored `id` wins so page-level invoker wiring (`popovertarget`) can
+  // target the panel; random fallback keeps standalone use collision-free.
+  const genId = `sail-dd-${Math.random().toString(36).slice(2, 10)}`
+  const panelId = derived(() => String(read(init.panelId) ?? '').trim() || genId)
   function panel() {
-    return hostFindById(nid)
+    return hostFindById(String(panelId() ?? ''))
   }
   function close() {
     const el = panel()
@@ -50,13 +55,13 @@ export default controller((init) => {
   const keys = {
     Escape: close,
   }
-  return { onSelect, keys, nid }
+  return { onSelect, keys, panelId }
 })
 </controller>
 
 <div
   popover
-  id={nid}
+  id={panelId()}
   use:hotkeys={keys}
   style(host)
 >

@@ -64,6 +64,28 @@ pub fn compile_sail(
     // nearest `sail.config.json` walking up, which is how a project dials the
     // surface ABOVE the floor.
     let policy_overrides = Policy::overrides_for(sail_file);
+    // L1 stdlib sources (`crates/sail/compiler/stdlib/**`) are FRAMEWORK
+    // INTERNALS compiled into the app bundle via `@sail/element/<tag>`.
+    // They are not app-author surface: the author-facing gates that assume
+    // an app policy context (type-erasure refusal, native-input prop
+    // registry) do not apply to them — the same sources pass `deck-bake`'s
+    // CEM compile, which runs without the author gate stream.
+    let is_l1_stdlib = sail_file
+        .components()
+        .any(|c| c == std::path::Component::Normal(std::ffi::OsStr::new("stdlib")))
+        && sail_file
+            .components()
+            .any(|c| c.as_os_str().to_string_lossy() == "compiler");
+    let mut policy_overrides = policy_overrides;
+    if is_l1_stdlib {
+        use sail_compiler::check::lint_overrides::{LintOverride, OverrideSeverity};
+        for rule in ["sail-no-type-erase", "sail-prop-value"] {
+            policy_overrides.push(LintOverride {
+                rule: rule.to_string(),
+                severity: OverrideSeverity::Off,
+            });
+        }
+    }
     // POSITION GRANT, computed once: deck routes by file location, so deck
     // (not the author, not the sail compiler) decides whether this file may
     // read `route` — and with which params.

@@ -1,6 +1,8 @@
 <!--
   <drawer> — edge-anchored non-modal sheet. Style product only.
-  Native <dialog> without showModal — invoker command="show" commandfor.
+  Native <dialog> sheet. Openers wire invoker command="show-modal"
+  commandfor=<panel-id> — browsers ship no native default for "show",
+  so non-modal open needs author-supplied JS (see site docs polyfill).
   side start|end|top|bottom (default end). size sm|md|lg. dismissible default true.
   Light-dom children: <header> / <section> / <footer> (same as dialog, not slots).
 
@@ -15,6 +17,8 @@
     side: 'start' | 'end' | 'top' | 'bottom' = 'end'
     /** Escape, outside pointer, and swipe-toward-edge can close. */
     dismissible = true
+    /** Authored panel id — invoker `commandfor` targets the inner dialog. */
+    panelId = ''
     onClose: () => void
     onDismiss: () => void
   }
@@ -32,6 +36,11 @@ export default controller((init) => {
   function isOn(v) { const x = read(v); return x === true || x === '' || x === 'true' }
   const dismissible = derived(() => isOn(init.dismissible) ? true : String(read(init.dismissible) ?? '') !== 'false')
   const side = derived(() => String(read(init.side) ?? 'end'))
+  // Authored `id` must reach the inner <dialog>: invoker buttons wire
+  // `commandfor` to it, and a wrapper-path component does not forward
+  // host attrs to its template root on its own.
+  const genId = `sail-drawer-${Math.random().toString(36).slice(2, 10)}`
+  const dialogId = derived(() => String(read(init.panelId) ?? '').trim() || genId)
   function closeFrom(el: unknown) {
     if (!el) return
     const box = el as { open?: boolean; close?: () => void; removeAttribute?: (n: string) => void }
@@ -44,10 +53,16 @@ export default controller((init) => {
       if (typeof cb2 === 'function') (cb2 as () => void)()
     }
   }
+  function panel() {
+    return hostFindById(String(dialogId() ?? ''))
+  }
+  // Close the panel by id — lastEl is only set after an inside click, so a
+  // fresh-open Escape must not depend on it.
   function onKeydown(e) {
     if (!dismissible() || e.key !== 'Escape') return
     e.preventDefault()
-    closeFrom(lastEl)
+    const box = panel() as { open?: boolean; close?: () => void } | null
+    if (box?.open && typeof box.close === 'function') box.close()
   }
   function onClick(e) {
     if (!dismissible()) return
@@ -75,11 +90,12 @@ export default controller((init) => {
     const ok = needNeg ? dist < -threshold : dist > threshold
     if (ok) closeFrom(lastEl)
   }
-  return { onKeydown, onClick, onPointerdown, onPointerup }
+  return { onKeydown, onClick, onPointerdown, onPointerup, dialogId }
 })
 </controller>
 
 <dialog
+  id={dialogId()}
   on:keydown={onKeydown}
   on:click={onClick}
   on:pointerdown={onPointerdown}

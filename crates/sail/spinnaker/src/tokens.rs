@@ -323,7 +323,7 @@ pub fn component_color_paths() -> &'static [(String, String)] {
 
 /// Dimensional size tokens the sx `w`/`h`/`min-*`/`max-*` props draw from — the
 /// icon, control-height, and panel-clamp families that the primitives now depend
-/// on. The value IS the token name (`max-h:overlay-max-h-md` → `var(--overlay-max-h-md)`),
+/// on. The value IS the token name (`max-h:panel-max-h-md` → `var(--panel-max-h-md)`),
 /// so a new size family is usable in sx the moment it lands in the model.
 pub fn size_values() -> &'static [&'static str] {
     static C: OnceLock<Vec<&'static str>> = OnceLock::new();
@@ -339,11 +339,11 @@ pub fn size_values() -> &'static [&'static str] {
                 t.starts_with("icon-size-")
                     || t.starts_with("control-h-")
                     || t.starts_with("breakpoint-")
-                    || t.starts_with("overlay-max-")
-                    || t.starts_with("overlay-min-")
-                    || t.starts_with("overlay-ch-")
-                    || t.starts_with("overlay-vh-")
-                    || t.starts_with("overlay-w-")
+                    || t.starts_with("panel-max-")
+                    || t.starts_with("panel-min-")
+                    || t.starts_with("panel-ch-")
+                    || t.starts_with("panel-vh-")
+                    || t.starts_with("panel-w-")
             })
             .collect();
         v.sort_unstable();

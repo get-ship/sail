@@ -188,7 +188,7 @@ fn run_tsgo(tool: &TsgoTool, args: &[&str], cwd: &Path) -> std::io::Result<std::
     if let Some(js) = &tool.js_entry {
         cmd.arg(js);
     }
-    let mut run = || cmd.args(args).current_dir(cwd).output();
+    let run = || cmd.args(args).current_dir(cwd).output();
     #[cfg(not(target_arch = "wasm32"))]
     {
         crate::profile::span("tsgo", run)

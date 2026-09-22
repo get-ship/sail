@@ -100,8 +100,6 @@ pub fn compile(source: &str, opts_json: &str) -> Result<JsValue, JsValue> {
         setup_url: parsed.setup_url,
         mode,
         source_path: None,
-            element_prefix: "sail".into(),
-            host_data_attr: "data-sail-host".into(),
         // The optional styles-injection flag was removed from
         // `CompileOpts` (the CLI no longer accepts `--styles`); the
         // wasm surface was orphaned by that refactor and the

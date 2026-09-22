@@ -2117,7 +2117,11 @@ fn css_fn_arg(transform: &str, name: &str) -> Option<String> {
     let end = rest.find(')')?;
     let raw = rest[..end].trim();
     if raw.ends_with('%') {
-        Some(format!("'{raw}'"))
+        // Strip % and return as a bare number — the motion runtime's
+        // translate-x/y keyframes handle the unit. Quoting it (e.g. '-50%')
+        // turns it into a MotionValue::Str which the runtime can't
+        // interpolate into a WAAPI keyframe.
+        Some(raw.trim_end_matches('%').to_string())
     } else if let Some(stripped) = raw.strip_suffix("px").or_else(|| raw.strip_suffix("deg")) {
         Some(stripped.to_string())
     } else {

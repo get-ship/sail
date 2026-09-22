@@ -291,6 +291,10 @@ const PLATFORM: &[(&str, &str)] = &[
     ("skeleton", include_str!("../stdlib/platform/skeleton.css")),
     ("slider", include_str!("../stdlib/platform/slider.css")),
     ("table", include_str!("../stdlib/platform/table.css")),
+    (
+        "tooltip",
+        include_str!("../stdlib/platform/tooltip.css"),
+    ),
 ];
 
 fn platform_css(tag: &str) -> Option<&'static str> {

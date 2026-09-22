@@ -79,6 +79,8 @@ Context:
 
 ## Decisions (with rationale)
 
+0. /remove-ai-slops invoked mid-planning (2026-08-23): ruled out-of-band for THIS session — sticky planner + no green baseline on framework-doover (14 known reds, site down, RI merge open) + unbounded default scope (branch diff). Methodology ADOPTED into the plan as the C-track per-crate execution recipe: behavior-lock-first (= red-before/green-after receipt law), deletion ladder before trim (= cull manifest order), batched parallel file passes within crate tiers. Any real deslop run gets a numbered job spec + explicit file list, dispatched to a worker session.
+
 1. Intent CLEAR, review_required false — outcome known; forks are owner-decisions being discussed in conversation (operator rejected option-menu format).
 2. Topology locked: 5 components A-E above.
 3. Stack framing adopted: language→IR→capability→severity→harness→culture; severity flips ride existing floor/dial machinery.

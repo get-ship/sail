@@ -16,7 +16,7 @@
   <column gap="2">
     <h2>dropdown rest</h2>
     <button popovertarget="dropdown-rest">Open dropdown rest</button>
-    <dropdown label="dropdown rest" id="dropdown-rest">
+    <dropdown label="dropdown rest" panel-id="dropdown-rest">
       <menu-item value="edit">Edit</menu-item>
       <menu-item value="dup">Duplicate</menu-item>
     </dropdown>

@@ -18,8 +18,10 @@
     onToggle: (detail: { open: boolean }) => void
   }
 
-  // Shell + trigger from background / foreground / border.
-  style host = {display(block).border({ color: border, width: 1 }).radius(lg).bg(background).type({ family: body })}
+  // Shell + trigger from background / foreground / border. border style is
+  // explicit: color+width alone leave UA border-style none → nothing paints.
+  // overflow clip keeps open-content corners inside the host radius.
+  style host = {display(block).border({ color: border, width: 1, style: solid }).overflow({ all: clip }).radius(lg).bg(background).type({ family: body })}
   // list(none) + after chevron: kill UA marker; single themed caret.
   style summary = {display(flex).pad({ y: 3, x: 4 }).fg(foreground).radius(lg).cursor(pointer).select(none).type({ size: sm, weight: semibold, list: none }), when: {hover: bg(hover-bg), after: margin({ s: auto }).size(4).content(empty).bg(muted-foreground)}, animate: { transition: play(colors, fast) }}
   style content = {pad({ x: 4, y: 3 })}

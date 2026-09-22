@@ -1,0 +1,19 @@
+/* Tooltip visibility rides the controller's hidden signal, bound to
+   data-hidden with attribute-presence semantics (true -> attr present,
+   false -> attr removed). Presence channel, not opacity utilities:
+   motion initial-reflect stamps inline opacity, which flattens any
+   class-based hide (bubble showed at rest). Anchor positioning needs a
+   rendered box, so hide via opacity, never display.
+   The :hover/:focus-within row is the no-JS fallback - the binder wins
+   once attached because [data-hidden] returns. */
+[data-tooltip-bubble] { opacity: 0; }
+[data-tooltip-bubble][data-hidden] { opacity: 0; pointer-events: none; }
+.sail-grp:hover > [data-tooltip-bubble]:not([data-hidden]),
+.sail-grp:focus-within > [data-tooltip-bubble]:not([data-hidden]),
+[data-tooltip-bubble]:not([data-hidden]) { opacity: 1; }
+[data-tooltip-bubble] { transition: opacity var(--duration-fast, 120ms); }
+/* Placement rides the controller re-exposed data-area: authored attrs land
+   on init only, so match-arm classes cannot see the active value. */
+[data-tooltip-bubble][data-area='bottom'] { position-area: bottom; }
+[data-tooltip-bubble][data-area='left'] { position-area: left; }
+[data-tooltip-bubble][data-area='right'] { position-area: right; }

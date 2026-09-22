@@ -163,7 +163,7 @@
     },
     "$type": "dimension"
   },
-  "overlay": {
+  "panel": {
     "max-w-sm": {
       "$value": "320px",
       "$type": "dimension"
@@ -1859,7 +1859,7 @@
       }
     }
   },
-  "scrim": {
+  "overlay": {
     "fill": {
       "$value": "none",
       "$type": "string"

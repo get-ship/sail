@@ -131,16 +131,6 @@ const FRAMEWORK_ASSETS: &[(&str, &str, &str)] = &[
     // `import('@ship/sail-lsp-browser/completions' | '/diagnostics')`) are
     // registered — `/worker` and `/hover` are real exports but unused by
     // any route today, so they are not surfaced here.
-    (
-        "@ship/sail-lsp-browser/completions",
-        "sail-lsp-completions.js",
-        "_deck/lsp-completions.js",
-    ),
-    (
-        "@ship/sail-lsp-browser/diagnostics",
-        "sail-lsp-diagnostics.js",
-        "_deck/lsp-diagnostics.js",
-    ),
 ];
 
 /// Playground / LSP — not on the hello-world importmap. Still served at
@@ -541,13 +531,29 @@ impl Plugin for AppPlugin {
                 );
             }
         }
+        // Node builtins referenced by browser-targeted vendor code
+        // (web-tree-sitter guards them behind `globalThis.process` checks —
+        // they never execute in a browser). Resolve to a virtual empty module
+        // (served by SailPlugin's load) instead of failing the build.
+        const NODE_STUB_PREFIX: &str = "\0sail-node-stub:";
+        const NODE_BUILTINS: &[&str] = &[
+            "fs", "fs/promises", "path", "module", "url", "util", "crypto",
+            "os", "child_process", "stream", "http", "https", "net", "tls",
+        ];
+        if NODE_BUILTINS.iter().any(|b| *b == args.specifier) {
+            return Ok(Some(HookResolveIdOutput::from_id(format!(
+                "{NODE_STUB_PREFIX}{}",
+                args.specifier
+            ))));
+        }
         Ok(None)
     }
 
     fn register_hook_usage(&self) -> HookUsage {
-        HookUsage::ResolveId
-    }
-}
+        HookUsage::ResolveId | HookUsage::Load
+     }
+ }
+
 /// Read the project name from `<project>/package.json#name`. The dev's
 /// `package.json` is the manifest: the bundler reads it for the page <title>
 /// and the chrome's brand string. Required.

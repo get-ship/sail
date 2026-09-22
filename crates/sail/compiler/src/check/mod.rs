@@ -467,7 +467,17 @@ pub fn collect(
     // Type gate (JOB-E1) — OnSave only. Never OnType: tsgo is too heavy for
     // the LSP keystroke path. Joins the same Error stream as lint (no second
     // gate). One tsgo invocation per call over this file's controller region.
-    if matches!(tier, DiagnosticTier::OnSave) {
+    //
+    // L1 stdlib sources (`crates/sail/compiler/stdlib/**`) are framework
+    // internals with their own quality path (deck-bake CEM + element tests);
+    // the app-author gate stream (DOM-env refusals, prop registry) does not
+    // apply to them when they are compiled into an app via
+    // `@sail/element/<tag>`.
+    let is_l1_stdlib_source = source_path.is_some_and(|p| {
+        p.components().any(|c| c.as_os_str() == "stdlib")
+            && p.components().any(|c| c.as_os_str() == "compiler")
+    });
+    if matches!(tier, DiagnosticTier::OnSave) && !is_l1_stdlib_source {
         diags.extend(tscheck::collect_sail_type_gate(author_source, source_path));
     }
 

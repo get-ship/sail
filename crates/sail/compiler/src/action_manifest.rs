@@ -71,6 +71,10 @@ pub struct ActionEntry {
     /// independent of the public `use:` skill surface — see
     /// [`PUBLIC_ACTION_NAMES`].
     pub auto_import: bool,
+    /// Bind vocabulary names this action writes at runtime (camelCase), e.g.
+    /// `anchorLeft`. Empty when the action writes no style-bind channels.
+    /// `bind(name)` resolves against these when the file uses `use:<action>`.
+    pub writes: &'static [&'static str],
 }
 
 /// The action registry. Sorted by `name` for deterministic builds and
@@ -86,42 +90,49 @@ pub const ACTIONS: &[ActionEntry] = &[
         param: "void",
         summary: "Autosize a textarea (height) or single-line input (width) to its content.",
         auto_import: true,
+        writes: &["autosizeH"],
     },
     ActionEntry {
         name: "clickOutside",
         param: "(() => void) | undefined",
         summary: "Fire a callback when a click lands outside the element.",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "clipboard",
         param: "ClipboardParam",
         summary: "Copy param text (or host text content) to the clipboard on click; optional onCopy success callback.",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "focus",
         param: "boolean | null | undefined | void",
         summary: "Focus the host on mount, or whenever a truthy param updates (autofocus without the native race).",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "gridTracks",
         param: "string | null | undefined",
         summary: "Measure a CSS grid's resolved track widths/positions for layout math.",
         auto_import: true,
+        writes: &["sailGridTemplate"],
     },
     ActionEntry {
         name: "hotkeys",
         param: "HotkeysMap | undefined",
         summary: "Declarative key→handler map on the document; ignores editable fields unless allowInInputs.",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "resizable",
         param: "void",
         summary: "Internal: L1 <resizable> handle — pointer-drag / arrow-nudge sets flex-basis % on the start pane; stamps role=separator + aria-orientation.",
         auto_import: true,
+        writes: &[],
     },
 ];
 
@@ -201,6 +212,20 @@ pub const BARE_REFERENCED_ACTION_NAMES: &[&str] = &[
 // (see drift-guard note above — the tests in `mod tests` enforce
 // the same invariants at `cargo test` time)
 
+/// Bind names (`anchorLeft`, …) written by any of the given `use:` actions.
+pub fn writes_for_actions<'a>(
+    action_names: impl IntoIterator<Item = &'a str>,
+) -> std::collections::BTreeSet<&'static str> {
+    let mut out = std::collections::BTreeSet::new();
+    for name in action_names {
+        if let Some(a) = ACTIONS.iter().find(|a| a.name == name) {
+            for w in a.writes {
+                out.insert(*w);
+            }
+        }
+    }
+    out
+}
 
 /// Lookup an action by bare `use:` name.
 pub fn action_by_name(name: &str) -> Option<&'static ActionEntry> {
@@ -235,6 +260,7 @@ pub fn to_json() -> Value {
                 "autoImport": a.auto_import,
                 "public": is_public_action(a.name),
                 "summary": a.summary,
+                "writes": a.writes,
             })
         })
         .collect();

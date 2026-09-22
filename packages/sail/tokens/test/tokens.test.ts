@@ -1170,7 +1170,7 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     }
     expect(blocks).toBeGreaterThanOrEqual(2)
     expect(overrideNames.size).toBeGreaterThan(10)
-    const chromeAuthored = new Set(['scrim-fill', 'scrim-blend', 'scrim-opacity'])
+    const chromeAuthored = new Set(['overlay-fill', 'overlay-blend', 'overlay-opacity'])
     for (const n of overrideNames) {
       if (n.startsWith('inverse-')) continue
       if (n.startsWith('bg-') || n.startsWith('fg-')) continue

@@ -170,13 +170,36 @@ async function measure(
         .getPropertyValue('--icon-size-xl')
       const iconMax = parseFloat(iconRaw) > 0 ? parseFloat(iconRaw) : 20
       const hosts = [
-        ...scope.querySelectorAll<HTMLElement>('[data-sail-host]'),
+        ...scope.querySelectorAll<HTMLElement>('[data-component]'),
       ]
       const hits = hosts.map((el) => {
-        const tag = el.getAttribute('data-sail-host') || el.tagName.toLowerCase()
+        const tag =
+          el.getAttribute('data-component') ||
+          el.tagName.toLowerCase()
         const defects: string[] = []
-        const H = el.getBoundingClientRect()
-        const host = el.getAttribute('data-sail-host') || ''
+        // display:contents hosts have no box of their own; measure the
+        // union of painted descendant boxes instead (projected children).
+        let H = el.getBoundingClientRect()
+        if (H.width === 0 && H.height === 0) {
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+          const acc = (n: Element) => {
+            if ((n as HTMLElement).style?.display === 'contents') {
+              n.childNodes.forEach((c) => { if (c.nodeType === 1) acc(c as Element) })
+              return
+            }
+            const r = n.getBoundingClientRect()
+            if (r.width > 0 || r.height > 0) {
+              minX = Math.min(minX, r.left); minY = Math.min(minY, r.top)
+              maxX = Math.max(maxX, r.right); maxY = Math.max(maxY, r.bottom)
+            }
+            n.childNodes.forEach((c) => { if (c.nodeType === 1) acc(c as Element) })
+          }
+          acc(el)
+          if (minX <= maxX && minY <= maxY) {
+            H = new DOMRect(minX, minY, maxX - minX, maxY - minY)
+          }
+        }
+        const host = el.getAttribute('data-component') || ''
         if (H.width < 2 && H.height < 2 && !CONTENTS_OK.has(host)) {
           if (!(HAIRLINE_OK.has(host) && (H.width >= 1 || H.height >= 1))) {
             defects.push('EMPTY-RENDER')
@@ -368,7 +391,7 @@ if (import.meta.main) {
       stampsSeen = Math.max(stampsSeen, hits.length)
       const stamped = hits.some((h) => h.tag === cell.tag)
       if (!stamped) {
-        cellDefects.push(`HOST-MISS no [data-sail-host]=${cell.tag} in ${cell.specimen}`)
+        cellDefects.push(`HOST-MISS no host for ${cell.tag} in ${cell.specimen}`)
       }
       const layoutKinds = LAYOUT_FLAGS.get(`${cell.route}::${cell.specimen}`)
       if (layoutKinds?.length && stamped) cellDefects.push(...layoutKinds)

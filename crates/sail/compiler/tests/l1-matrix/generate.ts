@@ -152,8 +152,8 @@ function renderHost(tag: string, specimen: string, props: Record<string, string>
       </footer>
     </dialog>`
     case 'drawer':
-      return `<button command="show" commandfor="${sid}">Open ${specimen}</button>
-    ${openTag('drawer', `${a} id="${sid}"`)}
+      return `<button command="show-modal" commandfor="${sid}">Open ${specimen}</button>
+    ${openTag('drawer', `${a} panel-id="${sid}"`)}
       <header>${specimen}</header>
       <section>Drawer body.</section>
       <footer>
@@ -162,7 +162,7 @@ function renderHost(tag: string, specimen: string, props: Record<string, string>
     </drawer>`
     case 'dropdown':
       return `<button popovertarget="${sid}">Open ${specimen}</button>
-    ${openTag('dropdown', `${a} id="${sid}"`)}
+    ${openTag('dropdown', `${a} panel-id="${sid}"`)}
       <menu-item value="edit">Edit</menu-item>
       <menu-item value="dup">Duplicate</menu-item>
     </dropdown>`

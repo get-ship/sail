@@ -798,7 +798,8 @@
           "file",
           "color",
           "date",
-          "button"
+          "button",
+          "range"
         ],
         "default": "text"
       },

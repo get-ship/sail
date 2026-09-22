@@ -315,7 +315,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <icon name="search" size="sm" style({ grow(0) })></icon>
       <input type="text" flush autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls={listId()} aria-activedescendant={activeId()} aria-label={label()} placeholder={placeholder()} bind:value={query} use:captureInput style({ grow(1).size({ min-w: 0 }).type({ family: body, size: base, leading: normal }) })>
     </row>
-    <ul role="listbox" id={listId()} aria-label={label()} use:captureList style({ grow(1).size({ min-h: 0, max-h: overlay-vh-sm }).pad(1).overflow({ y: auto }) })>
+    <ul role="listbox" id={listId()} aria-label={label()} use:captureList style({ grow(1).size({ min-h: 0, max-h: panel-max-h-sm }).pad(1).overflow({ y: auto }) })>
       <for {rows() as row} key={row.key}>
         <if {row.isHeading}>
           <li role="presentation" style({ pad({ y: 2, b: 1 }).fg(muted-foreground).select(none).type(label) })>{row.heading}</li>

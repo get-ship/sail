@@ -35,6 +35,7 @@ Reason classes:
 | skeleton.css | skeleton | composite | Shimmer gradient + `background-size` + animation | GAP-STDLIB-VOCAB-1 |
 | slider.css | slider | vendor-pseudo | WebKit / Firefox range track + thumb | none |
 | table.css | table | native-anatomy | Host compounds Style cannot see: `border-collapse`, dense pad, striped/hoverable on HTML `tr`, bordered cell box, sticky thead. Cell rest paint is `table/th.sail` + `td.sail` + `caption.sail` | none |
+| tooltip.css | tooltip | state-channel | Visibility keys off controller `data-hidden` — motion initial-reflect stamps inline opacity, flattening class-based hides | none |
 
 ## Ledger
 

@@ -15,7 +15,7 @@
   }
 
   style host = {position({ scheme: relative, name: tooltip }).display(inline-flex).self(start).group()}
-  style bubble = {position({ scheme: absolute, anchor: tooltip, area: top, z: popover }).pad({ y: 1, x: 2 }).size({ w: max, min-w: max }).overflow({ all: visible }).filter({ opacity: 0 }).bg(overlay).fg(foreground).radius(md).elevation(md).border({ width: 0 }).pointerEvents(none).type({ family: body, size: xs, weight: medium, wrap: nowrap }), when: { group-hover: filter({ opacity: 1 }), group-focus: filter({ opacity: 1 }) }, match: { placement: { top: position({ area: top }), bottom: position({ area: bottom }), left: position({ area: left }), right: position({ area: right }) } }, animate: { enter: play(fade), exit: play(fade) }}
+  style bubble = {position({ scheme: absolute, anchor: tooltip, area: top, z: popover }).pad({ y: 1, x: 2 }).size({ w: max, min-w: max }).overflow({ all: visible }).filter({ opacity: 0 }).bg(overlay).fg(foreground).radius(md).elevation(md).border({ width: 0 }).pointerEvents(none).type({ family: body, size: xs, weight: medium, wrap: nowrap }), match: { placement: { top: position({ area: top }), bottom: position({ area: bottom }), left: position({ area: left }), right: position({ area: right }) } }}
 </scope>
 
 <controller>
@@ -24,7 +24,14 @@ export default controller((init) => {
   const genId = `sail-tooltip-${Math.random().toString(36).slice(2, 10)}`
   const bubbleId = derived(() => String(read(init.id) ?? '').trim() || genId)
   const content = derived(() => String(read(init.content) ?? ''))
-  const hidden = signal(false)
+  // Authored placement lands on init only (wrapper shows the default attr),
+  // so the bubble re-exposes it as data-area for platform CSS to key off.
+  const placement = derived(() => String(read(init.placement) ?? '') || 'top')
+  // Rest = hidden. Hover/focus clears the signal; leave/blur/Escape set it.
+  // Visibility keys off data-hidden (platform/tooltip.css) — not opacity
+  // utilities: motion initial-reflect stamps inline opacity, which would
+  // flatten any class-based hide.
+  const hidden = signal(true)
   function clearHidden() { hidden.set(false) }
   function forceHidden() { hidden.set(true) }
   const keys = { Escape: () => { forceHidden() } }
@@ -37,11 +44,11 @@ export default controller((init) => {
     if (next && host?.contains(next)) return
     forceHidden()
   }
-  return { bubbleId, content, hidden, keys, onMouseenter, onMouseleave, onFocusin, onFocusout }
+  return { bubbleId, content, placement, hidden, keys, onMouseenter, onMouseleave, onFocusin, onFocusout }
 })
 </controller>
 
 <span use:hotkeys={keys} on:mouseenter={onMouseenter} on:mouseleave={onMouseleave} on:focusin={onFocusin} on:focusout={onFocusout} style(host)>
   <slot></slot>
-  <span id={bubbleId()} role="tooltip" data-tooltip-bubble data-hidden={hidden()} style(bubble)>{content()}</span>
+  <span id={bubbleId()} role="tooltip" data-tooltip-bubble data-area={placement()} data-hidden={hidden()} style(bubble)>{content()}</span>
 </span>
